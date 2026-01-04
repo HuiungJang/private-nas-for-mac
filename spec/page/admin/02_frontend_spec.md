@@ -1,7 +1,8 @@
 # Admin Page - Frontend Specification
 
-**Based on:** `Admin_page.jpg` Sketch
-**Version:** 1.0.0
+**Based on:** `Admin_page.png` Sketch
+**Version:** 1.1.0
+**Updates:** Added Dashboard, Context Banner, Enhanced IP UX.
 
 ---
 
@@ -12,9 +13,10 @@ The Admin interface uses a persistent Sidebar layout as depicted in the sketch.
 *   **Sidebar (Left, Fixed Width):**
     *   **Header:** "Admin" text + Current Admin Profile Avatar/Link.
     *   **Navigation Menu:**
-        1.  **File** (Icon: Folder) -> Routes to `/admin/files`
-        2.  **Users** (Icon: People) -> Routes to `/admin/users`
-        3.  **Settings** (Icon: Settings) -> Routes to `/admin/settings`
+        1. **Dashboard** (Icon: Dashboard) -> Routes to `/admin` (Home)
+        2. **File** (Icon: Folder) -> Routes to `/admin/files`
+        3. **Users** (Icon: People) -> Routes to `/admin/users`
+        4. **Settings** (Icon: Settings) -> Routes to `/admin/settings`
 *   **Main Content Area (Right, Scrollable):**
     *   Renders the active route component.
     *   Padding/Margins consistent with Material Design.
@@ -23,21 +25,35 @@ The Admin interface uses a persistent Sidebar layout as depicted in the sketch.
 
 ## 2. Views & Components
 
+### 2.0 Dashboard (Home)
+Default view when entering the Admin area.
+
+*   **Components:**
+    *   **`SystemHealthCards`:** Grid of cards showing:
+        *   CPU Usage (Gauge/Progress bar)
+        *   RAM Usage (Text: "4GB / 16GB")
+        *   Storage Status (Per mounted volume)
+    *   **`RecentActivityLog`:** Short list of recent Audit Logs (Login failures, File deletions).
+
 ### 2.1 File Manager View (`/admin/files`)
 Corresponds to the "1. File" sketch.
 
+*   **Context Awareness:**
+    *   **`UserContextBanner`:** If `userId` query param is present (viewing a specific user's files), display a distinct banner at the top:
+        *   *Text:* "Viewing files for user: **[Username]**"
+        *   *Action:* "Exit to Root" button.
+        *   *Style:* Warning/Info color to distinguish from normal admin file browsing.
+
 *   **Components:**
-    *   **`FileBreadcrumbs`:** Displays path `Root > Folder A > Folder B`. Clickable to navigate up.
+    *   **`FileBreadcrumbs`:** Displays path.
     *   **`FileGrid`:**
         *   **Items:** Cards/Icons representing Files and Directories.
         *   **Visuals:** Folder icon for directories, File preview/icon for files.
-        *   **Labels:** Filename displayed below the icon.
-    *   **Toolbar (Optional but implied):** Search bar, View toggle (Grid/List).
+    *   **Toolbar:** Search bar, View toggle (Grid/List), Multi-select actions (Delete, Move).
 
 *   **Interactions:**
-    *   **Single Click:** Select item.
-    *   **Double Click:** Enter directory.
-    *   **Context Menu (Right Click):** Delete, Rename, Download (Admin privileges).
+    *   **Context Menu (Right Click):** Delete, Rename, Download.
+    *   **Drag & Drop:** Move files (restricted permissions check on backend).
 
 ### 2.2 User Management View (`/admin/users`)
 Corresponds to the "2. Users" sketch.
@@ -49,47 +65,44 @@ Corresponds to the "2. Users" sketch.
         *   "Manage Files" -> Redirects to `/admin/files?userId={id}`.
         *   "Edit Account" -> Opens `EditUserModal`.
         *   "Delete" -> Confirmation Dialog.
-    *   **`CreateUserButton`:** Floating Action Button (FAB) or Toolbar button.
-
-*   **Sub-Feature: "User's File Manage"**
-    *   When an admin selects a user, the **File Manager View** is reused but scoped to that user's root directory.
+    *   **`CreateUserButton`:** Floating Action Button (FAB).
 
 ### 2.3 Settings View (`/admin/settings`)
 Corresponds to the "3. Settings" sketch.
 
-*   **Structure:**
-    *   A dashboard-like page or Tabs interface for categorized settings.
-
 *   **Sections:**
     1.  **IP Manage (Allowed IP Manage):**
-        *   **`IpAllowlistEditor`:** List of allowed IPs/CIDRs. Add/Remove buttons.
+        *   **`IpAllowlistEditor`:**
+            *   List of allowed IPs/CIDRs.
+            *   **Validation:** Regex check for IPv4/IPv6/CIDR format.
+            *   **Feature:** **"Add My Current IP"** button (fetches client IP and pre-fills input).
+            *   **Safety Warning:** If deleting the current IP, show a modal warning "You will lose access immediately."
         *   **`GeoIpToggle`:** Switch to enable/disable Country-based blocking.
     2.  **VPN Manage:**
-        *   *Display Only / Configuration:* Toggle for VPN requirement or connection status display.
+        *   **`VpnStatusCard`:** Shows Server Status (Running/Stopped).
+        *   **`ToggleSwitch`:** Enable/Disable VPN Server.
     3.  **Theme Manage:**
-        *   **`ThemeSelector`:** Radio buttons or cards for "Light", "Dark", "System".
-        *   **`AccentColorPicker`:** Color picker for main UI color.
+        *   **`ThemeSelector`:** Radio buttons for "Light", "Dark", "System".
+        *   **`AccentColorPicker`:** Color picker.
 
 ---
 
 ## 3. State Management (Frontend)
 
 ### 3.1 Store (Zustand)
-*   `useAdminNavStore`: Tracks sidebar open/close state (mobile), active menu item.
-*   `useFileBrowserStore`: Tracks current path, selected items, clipboard (copy/paste).
+*   `useAdminNavStore`: Sidebar state.
+*   `useFileBrowserStore`: Path, Selection, Clipboard.
 
 ### 3.2 Server State (TanStack Query)
 *   **Queries:**
+    *   `['admin', 'dashboard']`: Fetches health stats.
     *   `['admin', 'users']`: Fetches user list.
-    *   `['admin', 'files', path]`: Fetches file list for a specific path.
+    *   `['admin', 'files', path, userId]`: Fetches file list.
     *   `['admin', 'settings']`: Fetches system config.
-*   **Mutations:**
-    *   `useCreateUser`: Invalidates `['admin', 'users']`.
-    *   `useUpdateSettings`: Updates settings and shows Toast notification.
 
 ---
 
 ## 4. Design System (Material UI)
-*   **Theme:** Custom MUI Theme mirroring the "Theme Manage" settings.
-*   **Icons:** Material Icons (Folder, Group, Settings, Shield/Security for VPN).
-*   **Typography:** Roboto (default MUI).
+*   **Theme:** Custom MUI Theme.
+*   **Icons:** Material Icons.
+*   **Typography:** Roboto.

@@ -1,7 +1,8 @@
 # Admin Page - Backend Specification
 
 **Based on:** `Admin_page.png` Sketch & Master Spec
-**Version:** 1.0.0
+**Version:** 1.1.0
+**Updates:** Added System Health, Admin File Ops, IP Safety Logic.
 
 ---
 
@@ -13,7 +14,7 @@ The Admin Page backend provides the API surface for system administrators to man
 ## 2. API Endpoints
 
 ### 2.1 File Management (Admin View)
-Admins need to browse the entire file system or specific user directories.
+Admins need to browse and manage the entire file system or specific user directories.
 
 *   **GET** `/api/admin/files/list`
     *   **Query Params:**
@@ -23,6 +24,14 @@ Admins need to browse the entire file system or specific user directories.
         *   `currentPath`: String
         *   `breadcrumbs`: List<`PathNodeDTO`> (Name, Path)
         *   `items`: List<`FileNodeDTO`> (Name, Type, Size, ModTime, Owner)
+
+*   **POST** `/api/admin/files/delete`
+    *   **Purpose:** Admin privileged delete (bypassing standard user ownership checks if necessary, but logging is critical).
+    *   **Request:** `FileActionDTO` (List of paths)
+    *   **Response:** `BatchOperationResultDTO` (Success/Fail counts)
+
+*   **POST** `/api/admin/files/move`
+    *   **Request:** `FileMoveDTO` (Source Paths, Destination Path)
 
 ### 2.2 User Management
 Corresponds to the "2. USERS" menu in the sketch.
@@ -58,21 +67,39 @@ Corresponds to the "3. Settings" menu in the sketch.
 
 *   **GET** `/api/admin/settings`
     *   **Response:** `SystemSettingsDTO`
-        *   `ipAccessControl`: `IpControlDTO` (Allowlist, Blocklist)
-        *   `vpnConfig`: `VpnConfigDTO` (Status, Provider - *Placeholder per sketch*)
-        *   `themeConfig`: `ThemeConfigDTO` (Default system theme)
+        *   `ipAccessControl`: `IpControlDTO`
+        *   `vpnConfig`: `VpnConfigDTO`
+        *   `themeConfig`: `ThemeConfigDTO`
 
 *   **PUT** `/api/admin/settings/ip-access`
     *   **Request:** `IpControlDTO`
         *   `allowedIps`: List<String> (CIDR supported)
         *   `geoIpEnabled`: Boolean
-    *   **Logic:** Updates the firewall/interceptor rules immediately.
+    *   **Safety Logic (Validation):**
+        *   **MUST** check if the requester's current IP matches one of the allowed CIDRs/IPs.
+        *   **If not matched:** Reject the request with `400 Bad Request` ("Cannot block current session IP").
+
+*   **PUT** `/api/admin/settings/vpn`
+    *   **Request:** `VpnConfigDTO`
+        *   `enabled`: Boolean
+        *   `provider`: String (e.g., "WIREGUARD", "TAILSCALE") - *Future implementation*
+    *   **Note:** Controls the internal VPN server status.
 
 *   **PUT** `/api/admin/settings/theme`
     *   **Request:** `ThemeConfigDTO`
         *   `primaryColor`: String
         *   `darkModeDefault`: Boolean
-    *   **Note:** "Theme manage" from sketch.
+
+### 2.4 System Health (Dashboard)
+New requirement based on Master Spec to support the Admin Dashboard.
+
+*   **GET** `/api/admin/system/health`
+    *   **Response:** `SystemHealthDTO`
+        *   `cpuUsagePercent`: Double
+        *   `ramUsage`: `MemoryUsageDTO` (Used, Total)
+        *   `storageUsage`: `StorageUsageDTO` (Volume Label, Used, Total)
+        *   `uptime`: Long (seconds)
+        *   `jvmStatus`: String (Heap usage, Thread count)
 
 ---
 
@@ -102,4 +129,7 @@ public record SystemSettingsDTO(
 
 ## 4. Security Requirements
 *   **Authorization:** All endpoints under `/api/admin/**` must be secured with `@PreAuthorize("hasRole('ADMIN')")`.
-*   **Audit Logging:** Critical actions (User Create/Delete, Settings Change) must generate an `AuditLog` entry (Actor, Action, Target, Timestamp).
+*   **Audit Logging:**
+    *   **User Mgmt:** Create/Delete/Modify User.
+    *   **File Mgmt:** Admin-initiated Delete/Move (Must log "Admin {username} deleted file {path} owned by {owner}").
+    *   **Settings:** Any change to IP or Security settings.
