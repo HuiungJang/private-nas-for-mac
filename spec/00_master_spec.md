@@ -1,8 +1,8 @@
 # Private NAS for Mac - Master Specification
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Draft
-**Last Updated:** 2026-01-02
+**Last Updated:** 2026-01-04
 
 ---
 
@@ -11,7 +11,7 @@
 
 ### 1.1 Goals
 - Replace commercial cloud storage (Google Drive, Dropbox) with a private solution.
-- Ensure strict security controls for external access.
+- **Strict Security:** The NAS is accessible *only* via a secure VPN tunnel. No public HTTP/S ports are exposed.
 - Provide a seamless file management experience on both Desktop and Mobile.
 
 ---
@@ -44,12 +44,13 @@
 ## 3. Detailed Functional Requirements
 
 ### 3.1 Authentication & Security (Priority #1)
-- **Login System:** Secure session/JWT based authentication.
-- **IP Access Control:**
-  - **Allowlist:** Configurable list of allowed specific IPs.
-  - **Geo-IP Blocking:** Block traffic from countries other than the user's residence (Integration with MaxMind GeoLite or similar).
-  - **Failed Login Protection:** Ban IPs after $N$ failed attempts (Fail2Ban logic).
-- **Encryption:** All external traffic must be served over HTTPS (Let's Encrypt / Self-signed).
+- **VPN Enforcement:**
+  - The Application (Web UI/API) MUST NOT be exposed to the public internet.
+  - Users must connect to the hosted VPN (WireGuard) to access the NAS.
+- **Login System:** Secure session/JWT based authentication (Secondary layer inside VPN).
+- **Encryption:**
+  - VPN Tunnel provides the primary encryption layer.
+  - Internal traffic (Nginx -> Backend) can be HTTP or self-signed HTTPS.
 
 ### 3.2 File Management (Core)
 - **File Explorer UI:**
@@ -74,7 +75,9 @@
 - **Storage Control:** View mounted external drives, total space, and used space.
 
 ### 3.4 Additional NAS Features (Expanded)
-- **Public Share Links:** Generate time-limited or password-protected links for specific files to share with non-users.
+- **Share Links:**
+  - Since access is VPN-only, "Public" links are technically "Internal" links.
+  - Users receiving a link must also have VPN access.
 - **Thumbnail Generation:** Background job to generate low-res thumbnails for fast UI loading.
 - **Search:** Full-text search for filenames.
 - **System Health:** CPU and RAM usage monitoring of the host/container.

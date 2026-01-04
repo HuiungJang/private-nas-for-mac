@@ -1,24 +1,25 @@
 # Technical Architecture & Module Specification
 
 **Parent Document:** [00_master_spec.md](./00_master_spec.md)
-**Version:** 1.1.0
-**Date:** 2026-01-02
+**Version:** 1.2.0
+**Date:** 2026-01-04
 **Updates:** Adopting DDD, Hexagonal Architecture, and MapStruct.
 
 ---
 
 ## 1. System Architecture Overview
 
-The system follows a **Client-Server Architecture** hosted within a containerized environment (Docker).
-The Host Machine (Mac) provides the compute resources and the physical storage (External HDD/SSD via USB/Thunderbolt).
+The system follows a **VPN-Gated Client-Server Architecture** hosted within a containerized environment (Docker).
+The Host Machine (Mac) provides the compute resources and the physical storage. **Crucially, the Web Application is NOT exposed to the public internet.** It is only accessible via a secure VPN tunnel.
 
 ### 1.1 High-Level Container Diagram
 
 ```mermaid
 graph TD
-    UserClient[Web / Mobile Browser] -->|HTTPS / 443| Nginx[Reverse Proxy / Nginx]
+    UserClient[Web / Mobile Browser] -->|"Encrypted Tunnel (UDP)"| VPN_Server["VPN Container (WireGuard)"]
     
-    subgraph "Docker Compose Environment"
+    subgraph "Docker Compose Private Network"
+        VPN_Server -->|Allowed Traffic| Nginx[Reverse Proxy / Nginx]
         Nginx -->|Proxy Pass| Frontend["Frontend Container (Node/Nginx)"]
         Nginx -->|API Requests| Backend["Backend Container (Spring Boot)"]
         Backend -->|Metadata R/W| Database[PostgreSQL DB]
@@ -152,12 +153,18 @@ src/
 ## 4. Infrastructure & Deployment
 
 ### 4.1 Docker Composition
-The `docker-compose.yml` configuration remains focused on Volume mapping.
+The `docker-compose.yml` defines the services.
 
-1.  **`nas-backend`**:
-    -   Volumes: `/Volumes:/mnt/host_volumes:rw` (Mac External Drives).
-2.  **`nas-db`**:
-    -   PostgreSQL for metadata (User accounts, Audit logs, Shared links).
+1.  **`vpn-server`** (WireGuard):
+    -   **Exposed Port:** UDP (e.g., 51820) mapped to Host.
+    -   **Role:** Entry point for all external traffic.
+2.  **`nas-backend`**:
+    -   **Volumes:** `/Volumes:/mnt/host_volumes:rw` (Mac External Drives).
+    -   **Network:** Internal only (No ports exposed to host).
+3.  **`nas-frontend`**:
+    -   **Network:** Internal only.
+4.  **`nas-db`**:
+    -   **Network:** Internal only.
 
 ---
 
