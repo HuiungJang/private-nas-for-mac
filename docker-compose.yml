@@ -9,14 +9,15 @@ services:
       - PASSWORD=${WG_PASSWORD}
       - WG_DEFAULT_ADDRESS=10.8.0.x
       - WG_DEFAULT_DNS=1.1.1.1
-      - WG_ALLOWED_IPS=10.8.0.0/24, 0.0.0.0/0
+      - WG_ALLOWED_IPS=10.8.0.0/24 # Split Tunneling: Only VPN traffic (Secure)
+      # - WG_ALLOWED_IPS=10.8.0.0/24, 0.0.0.0/0 # Full Tunneling: All traffic (High privacy, low speed)
       # Optional: set to true to enable persistent keepalive
       - WG_PERSISTENT_KEEPALIVE=25
     volumes:
       - ./config/wireguard:/etc/wireguard
     ports:
       - "51820:51820/udp" # WireGuard VPN Port
-      - "51821:51821/tcp" # Web UI for Admin
+      - "127.0.0.1:51821:51821/tcp" # Web UI for Admin (Restricted to Localhost for security)
     cap_add:
       - NET_ADMIN
       - SYS_MODULE

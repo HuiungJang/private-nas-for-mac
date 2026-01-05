@@ -44,7 +44,7 @@ services:
       - ./config/wireguard:/etc/wireguard
     ports:
       - "51820:51820/udp" # The ONLY public port
-      - "51821:51821/tcp" # Web UI for Admin (Internal access only recommendation)
+      - "127.0.0.1:51821:51821/tcp" # Web UI for Admin (Restricted to localhost for security)
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -100,6 +100,8 @@ Since `wg-easy` provides its own UI, we have two options for the "VPN Management
 
 ## 5. Security Considerations
 
+- **Web UI Exposure:** The `wg-easy` Web UI (port 51821) is restricted to `127.0.0.1` in Docker. To access it from outside the Mac, use an SSH tunnel or access it locally. *Never* expose this port to the public internet.
+- **Split vs Full Tunneling:** By default, we use **Split Tunneling** (`WG_ALLOWED_IPS=10.8.0.0/24`) to only route NAS-related traffic through the VPN. This prevents the Mac from becoming a bottleneck for the client's general internet usage and hides the client's regular traffic from the VPN server.
 - **DDNS:** Since residential IPs change, a DDNS (Dynamic DNS) sidecar or router config is needed for `WG_HOST`.
 - **Port Forwarding:** The user must manually forward UDP 51820 on their router to the Mac.
 - **Key Rotation:** WireGuard keys should be rotated periodically (manual process in Phase 1).
