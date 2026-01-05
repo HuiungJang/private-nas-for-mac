@@ -63,10 +63,32 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
 
 ---
 
-## 🚀 Getting Started (Coming Soon)
+## 🚀 Getting Started
 
-*Instructions for setting up the Docker environment and building the project will be added in Phase
-1.*
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed on your Mac.
+
+### Step 1: Configure Environment
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` and set your `WG_HOST` (Public IP or DDNS) and `WG_PASSWORD`.
+
+### Step 2: Start VPN
+Run the Docker containers:
+```bash
+docker-compose up -d
+```
+
+### Step 3: Connect
+1. Access the Admin UI at [http://localhost:51821](http://localhost:51821).
+2. Login with the password you set in `.env`.
+3. Create a new client (peer).
+4. Scan the QR code with the WireGuard mobile app or download the configuration for your laptop.
+
+### Step 4: Network Setup
+- On your home router, **forward UDP port 51820** to your Mac's local IP address.
 
 ---
 *© 2026 Private NAS Project. Created with Vibe.*
