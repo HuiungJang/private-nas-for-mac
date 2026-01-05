@@ -1,8 +1,9 @@
 # Private NAS for Mac - Master Specification
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Draft
-**Last Updated:** 2026-01-04
+**Last Updated:** 2026-01-05
+**Updates:** Specified password hashing algorithm (Security Review).
 
 ---
 
@@ -106,7 +107,7 @@
 ### 5.1 Users
 - `id`: UUID
 - `username`: String
-- `password_hash`: String
+- `password_hash`: String (Must use BCrypt or Argon2)
 - `role`: Enum (ADMIN, USER)
 - `created_at`: Timestamp
 

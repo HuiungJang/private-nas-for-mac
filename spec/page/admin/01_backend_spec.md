@@ -1,8 +1,8 @@
 # Admin Page - Backend Specification
 
 **Based on:** `Admin_page.png` Sketch & Master Spec
-**Version:** 1.1.0
-**Updates:** Added System Health, Admin File Ops, IP Safety Logic.
+**Version:** 1.1.1
+**Updates:** Added Security Mitigations (Proxy Awareness, Path Restriction).
 
 ---
 
@@ -18,12 +18,16 @@ Admins need to browse and manage the entire file system or specific user directo
 
 *   **GET** `/api/admin/files/list`
     *   **Query Params:**
-        *   `path` (String, optional): The absolute path to list. Defaults to root.
+        *   `path` (String, optional): The absolute path to list. Defaults to configured storage root.
         *   `userId` (UUID, optional): If provided, roots the view to that specific user's home directory.
     *   **Response:** `DirectoryListingDTO`
         *   `currentPath`: String
         *   `breadcrumbs`: List<`PathNodeDTO`> (Name, Path)
         *   `items`: List<`FileNodeDTO`> (Name, Type, Size, ModTime, Owner)
+    *   **SECURITY NOTE (Path Scope):**
+        *   The backend **MUST** restrict access to the host's mounted volumes (e.g., `/Volumes/...`) or the defined data directory.
+        *   Access to the container's root file system (`/`, `/etc`, `/var`, etc.) is **strictly prohibited**.
+        *   Any path not starting with the allowed prefix must return `403 Forbidden` or `400 Bad Request`.
 
 *   **POST** `/api/admin/files/delete`
     *   **Purpose:** Admin privileged delete (bypassing standard user ownership checks if necessary, but logging is critical).
@@ -78,6 +82,10 @@ Corresponds to the "3. Settings" menu in the sketch.
     *   **Safety Logic (Validation):**
         *   **MUST** check if the requester's current IP matches one of the allowed CIDRs/IPs.
         *   **If not matched:** Reject the request with `400 Bad Request` ("Cannot block current session IP").
+    *   **SECURITY NOTE (Proxy Awareness):**
+        *   Since the app runs behind Nginx/Docker, `request.getRemoteAddr()` may return the internal gateway IP.
+        *   The application **MUST** be configured to trust and parse `X-Forwarded-For` or `Forwarded` headers to identify the **actual** VPN client IP.
+        *   Ensure Spring Boot's `server.forward-headers-strategy` is set to `NATIVE` or `FRAMEWORK`.
 
 *   **PUT** `/api/admin/settings/vpn`
     *   **Request:** `VpnConfigDTO`

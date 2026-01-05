@@ -1,7 +1,8 @@
 # User Page - Backend Specification
 
 **Based on:** `User_page.jpg` Sketch & Master Spec
-**Version:** 1.0.0
+**Version:** 1.0.1
+**Updates:** Added Filename Validation & Sanitization.
 
 ---
 
@@ -25,10 +26,12 @@ Users interact with their own isolated file system space.
 
 *   **POST** `/api/user/files/folder`
     *   **Request:** `CreateFolderDTO` (Path, Name)
+    *   **Validation:** Name must be sanitized (see Security Requirements).
 
 *   **POST** `/api/user/files/upload`
     *   **Request:** Multipart File + `path`
     *   **Response:** `FileNodeDTO`
+    *   **Validation:** Original filename must be sanitized.
 
 *   **POST** `/api/user/files/delete`
     *   **Request:** `FileActionDTO` (List of relative paths)
@@ -39,6 +42,7 @@ Users interact with their own isolated file system space.
 
 *   **POST** `/api/user/files/rename`
     *   **Request:** `FileRenameDTO` (Path, New Name)
+    *   **Validation:** New Name must be sanitized.
 
 *   **GET** `/api/user/files/download`
     *   **Query Params:** `path`
@@ -104,4 +108,11 @@ public record UserProfileDTO(
 *   **Data Isolation:**
     *   **CRITICAL:** The backend **MUST** resolve file paths relative to the authenticated user's home directory (e.g., `/mnt/nas/users/{userId}/...`).
     *   **Path Traversal Prevention:** Any request containing `..` or attempting to access paths outside the user's root must be rejected with `403 Forbidden` or `400 Bad Request`.
+*   **Input Sanitization (Filenames):**
+    *   **Strict Blocklist:** Filenames MUST NOT contain:
+        *   Directory separators: `/` or `\`
+        *   Relative path components: `..`
+        *   Control characters (0x00-0x1F)
+    *   **Length:** Maximum 255 characters.
+    *   **Resolution:** Invalid characters should either cause a `400 Bad Request` or be automatically replaced/sanitized (e.g., `_`) depending on UX policy.
 *   **Rate Limiting:** Apply reasonable limits to file uploads/downloads to prevent resource exhaustion.
