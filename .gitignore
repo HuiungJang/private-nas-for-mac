@@ -27,3 +27,25 @@ replay_pid*
 .env
 config/
 .DS_Store
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# IntelliJ IDEA
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+out/
+*.iml
+
+# VS Code
+.vscode/
+
+# Spring Boot
+**/target/
