@@ -1,0 +1,107 @@
+# Project TODO List
+
+**Based on:**
+- `spec/00_master_spec.md`
+- `spec/01_technical_architecture.md`
+- `spec/page/admin/01_backend_spec.md`
+
+---
+
+## 🚀 Phase 1: Foundation & Architecture
+
+### 1.1 Infrastructure & Setup
+- [x] **Project Scaffolding:** Spring Boot 4.x with Gradle (Kotlin DSL).
+- [x] **Directory Structure:** Domain-Driven Design (DDD) + Hexagonal Architecture.
+- [ ] **Docker Environment:**
+  - [ ] Verify `docker-compose.yml` includes PostgreSQL, VPN (WireGuard), Nginx.
+  - [ ] Ensure Volume mappings for `/Volumes` (Mac Host) to Container are correct.
+- [ ] **Database Integration:**
+  - [ ] Configure PostgreSQL in `application.properties`.
+  - [ ] Setup Flyway or Liquibase for schema migrations.
+
+### 1.2 Technical Debt / Refactoring
+- [ ] **Mapper Implementation:**
+  - [ ] Integrate **MapStruct** (currently manual mapping in `AdminFileController`).
+  - [ ] Create Mapper interfaces for DTO <-> Domain transformations.
+- [x] **Global Error Handling:**
+  - [x] Implement `@ControllerAdvice` for unified error responses (RFC 7807).
+  - [x] Handle `SecurityException` (Path Traversal) and `IllegalArgumentException`.
+
+---
+
+## 🛡️ Phase 2: Security & Authentication (`context/auth`)
+
+### 2.1 Security Core
+- [ ] **Spring Security Config:**
+  - [ ] Stateless Session Policy.
+  - [ ] CSRF Configuration (Disable for API, enable if needed for browser).
+  - [ ] CORS Configuration.
+- [ ] **JWT Implementation:**
+  - [ ] Token Generation (Login).
+  - [ ] Token Validation Filter.
+- [ ] **VPN/IP Enforcement:**
+  - [ ] Implement IP Filter Middleware (Trust `X-Forwarded-For`).
+  - [ ] Validate requests originate from VPN Subnet.
+
+### 2.2 User Domain
+- [ ] **Entities:** `User`, `Role`, `Password` (VO).
+- [ ] **Persistence:** `UserRepository` (JPA).
+- [ ] **Use Cases:**
+  - [ ] Login.
+  - [ ] Create User (Admin).
+  - [ ] Password Reset.
+
+---
+
+## 📂 Phase 3: File Management (`context/file`)
+
+### 3.1 Admin File Operations (`/api/admin/files`)
+- [x] **List Directory:** `GET /api/admin/files/list`
+  - [x] Domain: `FileNode`, `DirectoryListing`.
+  - [x] Port/Adapter: `LocalFileSystemAdapter` (Java NIO).
+  - [x] Security: Path traversal protection.
+- [ ] **Delete Files:** `POST /api/admin/files/delete`
+  - [ ] UseCase: Batch delete logic.
+  - [ ] Audit Log integration.
+- [ ] **Move Files:** `POST /api/admin/files/move`
+  - [ ] UseCase: Source -> Dest validation.
+
+### 3.2 User File Operations
+- [ ] **Upload File:** `POST /api/files/upload`
+  - [ ] Chunked upload support.
+  - [ ] Quota check.
+- [ ] **Download File:** `GET /api/files/download`
+  - [ ] Range header support (resumable).
+- [ ] **Preview:**
+  - [ ] Thumbnail generation service.
+
+---
+
+## ⚙️ Phase 4: System Administration (`context/system`)
+
+### 4.1 User Management API
+- [ ] `GET /api/admin/users`: List users + usage stats.
+- [ ] `POST /api/admin/users`: Create new user.
+- [ ] `PUT /api/admin/users/{userId}`: Update status/role.
+
+### 4.2 System Settings
+- [ ] `GET /api/admin/settings`: Retrieve config.
+- [ ] `PUT /api/admin/settings/ip-access`: Update allowed IPs.
+- [ ] `PUT /api/admin/settings/theme`: Update UI theme config.
+
+### 4.3 Monitoring / Dashboard
+- [ ] `GET /api/admin/system/health`:
+  - [ ] CPU/RAM usage (Micrometer/Actuator).
+  - [ ] Storage usage (Disk space).
+- [ ] **Audit Logging:**
+  - [ ] Intercept critical actions (Login, Delete, Settings Change) and save to DB.
+
+---
+
+## 🧪 Testing & Quality
+- [ ] **Unit Tests:**
+  - [x] `LocalFileSystemAdapterTest` (Infrastructure).
+  - [ ] Service Layer Tests (Mocking Ports).
+- [ ] **Integration Tests:**
+  - [ ] Controller Tests (`MockMvc`).
+  - [ ] Testcontainers for Repository Layer (PostgreSQL).
