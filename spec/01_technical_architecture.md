@@ -1,8 +1,8 @@
 # Technical Architecture & Module Specification
 
 **Parent Document:** [00_master_spec.md](./00_master_spec.md)
-**Version:** 1.2.0
-**Date:** 2026-01-04
+**Version:** 1.2.1
+**Date:** 2026-01-07
 **Updates:** Adopting DDD, Hexagonal Architecture, and MapStruct.
 
 ---
@@ -35,8 +35,8 @@ graph TD
 We adopt **Domain-Driven Design (DDD)** principles implemented via **Hexagonal Architecture (Ports & Adapters)**. This ensures the core business logic remains independent of frameworks, databases, and external interfaces.
 
 ### 2.1 Core Technology Stack
-- **Java Version:** Java 21 LTS (utilizing Virtual Threads).
-- **Framework:** Spring Boot 3.x.
+- **Java Version:** Java 25 LTS (utilizing Virtual Threads).
+- **Framework:** Spring Boot 4.x.
 - **Build System:** Gradle (Kotlin DSL).
 - **Mapping:** **MapStruct** (Strict mapping between layers).
 - **Database Access:** Spring Data JPA + QueryDSL.
