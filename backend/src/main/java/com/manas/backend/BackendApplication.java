@@ -1,12 +1,13 @@
-package com.mac.privatenas;
+package com.manas.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PrivateNasApplication {
+public class BackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PrivateNasApplication.class, args);
+        SpringApplication.run(BackendApplication.class, args);
     }
+
 }

@@ -1,1 +1,1 @@
-rootProject.name = "private-nas-backend"
+rootProject.name = "backend"
