@@ -36,18 +36,18 @@
   - [x] Stateless Session Policy.
   - [x] CSRF Configuration (Disable for API, enable if needed for browser).
   - [x] CORS Configuration.
-- [ ] **JWT Implementation:**
-  - [ ] Token Generation (Login).
-  - [ ] Token Validation Filter.
+- [x] **JWT Implementation:**
+  - [x] Token Generation (Login).
+  - [x] Token Validation Filter.
 - [ ] **VPN/IP Enforcement:**
   - [ ] Implement IP Filter Middleware (Trust `X-Forwarded-For`).
   - [ ] Validate requests originate from VPN Subnet.
 
 ### 2.2 User Domain
-- [ ] **Entities:** `User`, `Role`, `Password` (VO).
-- [ ] **Persistence:** `UserRepository` (JPA).
-- [ ] **Use Cases:**
-  - [ ] Login.
+- [x] **Entities:** `User`, `Role`, `Password` (VO).
+- [ ] **Persistence:** `UserRepository` (JPA) - *InMemory Adapter implemented for Phase 1*.
+- [x] **Use Cases:**
+  - [x] Login.
   - [ ] Create User (Admin).
   - [ ] Password Reset.
 
