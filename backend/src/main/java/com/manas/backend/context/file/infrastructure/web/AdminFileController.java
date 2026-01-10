@@ -2,9 +2,11 @@ package com.manas.backend.context.file.infrastructure.web;
 
 import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
 import com.manas.backend.context.file.application.port.in.ListDirectoryUseCase;
+import com.manas.backend.context.file.application.port.in.MoveFileUseCase;
 import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesRequest;
 import com.manas.backend.context.file.infrastructure.web.dto.DirectoryListingDTO;
+import com.manas.backend.context.file.infrastructure.web.dto.MoveFileRequest;
 import com.manas.backend.context.file.infrastructure.web.mapper.FileMapper;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class AdminFileController {
 
     private final ListDirectoryUseCase listDirectoryUseCase;
     private final DeleteFilesUseCase deleteFilesUseCase;
+    private final MoveFileUseCase moveFileUseCase;
     private final FileMapper fileMapper;
 
     @GetMapping("/list")
@@ -43,6 +46,16 @@ public class AdminFileController {
             @RequestParam(required = false) UUID userId
     ) {
         deleteFilesUseCase.deleteFiles(request.paths(), userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/move")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> moveFile(
+            @RequestBody MoveFileRequest request,
+            @RequestParam(required = false) UUID userId
+    ) {
+        moveFileUseCase.moveFile(request.sourcePath(), request.destinationPath(), userId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -16,11 +16,19 @@ public interface FileStoragePort {
 
     /**
      * Deletes a file or directory at the specified path.
-     *
-     * @param path   Absolute path or relative to root.
+     * @param path Absolute path or relative to root.
      * @param userId Optional user ID for logging/permission check.
-     * @throws SecurityException        if path is outside allowed scope.
+     * @throws SecurityException if path is outside allowed scope.
      * @throws IllegalArgumentException if path does not exist.
      */
     void delete(String path, UUID userId);
+
+    /**
+     * Moves a file or directory from source to destination.
+     *
+     * @param sourcePath      Source path.
+     * @param destinationPath Destination path.
+     * @param userId          Optional user ID.
+     */
+    void move(String sourcePath, String destinationPath, UUID userId);
 }
