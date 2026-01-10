@@ -49,6 +49,31 @@ public class LocalFileSystemAdapter implements FileStoragePort {
     }
 
     @Override
+    public void move(String sourcePathString, String destinationPathString, UUID userId) {
+        Path sourcePath = resolveTarget(sourcePathString);
+        Path destinationPath = resolveTarget(destinationPathString);
+
+        if (!Files.exists(sourcePath)) {
+            throw new IllegalArgumentException("Source path does not exist: " + sourcePath);
+        }
+
+        if (Files.exists(destinationPath)) {
+            throw new IllegalArgumentException("Destination path already exists: " + destinationPath);
+        }
+
+        try {
+            // Create parent directories if they don't exist
+            Files.createDirectories(destinationPath.getParent());
+
+            Files.move(sourcePath, destinationPath);
+            log.info("User {} moved file from {} to {}", userId, sourcePath, destinationPath);
+        } catch (IOException e) {
+            log.error("Failed to move file from {} to {}", sourcePath, destinationPath, e);
+            throw new RuntimeException("Failed to move file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public DirectoryListing listDirectory(String pathString, UUID userId) {
         // 1. Validate & Resolve
         var targetPath = resolveAndValidate(pathString);
