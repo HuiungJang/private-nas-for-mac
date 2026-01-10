@@ -3,21 +3,17 @@ services:
     image: ghcr.io/wg-easy/wg-easy
     container_name: nas-vpn
     environment:
-      # The public IP or DDNS of your Mac
       - WG_HOST=${WG_HOST}
-      # The password for the Web UI (port 51821)
       - PASSWORD=${WG_PASSWORD}
       - WG_DEFAULT_ADDRESS=10.8.0.x
       - WG_DEFAULT_DNS=1.1.1.1
-      - WG_ALLOWED_IPS=10.8.0.0/24 # Split Tunneling: Only VPN traffic (Secure)
-      # - WG_ALLOWED_IPS=10.8.0.0/24, 0.0.0.0/0 # Full Tunneling: All traffic (High privacy, low speed)
-      # Optional: set to true to enable persistent keepalive
+      - WG_ALLOWED_IPS=10.8.0.0/24
       - WG_PERSISTENT_KEEPALIVE=25
     volumes:
       - ./config/wireguard:/etc/wireguard
     ports:
-      - "51820:51820/udp" # WireGuard VPN Port
-      - "127.0.0.1:51821:51821/tcp" # Web UI for Admin (Restricted to Localhost for security)
+      - "51820:51820/udp"
+      - "127.0.0.1:51821:51821/tcp"
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -25,3 +21,38 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
     restart: unless-stopped
+    networks:
+      - nas_network
+
+  nas-db:
+    image: postgres:16-alpine
+    container_name: nas-db
+    environment:
+      POSTGRES_USER: nas_user
+      POSTGRES_PASSWORD: nas_password
+      POSTGRES_DB: nas_db
+    volumes:
+      - ./config/db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - nas_network
+
+  nas-backend:
+    build: ./backend
+    container_name: nas-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://nas-db:5432/nas_db
+      SPRING_DATASOURCE_USERNAME: nas_user
+      SPRING_DATASOURCE_PASSWORD: nas_password
+      APP_STORAGE_ROOT: /mnt/host_volumes
+    volumes:
+      - /Volumes:/mnt/host_volumes:rw
+    depends_on:
+      - nas-db
+    restart: unless-stopped
+    networks:
+      - nas_network
+
+networks:
+  nas_network:
+    driver: bridge

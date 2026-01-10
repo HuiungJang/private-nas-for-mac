@@ -1,19 +1,21 @@
 package com.manas.backend.context.file.infrastructure.web;
 
+import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
 import com.manas.backend.context.file.application.port.in.ListDirectoryUseCase;
 import com.manas.backend.context.file.domain.DirectoryListing;
+import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesRequest;
 import com.manas.backend.context.file.infrastructure.web.dto.DirectoryListingDTO;
 import com.manas.backend.context.file.infrastructure.web.mapper.FileMapper;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/files")
@@ -21,6 +23,7 @@ import java.util.UUID;
 public class AdminFileController {
 
     private final ListDirectoryUseCase listDirectoryUseCase;
+    private final DeleteFilesUseCase deleteFilesUseCase;
     private final FileMapper fileMapper;
 
     @GetMapping("/list")
@@ -31,5 +34,15 @@ public class AdminFileController {
     ) {
         DirectoryListing result = listDirectoryUseCase.listDirectory(path, userId);
         return ResponseEntity.ok(fileMapper.toDTO(result));
+    }
+
+    @PostMapping("/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteFiles(
+            @RequestBody DeleteFilesRequest request,
+            @RequestParam(required = false) UUID userId
+    ) {
+        deleteFilesUseCase.deleteFiles(request.paths(), userId);
+        return ResponseEntity.noContent().build();
     }
 }

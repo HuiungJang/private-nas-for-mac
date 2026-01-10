@@ -12,12 +12,12 @@
 ### 1.1 Infrastructure & Setup
 - [x] **Project Scaffolding:** Spring Boot 4.x with Gradle (Kotlin DSL).
 - [x] **Directory Structure:** Domain-Driven Design (DDD) + Hexagonal Architecture.
-- [ ] **Docker Environment:**
-  - [ ] Verify `docker-compose.yml` includes PostgreSQL, VPN (WireGuard), Nginx.
-  - [ ] Ensure Volume mappings for `/Volumes` (Mac Host) to Container are correct.
-- [ ] **Database Integration:**
-  - [ ] Configure PostgreSQL in `application.properties`.
-  - [ ] Setup Flyway or Liquibase for schema migrations.
+- [x] **Docker Environment:**
+  - [x] Verify `docker-compose.yml` includes PostgreSQL, VPN (WireGuard), Nginx.
+  - [x] Ensure Volume mappings for `/Volumes` (Mac Host) to Container are correct.
+- [x] **Database Integration:**
+  - [x] Configure PostgreSQL in `application.properties`.
+  - [x] Setup Flyway or Liquibase for schema migrations.
 
 ### 1.2 Technical Debt / Refactoring
 - [x] **Mapper Implementation:**
@@ -60,8 +60,8 @@
   - [x] Domain: `FileNode`, `DirectoryListing`.
   - [x] Port/Adapter: `LocalFileSystemAdapter` (Java NIO).
   - [x] Security: Path traversal protection.
-- [ ] **Delete Files:** `POST /api/admin/files/delete`
-  - [ ] UseCase: Batch delete logic.
+- [x] **Delete Files:** `POST /api/admin/files/delete`
+  - [x] UseCase: Batch delete logic.
   - [ ] Audit Log integration.
 - [ ] **Move Files:** `POST /api/admin/files/move`
   - [ ] UseCase: Source -> Dest validation.

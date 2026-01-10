@@ -13,4 +13,14 @@ public interface FileStoragePort {
      * @throws IllegalArgumentException if path is invalid.
      */
     DirectoryListing listDirectory(String path, UUID userId);
+
+    /**
+     * Deletes a file or directory at the specified path.
+     *
+     * @param path   Absolute path or relative to root.
+     * @param userId Optional user ID for logging/permission check.
+     * @throws SecurityException        if path is outside allowed scope.
+     * @throws IllegalArgumentException if path does not exist.
+     */
+    void delete(String path, UUID userId);
 }

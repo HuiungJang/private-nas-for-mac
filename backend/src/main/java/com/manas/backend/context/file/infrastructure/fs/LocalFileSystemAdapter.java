@@ -4,10 +4,6 @@ import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.domain.FileNode;
 import com.manas.backend.context.file.domain.PathNode;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +15,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -28,6 +27,25 @@ public class LocalFileSystemAdapter implements FileStoragePort {
 
     public LocalFileSystemAdapter(@Value("${app.storage.root}") String rootPathString) {
         this.rootPath = Paths.get(rootPathString).toAbsolutePath().normalize();
+    }
+
+    @Override
+    public void delete(String pathString, UUID userId) {
+        Path targetPath = resolveTarget(pathString);
+
+        if (!Files.exists(targetPath)) {
+            throw new IllegalArgumentException("Path does not exist: " + targetPath);
+        }
+
+        try {
+            // TODO: Handle recursive delete if it's a directory?
+            // For now, standard delete (will fail if non-empty dir)
+            Files.delete(targetPath);
+            log.info("User {} deleted file: {}", userId, targetPath);
+        } catch (IOException e) {
+            log.error("Failed to delete path: {}", targetPath, e);
+            throw new RuntimeException("Failed to delete file: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -48,7 +66,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         );
     }
 
-    private Path resolveAndValidate(String pathString) {
+    private Path resolveTarget(String pathString) {
         Path targetPath = (pathString == null || pathString.isBlank())
                 ? rootPath
                 : Paths.get(pathString).toAbsolutePath().normalize();
@@ -57,6 +75,11 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             log.warn("Security alert: Path traversal attempt to '{}'", targetPath);
             throw new SecurityException("Access denied: Path is outside the allowed storage root.");
         }
+        return targetPath;
+    }
+
+    private Path resolveAndValidate(String pathString) {
+        Path targetPath = resolveTarget(pathString);
 
         if (!Files.exists(targetPath)) {
             throw new IllegalArgumentException("Path does not exist: " + targetPath);
