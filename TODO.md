@@ -45,10 +45,10 @@
 
 ### 2.2 User Domain
 - [x] **Entities:** `User`, `Role`, `Password` (VO).
-- [ ] **Persistence:** `UserRepository` (JPA) - *InMemory Adapter implemented for Phase 1*.
+- [x] **Persistence:** `UserRepository` (JPA) - *Implemented with PostgreSQL/Flyway*.
 - [x] **Use Cases:**
   - [x] Login.
-  - [ ] Create User (Admin).
+  - [x] Create User (Admin) - *via DataInitializer on startup*.
   - [ ] Password Reset.
 
 ---
