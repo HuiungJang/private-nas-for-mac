@@ -24,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final IpEnforcementFilter ipEnforcementFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -44,7 +45,9 @@ public class SecurityConfig {
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
-                // Add JWT Filter before the standard Username/Password filter
+                // Enforce IP restrictions first
+                .addFilterBefore(ipEnforcementFilter, JwtAuthenticationFilter.class)
+                // Then validate JWT
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

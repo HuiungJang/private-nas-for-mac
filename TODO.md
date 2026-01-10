@@ -37,11 +37,11 @@
   - [x] CSRF Configuration (Disable for API, enable if needed for browser).
   - [x] CORS Configuration.
 - [x] **JWT Implementation:**
-  - [x] Token Generation (Login).
+  - [x] Token Generation (Login) - Provider Implemented.
   - [x] Token Validation Filter.
-- [ ] **VPN/IP Enforcement:**
-  - [ ] Implement IP Filter Middleware (Trust `X-Forwarded-For`).
-  - [ ] Validate requests originate from VPN Subnet.
+- [x] **VPN/IP Enforcement:**
+  - [x] Implement IP Filter Middleware (Trust `X-Forwarded-For`).
+  - [x] Validate requests originate from VPN Subnet.
 
 ### 2.2 User Domain
 - [x] **Entities:** `User`, `Role`, `Password` (VO).
