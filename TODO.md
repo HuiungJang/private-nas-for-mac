@@ -32,10 +32,10 @@
 ## 🛡️ Phase 2: Security & Authentication (`context/auth`)
 
 ### 2.1 Security Core
-- [ ] **Spring Security Config:**
-  - [ ] Stateless Session Policy.
-  - [ ] CSRF Configuration (Disable for API, enable if needed for browser).
-  - [ ] CORS Configuration.
+- [x] **Spring Security Config:**
+  - [x] Stateless Session Policy.
+  - [x] CSRF Configuration (Disable for API, enable if needed for browser).
+  - [x] CORS Configuration.
 - [ ] **JWT Implementation:**
   - [ ] Token Generation (Login).
   - [ ] Token Validation Filter.
