@@ -2,11 +2,8 @@ package com.manas.backend.context.file.infrastructure.web;
 
 import com.manas.backend.context.file.application.port.in.ListDirectoryUseCase;
 import com.manas.backend.context.file.domain.DirectoryListing;
-import com.manas.backend.context.file.domain.FileNode;
-import com.manas.backend.context.file.domain.PathNode;
 import com.manas.backend.context.file.infrastructure.web.dto.DirectoryListingDTO;
-import com.manas.backend.context.file.infrastructure.web.dto.FileNodeDTO;
-import com.manas.backend.context.file.infrastructure.web.dto.PathNodeDTO;
+import com.manas.backend.context.file.infrastructure.web.mapper.FileMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 
@@ -16,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +21,7 @@ import java.util.UUID;
 public class AdminFileController {
 
     private final ListDirectoryUseCase listDirectoryUseCase;
+    private final FileMapper fileMapper;
 
     @GetMapping("/list")
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,32 +30,6 @@ public class AdminFileController {
             @RequestParam(required = false) UUID userId
     ) {
         DirectoryListing result = listDirectoryUseCase.listDirectory(path, userId);
-        return ResponseEntity.ok(mapToDTO(result));
-    }
-
-    // Manual mapping for now, replacing MapStruct as dependency is missing
-    private DirectoryListingDTO mapToDTO(DirectoryListing domain) {
-        List<PathNodeDTO> breadcrumbs = domain.breadcrumbs().stream()
-                .map(this::mapPathNode)
-                .toList();
-        List<FileNodeDTO> items = domain.items().stream()
-                .map(this::mapFileNode)
-                .toList();
-
-        return new DirectoryListingDTO(domain.currentPath(), breadcrumbs, items);
-    }
-
-    private PathNodeDTO mapPathNode(PathNode domain) {
-        return new PathNodeDTO(domain.name(), domain.path());
-    }
-
-    private FileNodeDTO mapFileNode(FileNode domain) {
-        return new FileNodeDTO(
-                domain.name(),
-                domain.isDirectory() ? "DIRECTORY" : "FILE",
-                domain.size(),
-                domain.lastModified(),
-                domain.owner()
-        );
+        return ResponseEntity.ok(fileMapper.toDTO(result));
     }
 }

@@ -20,9 +20,9 @@
   - [ ] Setup Flyway or Liquibase for schema migrations.
 
 ### 1.2 Technical Debt / Refactoring
-- [ ] **Mapper Implementation:**
-  - [ ] Integrate **MapStruct** (currently manual mapping in `AdminFileController`).
-  - [ ] Create Mapper interfaces for DTO <-> Domain transformations.
+- [x] **Mapper Implementation:**
+  - [x] Integrate **MapStruct** (currently manual mapping in `AdminFileController`).
+  - [x] Create Mapper interfaces for DTO <-> Domain transformations.
 - [x] **Global Error Handling:**
   - [x] Implement `@ControllerAdvice` for unified error responses (RFC 7807).
   - [x] Handle `SecurityException` (Path Traversal) and `IllegalArgumentException`.
