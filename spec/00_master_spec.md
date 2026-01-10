@@ -170,3 +170,14 @@
 - File Previews.
 - Mobile Optimization.
 - Test Coverage expansion to > 70%.
+
+---
+
+## 8. Quality Assurance & Testing
+
+- **Mandatory Testing:** Every feature implementation must include:
+  - **Unit Tests:** For Domain Logic and Service Layer (using JUnit 5, Mockito).
+  - **Integration Tests:** For Controllers, Repositories, and Infrastructure Adapters (using
+    @SpringBootTest, Testcontainers).
+- **Code Coverage:** Aim for > 70% line coverage for business logic.
+- **CI Enforcement:** Build pipeline should fail if tests fail.

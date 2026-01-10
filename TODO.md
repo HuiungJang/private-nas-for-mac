@@ -26,9 +26,9 @@
 - [x] **Global Error Handling:**
   - [x] Implement `@ControllerAdvice` for unified error responses (RFC 7807).
   - [x] Handle `SecurityException` (Path Traversal) and `IllegalArgumentException`.
-- [ ] **Log Tracking Foundation:**
-  - [ ] Implement `TraceIdFilter` (MDC).
-  - [ ] Configure Logback for Trace ID output.
+- [x] **Log Tracking Foundation:**
+  - [x] Implement `TraceIdFilter` (MDC).
+  - [x] Configure Logback for Trace ID output.
 
 ---
 
@@ -65,7 +65,7 @@
   - [x] Security: Path traversal protection.
 - [x] **Delete Files:** `POST /api/admin/files/delete`
   - [x] UseCase: Batch delete logic.
-  - [ ] Audit Log integration.
+  - [x] Audit Log integration - *Async AuditLogService implemented*.
 - [ ] **Move Files:** `POST /api/admin/files/move`
   - [ ] UseCase: Source -> Dest validation.
 
@@ -96,8 +96,9 @@
 - [ ] `GET /api/admin/system/health`:
   - [ ] CPU/RAM usage (Micrometer/Actuator).
   - [ ] Storage usage (Disk space).
-- [ ] **Audit Logging:**
-  - [ ] Intercept critical actions (Login, Delete, Settings Change) and save to DB.
+- [x] **Audit Logging:**
+  - [x] Intercept critical actions (Login, Delete, Settings Change) and save to DB.
+  - [x] Integrate Trace ID.
 
 ---
 
