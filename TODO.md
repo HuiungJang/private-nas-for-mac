@@ -26,6 +26,9 @@
 - [x] **Global Error Handling:**
   - [x] Implement `@ControllerAdvice` for unified error responses (RFC 7807).
   - [x] Handle `SecurityException` (Path Traversal) and `IllegalArgumentException`.
+- [ ] **Log Tracking Foundation:**
+  - [ ] Implement `TraceIdFilter` (MDC).
+  - [ ] Configure Logback for Trace ID output.
 
 ---
 

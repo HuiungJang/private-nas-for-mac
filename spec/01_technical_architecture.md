@@ -1,9 +1,9 @@
 # Technical Architecture & Module Specification
 
 **Parent Document:** [00_master_spec.md](./00_master_spec.md)
-**Version:** 1.2.1
-**Date:** 2026-01-07
-**Updates:** Adopting DDD, Hexagonal Architecture, and MapStruct.
+**Version:** 1.3.0
+**Date:** 2026-01-10
+**Updates:** Added Observability & Logging Architecture.
 
 ---
 
@@ -20,8 +20,8 @@ graph TD
     
     subgraph "Docker Compose Private Network"
         VPN_Server -->|Allowed Traffic| Nginx[Reverse Proxy / Nginx]
-        Nginx -->|Proxy Pass| Frontend["Frontend Container (Node/Nginx)"]
-        Nginx -->|API Requests| Backend["Backend Container (Spring Boot)"]
+        Nginx -->|Proxy Pass (X-Trace-ID)| Frontend["Frontend Container (Node/Nginx)"]
+        Nginx -->|API Requests (X-Trace-ID)| Backend["Backend Container (Spring Boot)"]
         Backend -->|Metadata R/W| Database[PostgreSQL DB]
     end
     
@@ -41,6 +41,7 @@ We adopt **Domain-Driven Design (DDD)** principles implemented via **Hexagonal A
 - **Mapping:** **MapStruct** (Strict mapping between layers).
 - **Database Access:** Spring Data JPA + QueryDSL.
 - **Security:** Spring Security 6 (Stateless JWT).
+- **Logging:** SLF4J + Logback (JSON Format optional).
 
 ### 2.2 Conceptual Architecture (Hexagonal)
 
@@ -49,6 +50,7 @@ graph TD
     subgraph "Infrastructure (Adapters)"
         WebAdapter[Web Controller] -->|Input Port| AppLayer
         AuthAdapter[Security Filter] -->|Input Port| AppLayer
+        LogAdapter[RequestLoggingFilter] -->|MDC Setup| AppLayer
         
         AppLayer -->|Output Port| PersistenceAdapter[JPA Repository]
         AppLayer -->|Output Port| FileSystemAdapter[NIO File System]
@@ -68,57 +70,32 @@ The project is divided into Bounded Contexts. Each context follows the Hexagonal
 
 ```text
 com.mac.private-nas
-├── common/                     # Shared kernel (Value Objects, Base Classes)
+├── common/                     # Shared kernel
+│   ├── tracing/                # [New] TraceIdFilter, MdcUtils
+│   └── exception/              # GlobalExceptionHandler
 ├── context/
-│   ├── auth/                   # [Bounded Context] Authentication & User Mgmt
-│   │   ├── domain/             # Entities (User), VOs (Password, Role)
-│   │   ├── application/        # Ports (in/out), UseCases (LoginUseCase)
-│   │   └── infrastructure/     # Adapters (AuthController, JpaUserRepository, JwtProvider)
-│   │
+│   ├── auth/                   # [Bounded Context] Authentication
 │   ├── file/                   # [Bounded Context] File Operations
-│   │   ├── domain/             # Entities (FileMetadata), Services (FileValidator)
-│   │   ├── application/        # Ports (FileStoragePort), UseCases (UploadFileUseCase)
-│   │   └── infrastructure/     # Adapters (FileController, LocalFileSystemAdapter)
-│   │
-│   └── system/                 # [Bounded Context] Admin & Monitoring
-│       ├── domain/             # Entities (SystemMetric, AuditLog)
-│       └── ...
+│   └── system/                 # [Bounded Context] System & Audit
+│       ├── domain/             # AuditLog Entity
+│       └── application/        # AuditService
 └── PrivateNasApplication.java
 ```
 
-### 2.4 Data Mapping Strategy (MapStruct)
-Strict separation of data models requires explicit mapping. **Direct leakage of JPA Entities to the Web Layer is forbidden.**
+### 2.4 Observability Strategy
 
-*   **Web Layer:** Uses `RequestDTO` / `ResponseDTO`.
-*   **Application Layer:** Uses `Command` / `Result` (POJOs).
-*   **Domain Layer:** Uses `Domain Entities`.
-*   **Infrastructure (Persistence):** Uses `JpaEntity`.
+We implement a **Correlation ID** pattern for end-to-end tracing.
 
-**Flow & Mapping:**
-1.  `Controller` receives `RequestDTO`.
-2.  `MapStruct` converts `RequestDTO` -> `Command`.
-3.  `UseCase` executes logic using `Domain Entities`.
-4.  `UseCase` calls `OutputPort` (Repository).
-5.  `Repository Adapter` converts `Domain Entity` -> `JpaEntity` (via MapStruct) and saves.
-6.  Return path reverses this process.
-
-### 2.5 Key Module Responsibilities
-
-#### A. Auth Context (`/context/auth`)
-- **Domain:** `User`, `Role`, `Password` (VO). Logic for password strength, account locking.
-- **Application:** `LoginUseCase`, `RotateTokenUseCase`.
-- **Infra:**
-  - `Web`: `AuthController` (REST).
-  - `Security`: `CustomUserDetailsService` (Spring Security Adapter).
-  - `Persistence`: `UserEntity` (JPA), `UserRepositoryAdapter`.
-
-#### B. File Context (`/context/file`)
-- **Domain:** `VirtualFile`, `FileAttributes` (Size, MimeType). Domain logic for file naming collisions.
-- **Application:** `UploadFileUseCase`, `ListDirectoryUseCase`.
-- **Infra:**
-  - `Web`: `FileController` (REST).
-  - `FileSystem`: `LocalDiskAdapter` (Implements `FileStoragePort` using `java.nio`).
-    - *Note:* This adapter handles the actual I/O with Mac volumes.
+1. **Frontend:**
+    - Interceptors (Axios/Fetch) inject `X-Trace-ID` (UUID) into every header.
+2. **Backend (Filter):**
+    - `TraceIdFilter` reads `X-Trace-ID` or generates a new one if missing.
+    - Sets `MDC.put("traceId", id)`.
+    - Adds `X-Trace-ID` to the response header.
+3. **Logs:**
+    - Logback pattern includes `%X{traceId}`.
+4. **Audit:**
+    - `AuditService` captures the Trace ID from MDC when saving `AuditLog` entities.
 
 ---
 
@@ -129,6 +106,7 @@ Strict separation of data models requires explicit mapping. **Direct leakage of 
 - **Language:** TypeScript 5.x.
 - **State:** TanStack Query + Zustand.
 - **UI:** Material UI (MUI).
+- **HTTP Client:** Axios (configured with interceptors for Tracing).
 
 ### 3.2 Feature-Sliced Design (FSD)
 Aligning with the backend's domain separation.
@@ -137,15 +115,10 @@ Aligning with the backend's domain separation.
 src/
 ├── app/                    # Providers, Global Styles
 ├── entities/               # Business entities (User, FileNode)
-│   ├── user/
-│   └── file/
-├── features/               # User interactions (Auth, FileBrowser)
-│   ├── login/              # UI + Logic for logging in
-│   ├── file-tree/          # Recursive file tree viewer
-│   └── file-actions/       # Upload, Delete, Rename logic
-├── widgets/                # Composition of features (Header, Sidebar)
-├── pages/                  # Routing pages (Dashboard, Settings)
-└── shared/                 # UI Kit, API Client, Utils
+├── features/               # User interactions
+├── widgets/                # Composition of features
+├── pages/                  # Routing pages
+└── shared/                 # UI Kit, API Client (Axios Instance)
 ```
 
 ---

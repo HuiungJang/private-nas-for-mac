@@ -1,9 +1,9 @@
 # Private NAS for Mac - Master Specification
 
-**Version:** 1.1.1
+**Version:** 1.2.0
 **Status:** Draft
-**Last Updated:** 2026-01-05
-**Updates:** Specified password hashing algorithm (Security Review).
+**Last Updated:** 2026-01-10
+**Updates:** Added End-to-End Log Tracking Requirement.
 
 ---
 
@@ -14,6 +14,8 @@
 - Replace commercial cloud storage (Google Drive, Dropbox) with a private solution.
 - **Strict Security:** The NAS is accessible *only* via a secure VPN tunnel. No public HTTP/S ports are exposed.
 - Provide a seamless file management experience on both Desktop and Mobile.
+- **Full Observability:** Provide complete traceability of user actions from frontend to backend for
+  security auditing.
 
 ---
 
@@ -21,24 +23,23 @@
 
 ### 2.1 Backend
 - **Language:** Java 21 or 25 (Preview features enabled if necessary).
-- **Framework:** Spring Boot 3.x.
+- **Framework:** Spring Boot 3.x/4.x.
 - **Build Tool:** Gradle (preferred for flexibility) or Maven.
-- **Database:** PostgreSQL or H2 (File-based) for metadata (user logs, shared links).
+- **Database:** PostgreSQL.
 - **File System Interaction:** Java NIO for managing Mac file systems (APFS/HFS+).
 
 ### 2.2 Frontend
 - **Language:** TypeScript.
-- **Framework:** React.js or Next.js (SPA mode).
+- **Framework:** React.js.
 - **Build Tool:** Vite.
-- **UI Library:** Material UI (MUI) or Tailwind CSS for responsive design.
+- **UI Library:** Material UI (MUI).
 - **State Management:** TanStack Query (React Query) / Zustand.
 
 ### 2.3 Infrastructure & DevOps
 - **Containerization:** Docker & Docker Compose.
 - **OS Support:** macOS (Host), Linux (Container base).
-- **CI/CD:** Local build scripts, GitHub Actions (optional).
+- **CI/CD:** Local build scripts.
 - **Testing:** JUnit 5, Mockito, Testcontainers (Backend), Jest/Vitest (Frontend).
-- **Code Coverage Goal:** > 70%.
 
 ---
 
@@ -120,24 +121,45 @@
 - `timestamp`: Timestamp
 - `status`: String (SUCCESS, FAILURE)
 
-### 5.3 System Config
-- `key`: String (e.g., "ALLOWED_COUNTRIES", "MAX_UPLOAD_SIZE")
-- `value`: String
+---
+
+## 6. Observability & Logging (New)
+
+### 6.1 End-to-End Tracing
+
+- **Requirement:** Every user action must be traceable from the Frontend UI click to the Backend
+  Database execution.
+- **Implementation:**
+  - **Frontend:** Generates a unique `Trace ID` (UUID) for every API request and sends it in the
+    `X-Trace-ID` header.
+  - **Backend:**
+    - Intercepts `X-Trace-ID` via a Filter.
+    - Adds the ID to the **MDC (Mapped Diagnostic Context)**.
+    - Includes the ID in all log outputs (Console/File).
+    - Returns the ID in the `X-Trace-ID` response header for debugging.
+
+### 6.2 Audit Logging
+
+- **Requirement:** Critical business actions must be persisted to the `audit_logs` table.
+- **Scope:** Login, Upload, Download, Delete, Move, Rename, User Management.
+- **Data:** User ID, Action Type, Resource Path, Trace ID, Timestamp, IP Address.
 
 ---
 
-## 6. Implementation Phases
+## 7. Implementation Phases
 
 ### Phase 1: Foundation
 - Project scaffolding (Spring Boot + React).
 - Docker Compose setup.
 - Basic Authentication.
 - Basic File Listing (Local storage).
+- **Log Tracking Foundation (Trace ID Middleware).**
 
 ### Phase 2: Core File Operations
 - Upload/Download logic.
 - File manipulation (Delete, Rename, Move).
 - Tree View UI.
+- **Audit Logging Integration.**
 
 ### Phase 3: Security & Admin
 - IP Filter middleware.
