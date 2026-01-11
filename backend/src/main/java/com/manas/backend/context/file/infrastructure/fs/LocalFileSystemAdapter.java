@@ -84,17 +84,26 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         // 3. Generate Breadcrumbs
         var breadcrumbs = generateBreadcrumbs(targetPath);
 
+        // Calculate logical path for response
+        String logicalPath = toLogicalPath(targetPath);
+
         return new DirectoryListing(
-                targetPath.toString(),
+                logicalPath,
                 breadcrumbs,
                 items
         );
     }
 
     private Path resolveTarget(String pathString) {
-        Path targetPath = (pathString == null || pathString.isBlank())
-                ? rootPath
-                : Paths.get(pathString).toAbsolutePath().normalize();
+        if (pathString == null || pathString.isBlank()) {
+            return rootPath;
+        }
+
+        // Treat all paths as relative to rootPath.
+        // If pathString starts with "/", strip it to prevent Path.resolve() from treating it as absolute.
+        String relativePath = pathString.startsWith("/") ? pathString.substring(1) : pathString;
+
+        Path targetPath = rootPath.resolve(relativePath).toAbsolutePath().normalize();
 
         if (!targetPath.startsWith(rootPath)) {
             log.warn("Security alert: Path traversal attempt to '{}'", targetPath);
@@ -135,7 +144,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             var attrs = Files.readAttributes(path, BasicFileAttributes.class);
             return new FileNode(
                     path.getFileName().toString(),
-                    path.toAbsolutePath().toString(),
+                    toLogicalPath(path),
                     attrs.isDirectory(),
                     attrs.size(),
                     attrs.lastModifiedTime().toInstant(),
@@ -145,6 +154,14 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             log.warn("Skipping file '{}' due to read error: {}", path, e.getMessage());
             return null;
         }
+    }
+
+    private String toLogicalPath(Path path) {
+        if (path.equals(rootPath)) {
+            return "/";
+        }
+        // Create path relative to root, formatted as /path/to/file
+        return "/" + rootPath.relativize(path);
     }
 
     private Comparator<FileNode> byTypeThenName() {
@@ -159,7 +176,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         // Walk up the tree until root
         while (current != null && current.startsWith(rootPath)) {
             String name = current.equals(rootPath) ? "Root" : current.getFileName().toString();
-            breadcrumbs.add(new PathNode(name, current.toAbsolutePath().toString()));
+            breadcrumbs.add(new PathNode(name, toLogicalPath(current)));
 
             if (current.equals(rootPath)) break;
             current = current.getParent();
