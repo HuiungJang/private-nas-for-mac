@@ -53,6 +53,17 @@ services:
     networks:
       - nas_network
 
+  nas-frontend:
+    build: ./frontend
+    container_name: nas-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - nas-backend
+    restart: unless-stopped
+    networks:
+      - nas_network
+
 networks:
   nas_network:
     driver: bridge

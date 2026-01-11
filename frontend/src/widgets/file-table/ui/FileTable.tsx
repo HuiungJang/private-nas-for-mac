@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import {FileNode} from '@/entities/file/model/types';
+import type {FileNode} from '@/entities/file/model/types';
 
 interface FileTableProps {
   files: FileNode[];

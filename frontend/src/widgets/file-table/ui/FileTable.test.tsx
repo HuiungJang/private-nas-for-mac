@@ -1,7 +1,7 @@
 import {fireEvent, render, screen} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {FileTable} from './FileTable';
-import {FileNode} from '@/entities/file/model/types';
+import type {FileNode} from '@/entities/file/model/types';
 
 describe('FileTable', () => {
   const mockFiles: FileNode[] = [

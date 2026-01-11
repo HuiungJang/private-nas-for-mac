@@ -55,14 +55,14 @@ src/
 
 ### Phase 1: Foundation & Scaffolding
 
-- [ ] **Project Setup:** Initialize Vite + React + TypeScript.
-- [ ] **Config:** Setup `tsconfig`, `eslint`, `prettier` (AirBnB or Google style).
-- [ ] **Docker:** Create `Dockerfile` and update `docker-compose.yml`.
-- [ ] **Proxy:** Configure Vite proxy to backend (`/api` -> `http://localhost:8080`).
-- [ ] **FSD Structure:** Create directory structure.
-- [ ] **Shared Layer:**
-    - [ ] Setup Axios with `X-Trace-ID` interceptor.
-    - [ ] Setup MUI Theme (Dark/Light mode support).
+- [x] **Project Setup:** Initialize Vite + React + TypeScript.
+- [x] **Config:** Setup `tsconfig`, `eslint`, `prettier` (AirBnB or Google style).
+- [x] **Docker:** Create `Dockerfile` and update `docker-compose.yml`.
+- [x] **Proxy:** Configure Vite proxy to backend (`/api` -> `http://localhost:8080`).
+- [x] **FSD Structure:** Create directory structure.
+- [x] **Shared Layer:**
+  - [x] Setup Axios with `X-Trace-ID` interceptor.
+  - [x] Setup MUI Theme (Dark/Light mode support).
 
 ### Phase 2: Authentication (Auth Context)
 

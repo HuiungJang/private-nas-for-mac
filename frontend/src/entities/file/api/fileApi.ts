@@ -1,5 +1,5 @@
 import {apiClient} from '@/shared/api/axios';
-import {DirectoryListing} from '../model/types';
+import type {DirectoryListing} from '../model/types';
 
 export const fileApi = {
   listFiles: async (path?: string): Promise<DirectoryListing> => {
