@@ -36,11 +36,10 @@ const StyledTextField = styled(TextField)(({theme}) => ({
     },
     '&.MuiFormLabel-filled': {
       transform: 'translate(14px, -9px) scale(0.75)',
-    }
+    },
   },
 }));
 
 export const IOSInput = (props: TextFieldProps) => {
   return <StyledTextField variant="outlined" fullWidth {...props} />;
 };
-

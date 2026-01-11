@@ -1,5 +1,5 @@
 import React from 'react';
-import {Breadcrumbs, Link, styled, Typography} from '@mui/material';
+import {Box, Breadcrumbs, Link, styled, Typography} from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import type {PathNode} from '@/entities/file/model/types';
 
@@ -11,8 +11,21 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({theme}) => ({
   },
   '& .MuiBreadcrumbs-ol': {
     alignItems: 'center',
+    flexWrap: 'nowrap', // Prevent wrapping
   },
 }));
+
+const ScrollContainer = styled(Box)({
+  overflowX: 'auto',
+  whiteSpace: 'nowrap',
+  paddingBottom: '4px', // Space for scrollbar if visible, or touch area
+  // Hide scrollbar
+  '&::-webkit-scrollbar': {
+    display: 'none',
+  },
+  msOverflowStyle: 'none',
+  scrollbarWidth: 'none',
+});
 
 const StyledLink = styled(Link)(({theme}) => ({
   display: 'flex',
@@ -45,6 +58,7 @@ interface IOSBreadcrumbsProps {
 
 export const IOSBreadcrumbs: React.FC<IOSBreadcrumbsProps> = ({breadcrumbs, onNavigate}) => {
   return (
+      <ScrollContainer>
       <StyledBreadcrumbs
           separator={
             <NavigateNextIcon fontSize="small" sx={{color: 'text.secondary', opacity: 0.5}}/>
@@ -75,5 +89,6 @@ export const IOSBreadcrumbs: React.FC<IOSBreadcrumbsProps> = ({breadcrumbs, onNa
           );
         })}
       </StyledBreadcrumbs>
+      </ScrollContainer>
   );
 };

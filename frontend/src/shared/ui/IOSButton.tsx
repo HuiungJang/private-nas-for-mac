@@ -46,4 +46,3 @@ export const IOSButton = (props: IOSButtonProps) => {
   // effectively bridging our custom 'tonal' to a valid MUI variant for the DOM/Component
   return <StyledButton disableElevation {...props} variant={muiVariant as any}/>;
 };
-

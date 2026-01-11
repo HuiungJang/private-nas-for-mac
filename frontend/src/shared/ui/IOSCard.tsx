@@ -17,4 +17,3 @@ const StyledPaper = styled(Paper)(({theme}) => ({
 export const IOSCard = (props: PaperProps) => {
   return <StyledPaper elevation={0} {...props} />;
 };
-
