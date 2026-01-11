@@ -9,7 +9,7 @@
 
 - **Framework:** React 18+
 - **Build Tool:** Vite (TypeScript)
-- **UI Library:** Material UI (MUI) v6
+- **UI Library:** Material UI (MUI) v6 (Customized for **iOS 17** Aesthetics)
 - **State Management:**
     - **Server State:** TanStack Query (React Query) v5
     - **Client State:** Zustand
@@ -77,7 +77,7 @@ src/
 - [ ] **Widgets/FileTable:**
     - [ ] Render List/Grid view.
     - [ ] Breadcrumb navigation.
-    - [ ] File Icon integration.
+  - [ ] File Icon integration.`
 - [ ] **Features/FileBrowser:**
     - [ ] Directory Navigation (Click to enter).
     - [ ] Path State Management.

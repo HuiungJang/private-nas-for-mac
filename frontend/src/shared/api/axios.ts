@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {v4 as uuidv4} from 'uuid';
+import {useAuthStore} from '@/entities/user/model/store';
 
 export const API_URL = '/api';
 
@@ -19,9 +20,8 @@ apiClient.interceptors.request.use(
       config.headers['X-Trace-ID'] = traceId;
 
       // 2. Add JWT Token if exists
-      // Note: In FSD, avoiding direct dependency on 'entities/user' here is good.
-      // We can assume localStorage usage for Phase 1.
-      const token = localStorage.getItem('token');
+      // Access token from Zustand store (outside React component)
+      const token = useAuthStore.getState().token;
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
       }

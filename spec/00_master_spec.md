@@ -28,12 +28,18 @@
 - **Database:** PostgreSQL.
 - **File System Interaction:** Java NIO for managing Mac file systems (APFS/HFS+).
 
-### 2.2 Frontend
-- **Language:** TypeScript.
-- **Framework:** React.js.
-- **Build Tool:** Vite.
-- **UI Library:** Material UI (MUI).
-- **State Management:** TanStack Query (React Query) / Zustand.
+### 3.2 Frontend (User Interface)
+
+* **Framework:** React 18+ (Vite).
+* **Language:** TypeScript.
+* **Design System:** Material UI (MUI) v6 customized to mimic **Apple iOS 17** aesthetics.
+  * **Style:** Clean, flat-ish design with extensive use of translucency (frosted glass/blur),
+    rounded corners, and San Francisco-like typography.
+  * **Interactions:** Smooth transitions, responsive feedback, and "vibe-based" intuitive
+    navigation.
+* **State Management:**
+  * **Server State:** TanStack Query (React Query).
+  * **Client State:** Zustand.
 
 ### 2.3 Infrastructure & DevOps
 - **Containerization:** Docker & Docker Compose.

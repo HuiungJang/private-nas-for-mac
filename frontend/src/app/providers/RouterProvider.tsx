@@ -2,6 +2,7 @@ import React from 'react';
 import {BrowserRouter, Navigate, Outlet, Route, Routes} from 'react-router-dom';
 import {useAuthStore} from '@/entities/user/model/store';
 import {LoginPage} from '@/pages/login/LoginPage';
+import {DashboardPage} from '@/pages/dashboard/DashboardPage';
 
 // Protected Route Wrapper
 const RequireAuth: React.FC = () => {
@@ -17,7 +18,7 @@ export const AppRouter: React.FC = () => {
 
           {/* Protected Routes */}
           <Route element={<RequireAuth/>}>
-            <Route path="/" element={<div>Dashboard (Placeholder)</div>}/>
+            <Route path="/" element={<DashboardPage/>}/>
             {/* Add more protected routes here */}
           </Route>
         </Routes>

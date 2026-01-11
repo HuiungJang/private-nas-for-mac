@@ -1,32 +1,48 @@
 import React, {useState} from 'react';
-import {Alert, Box, Button, TextField} from '@mui/material';
+import {Alert, Box} from '@mui/material';
+import {useNavigate} from 'react-router-dom';
+import {AxiosError} from 'axios';
 import {apiClient} from '@/shared/api/axios';
 import {useAuthStore} from '@/entities/user/model/store';
+import {IOSButton, IOSInput} from '@/shared/ui';
 
 export const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const login = useAuthStore((state) => state.login);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
-      const response = await apiClient.post('/auth/login', {username, password});
+      const response = await apiClient.post('/auth/login', {
+        username,
+        password,
+      });
       login(response.data.token);
-    } catch (err: any) {
+      navigate('/');
+    } catch (err: unknown) {
       console.log('Login Error:', err);
-      setError(err.response?.data?.detail || 'Login failed');
+      if (err instanceof AxiosError && err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError('Login failed');
+      }
     }
   };
 
   return (
-      <Box component="form" onSubmit={handleSubmit} sx={{mt: 1}}>
-        {error && <Alert severity="error" sx={{mb: 2}}>{error}</Alert>}
+      <Box component="form" onSubmit={handleSubmit} sx={{mt: 1, width: '100%'}}>
+        {error && (
+            <Alert severity="error" sx={{mb: 2, borderRadius: 3}}>
+              {error}
+            </Alert>
+        )}
 
-        <TextField
+        <IOSInput
             margin="normal"
             required
             fullWidth
@@ -38,7 +54,7 @@ export const LoginForm: React.FC = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
         />
-        <TextField
+        <IOSInput
             margin="normal"
             required
             fullWidth
@@ -50,14 +66,9 @@ export const LoginForm: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
         />
-        <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{mt: 3, mb: 2}}
-        >
+        <IOSButton type="submit" fullWidth variant="contained" sx={{mt: 4, mb: 2}} size="large">
           Sign In
-        </Button>
+        </IOSButton>
       </Box>
   );
 };

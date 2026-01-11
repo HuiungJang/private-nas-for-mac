@@ -2,49 +2,105 @@ import React from 'react';
 import {createTheme, ThemeProvider as MuiThemeProvider} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
-// TODO: Move to shared/config/theme if it grows
+// iOS 17 Design Guidelines (Dark Mode)
 const theme = createTheme({
   palette: {
-    mode: 'dark', // Default to dark mode for "vibe"
+    mode: 'dark',
     primary: {
-      main: '#90caf9',
+      main: '#0A84FF', // iOS System Blue (Dark)
     },
     secondary: {
-      main: '#f48fb1',
+      main: '#5E5CE6', // iOS System Indigo (Dark)
+    },
+    error: {
+      main: '#FF453A', // iOS System Red (Dark)
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: '#000000', // iOS System Background (Dark)
+      paper: '#1C1C1E', // iOS Secondary System Background (Dark)
     },
+    text: {
+      primary: '#FFFFFF',
+      secondary: '#EBEBF599', // Label Color (Secondary) ~60%
+    },
+    divider: '#38383A', // Separator Color
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"San Francisco"',
+      '"Helvetica Neue"',
+      'Helvetica',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+    h1: {fontWeight: 700},
+    h2: {fontWeight: 700},
+    h3: {fontWeight: 600},
+    h4: {fontWeight: 600},
+    h5: {fontWeight: 600},
+    h6: {fontWeight: 600},
+    button: {
+      textTransform: 'none', // No uppercase for buttons
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 12, // More rounded corners (iOS style)
   },
   components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 50, // Pill shape
+          padding: '8px 20px',
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none', // Remove Material elevation overlays
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'rgba(28, 28, 30, 0.8)', // Translucent
+          backdropFilter: 'blur(20px)', // Glassmorphism
+          boxShadow: 'none',
+          borderBottom: '1px solid #38383A',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#1C1C1E',
+          backgroundImage: 'none',
+        },
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          scrollbarColor: "#6b6b6b #2b2b2b",
-          "&::-webkit-scrollbar, & *::-webkit-scrollbar": {
-            backgroundColor: "#2b2b2b",
+          scrollbarColor: '#6b6b6b #2b2b2b',
+          '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
+            backgroundColor: 'transparent',
+            width: '8px',
           },
-          "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
+          '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
             borderRadius: 8,
-            backgroundColor: "#6b6b6b",
+            backgroundColor: '#6b6b6b',
             minHeight: 24,
-            border: "3px solid #2b2b2b",
-          },
-          "&::-webkit-scrollbar-thumb:focus, & *::-webkit-scrollbar-thumb:focus": {
-            backgroundColor: "#959595",
-          },
-          "&::-webkit-scrollbar-thumb:active, & *::-webkit-scrollbar-thumb:active": {
-            backgroundColor: "#959595",
-          },
-          "&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover": {
-            backgroundColor: "#959595",
-          },
-          "&::-webkit-scrollbar-corner, & *::-webkit-scrollbar-corner": {
-            backgroundColor: "#2b2b2b",
           },
         },
       },
