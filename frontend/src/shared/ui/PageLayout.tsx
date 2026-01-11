@@ -4,13 +4,21 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import {useNavigate} from 'react-router-dom';
 
 // Glassmorphic Header
+
 const GlassAppBar = styled(AppBar)(({theme}) => ({
-  backgroundColor: 'rgba(0, 0, 0, 0.7)', // Translucent black
+  backgroundColor:
+      theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+
   backdropFilter: 'blur(20px) saturate(180%)', // iOS Blur
-  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+
+  borderBottom: `1px solid ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'}`,
+
   color: theme.palette.text.primary,
+
   position: 'sticky',
+
   top: 0,
+
   zIndex: 1100,
 }));
 

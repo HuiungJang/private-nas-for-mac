@@ -2,28 +2,28 @@ import React from 'react';
 import {createTheme, ThemeProvider as MuiThemeProvider} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
-// iOS 17 Design Guidelines (Dark Mode)
+// iOS 17 Design Guidelines (Light Mode)
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#0A84FF', // iOS System Blue (Dark)
+      main: '#007AFF', // iOS System Blue (Light)
     },
     secondary: {
-      main: '#5E5CE6', // iOS System Indigo (Dark)
+      main: '#5856D6', // iOS System Indigo (Light)
     },
     error: {
-      main: '#FF453A', // iOS System Red (Dark)
+      main: '#FF3B30', // iOS System Red (Light)
     },
     background: {
-      default: '#000000', // iOS System Background (Dark)
-      paper: '#1C1C1E', // iOS Secondary System Background (Dark)
+      default: '#F2F2F7', // iOS System Grouped Background (Light)
+      paper: '#FFFFFF', // iOS System Background (Light)
     },
     text: {
-      primary: '#FFFFFF',
-      secondary: '#EBEBF599', // Label Color (Secondary) ~60%
+      primary: '#000000',
+      secondary: '#3C3C4399', // Label Color (Secondary) ~60%
     },
-    divider: '#38383A', // Separator Color
+    divider: '#3C3C4329', // Separator Color (Opaque)
   },
   typography: {
     fontFamily: [
@@ -74,17 +74,17 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(28, 28, 30, 0.8)', // Translucent
+          backgroundColor: 'rgba(255, 255, 255, 0.8)', // Translucent White
           backdropFilter: 'blur(20px)', // Glassmorphism
           boxShadow: 'none',
-          borderBottom: '1px solid #38383A',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1C1C1E',
+          backgroundColor: '#FFFFFF',
           backgroundImage: 'none',
         },
       },
@@ -92,15 +92,24 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          scrollbarColor: '#6b6b6b #2b2b2b',
+          scrollbarColor: '#C1C1C1 transparent',
           '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
             backgroundColor: 'transparent',
             width: '8px',
           },
           '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
             borderRadius: 8,
-            backgroundColor: '#6b6b6b',
+            backgroundColor: '#C1C1C1',
             minHeight: 24,
+          },
+          '&::-webkit-scrollbar-thumb:focus, & *::-webkit-scrollbar-thumb:focus': {
+            backgroundColor: '#A8A8A8',
+          },
+          '&::-webkit-scrollbar-thumb:active, & *::-webkit-scrollbar-thumb:active': {
+            backgroundColor: '#A8A8A8',
+          },
+          '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: '#A8A8A8',
           },
         },
       },

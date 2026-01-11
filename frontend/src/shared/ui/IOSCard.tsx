@@ -7,11 +7,15 @@ import {Paper, styled} from '@mui/material';
 // - Border Radius: 16px
 
 const StyledPaper = styled(Paper)(({theme}) => ({
-  backgroundColor: '#1C1C1E',
+  backgroundColor: theme.palette.background.paper, // Uses theme value
+
   borderRadius: 16,
+
   padding: theme.spacing(2),
+
   backgroundImage: 'none', // Remove MUI elevation overlay
-  border: '1px solid rgba(255, 255, 255, 0.05)', // Subtle separator
+
+  border: `1px solid ${theme.palette.mode === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)'}`, // Subtle separator
 }));
 
 export const IOSCard = (props: PaperProps) => {

@@ -89,20 +89,20 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate}) => {
                     key={file.name}
                     disablePadding
                     secondaryAction={
-                      file.type === 'DIRECTORY' ?
-                          <NavigateNextIcon sx={{color: 'text.secondary', opacity: 0.5}}/> : null
+                      file.type === 'DIRECTORY' ? (
+                          <NavigateNextIcon sx={{color: 'text.secondary', opacity: 0.5}}/>
+                      ) : null
                     }
                 >
                   <ListItemButton
                       onClick={() => handleRowClick(file)}
                       sx={{
-                        borderBottom: index !== files.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
-                        py: 1.5
+                        borderBottom:
+                            index !== files.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
+                        py: 1.5,
                       }}
                   >
-                    <ListItemAvatar sx={{minWidth: 40, mr: 1}}>
-                      {getIcon(file.type)}
-                    </ListItemAvatar>
+                    <ListItemAvatar sx={{minWidth: 40, mr: 1}}>{getIcon(file.type)}</ListItemAvatar>
                     <ListItemText
                         primary={file.name}
                         primaryTypographyProps={{fontWeight: 500, noWrap: true}}
@@ -136,13 +136,8 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate}) => {
           </TableHead>
           <TableBody>
             {files.map((file) => (
-                <StyledTableRow
-                    key={file.name}
-                    onDoubleClick={() => handleRowClick(file)}
-                >
-                  <StyledTableCell>
-                    {getIcon(file.type)}
-                  </StyledTableCell>
+                <StyledTableRow key={file.name} onDoubleClick={() => handleRowClick(file)}>
+                  <StyledTableCell>{getIcon(file.type)}</StyledTableCell>
                   <StyledTableCell component="th" scope="row" sx={{fontWeight: 500}}>
                     {file.name}
                   </StyledTableCell>

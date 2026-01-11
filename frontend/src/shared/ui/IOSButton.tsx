@@ -26,10 +26,10 @@ const StyledButton = styled(Button, {
   },
 
   ...((variant as string) === 'tonal' && {
-    backgroundColor: '#2C2C2E', // Tertiary System Fill
+    backgroundColor: theme.palette.mode === 'light' ? '#E5E5EA' : '#2C2C2E', // System Fill
     color: theme.palette.primary.main,
     '&:hover': {
-      backgroundColor: '#3A3A3C',
+      backgroundColor: theme.palette.mode === 'light' ? '#D1D1D6' : '#3A3A3C',
     },
   }),
 }));
