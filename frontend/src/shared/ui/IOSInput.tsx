@@ -1,4 +1,5 @@
-import {styled, TextField, TextFieldProps} from '@mui/material';
+import type {TextFieldProps} from '@mui/material';
+import {styled, TextField} from '@mui/material';
 
 // iOS Input Style
 // - Gray background (#1C1C1E or #2C2C2E)
@@ -35,10 +36,11 @@ const StyledTextField = styled(TextField)(({theme}) => ({
     },
     '&.MuiFormLabel-filled': {
       transform: 'translate(14px, -9px) scale(0.75)',
-    },
+    }
   },
 }));
 
 export const IOSInput = (props: TextFieldProps) => {
   return <StyledTextField variant="outlined" fullWidth {...props} />;
 };
+

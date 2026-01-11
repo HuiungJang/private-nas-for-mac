@@ -1,4 +1,5 @@
-import {Paper, PaperProps, styled} from '@mui/material';
+import type {PaperProps} from '@mui/material';
+import {Paper, styled} from '@mui/material';
 
 // iOS Card
 // - Flat, no shadow
@@ -16,3 +17,4 @@ const StyledPaper = styled(Paper)(({theme}) => ({
 export const IOSCard = (props: PaperProps) => {
   return <StyledPaper elevation={0} {...props} />;
 };
+

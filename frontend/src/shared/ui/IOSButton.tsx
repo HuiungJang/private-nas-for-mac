@@ -1,11 +1,12 @@
-import {Button, ButtonProps, styled} from '@mui/material';
+import type {ButtonProps} from '@mui/material';
+import {Button, styled} from '@mui/material';
 
 // iOS Button Variants
 // 1. Primary: Filled Blue (Standard MUI Contained)
 // 2. Tonal: Gray background, Blue text (Common in iOS)
 // 3. Text: Plain Blue text
 
-interface IOSButtonProps extends ButtonProps {
+interface IOSButtonProps extends Omit<ButtonProps, 'variant'> {
   variant?: 'contained' | 'outlined' | 'text' | 'tonal';
 }
 
@@ -24,7 +25,7 @@ const StyledButton = styled(Button, {
     transform: 'scale(0.96)', // Subtle press effect
   },
 
-  ...(variant === 'tonal' && {
+  ...((variant as string) === 'tonal' && {
     backgroundColor: '#2C2C2E', // Tertiary System Fill
     color: theme.palette.primary.main,
     '&:hover': {
@@ -41,5 +42,8 @@ export const IOSButton = (props: IOSButtonProps) => {
 
   const muiVariant = props.variant === 'tonal' ? 'contained' : props.variant;
 
+  // We cast muiVariant to any to satisfy the underlying Button's strict variant type
+  // effectively bridging our custom 'tonal' to a valid MUI variant for the DOM/Component
   return <StyledButton disableElevation {...props} variant={muiVariant as any}/>;
 };
+
