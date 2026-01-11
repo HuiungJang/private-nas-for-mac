@@ -4,7 +4,6 @@ import com.manas.backend.context.auth.domain.Role;
 import com.manas.backend.context.auth.infrastructure.persistence.entity.UserEntity;
 import com.manas.backend.context.auth.infrastructure.persistence.repository.JpaUserRepository;
 import java.util.Set;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -28,7 +27,7 @@ public class DataInitializer {
             log.info("No users found. Creating default admin user.");
             String encodedPassword = passwordEncoder.encode("admin123");
             UserEntity admin = new UserEntity(
-                    UUID.randomUUID(),
+                    null,
                     "admin",
                     encodedPassword,
                     Set.of(Role.ADMIN)

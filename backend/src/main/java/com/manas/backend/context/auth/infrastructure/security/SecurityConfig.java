@@ -46,7 +46,8 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
                 // Enforce IP restrictions first
-                .addFilterBefore(ipEnforcementFilter, JwtAuthenticationFilter.class)
+                .addFilterBefore(ipEnforcementFilter,
+                        org.springframework.security.web.header.HeaderWriterFilter.class)
                 // Then validate JWT
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

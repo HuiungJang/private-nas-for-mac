@@ -25,7 +25,7 @@ replay_pid*
 
 # Docker / Environment
 .env
-config/
+/config/
 .DS_Store
 
 # Gradle
