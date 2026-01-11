@@ -66,10 +66,10 @@ src/
 
 ### Phase 2: Authentication (Auth Context)
 
-- [ ] **Entities/User:** Define `User` type and `useAuth` store (Zustand).
-- [ ] **Features/Auth:** Implement `LoginForm` component.
-- [ ] **Pages/Login:** Create Login Page.
-- [ ] **App/Router:** Protected Routes (Require Login).
+- [x] **Entities/User:** Define `User` type and `useAuth` store (Zustand).
+- [x] **Features/Auth:** Implement `LoginForm` component.
+- [x] **Pages/Login:** Create Login Page.
+- [x] **App/Router:** Protected Routes (Require Login).
 
 ### Phase 3: File Browser Core (File Context)
 
