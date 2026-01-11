@@ -95,7 +95,16 @@ src/
 - [ ] **Widgets/UserTable:** List/Add/Delete users.
 - [ ] **Widgets/AuditLog:** View `audit_logs` table (Trace ID visualization).
 
-### Phase 6: Polish
+### Phase 6: Responsive Design (Mobile Adaptation)
 
-- [ ] **Responsive:** Mobile view optimization.
+- [ ] **Global Layout:** Ensure `PageLayout` handles mobile padding/margins correctly.
+- [ ] **Login Page:** Full-width layout on mobile, optimized spacing.
+- [ ] **Dashboard:**
+  - [ ] **Breadcrumbs:** Horizontal scroll support for deep paths on mobile.
+  - [ ] **File Table:** Switch to `List` view on mobile (Hide detailed columns, show primary info
+    only).
+  - [ ] **Actions:** Optimize button placement for touch.
+
+### Phase 7: Polish
+
 - [ ] **Error Handling:** Toast notifications (Snackbar) for API errors.

@@ -31,14 +31,27 @@
 ### 3.2 Frontend (User Interface)
 
 * **Framework:** React 18+ (Vite).
+
 * **Language:** TypeScript.
+
 * **Design System:** Material UI (MUI) v6 customized to mimic **Apple iOS 17** aesthetics.
+
   * **Style:** Clean, flat-ish design with extensive use of translucency (frosted glass/blur),
     rounded corners, and San Francisco-like typography.
+
   * **Interactions:** Smooth transitions, responsive feedback, and "vibe-based" intuitive
     navigation.
+
+  * **Responsiveness:** Fully adaptive UI supporting Desktop, Tablet, and Mobile.
+
+    * **Mobile:** List-based views, optimized touch targets, horizontal scrolling breadcrumbs.
+
+    * **Desktop:** Table-based views, extensive data columns, centered layouts.
+
 * **State Management:**
+
   * **Server State:** TanStack Query (React Query).
+
   * **Client State:** Zustand.
 
 ### 2.3 Infrastructure & DevOps
