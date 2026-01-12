@@ -5,6 +5,7 @@ import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.domain.FileNode;
 import com.manas.backend.context.file.domain.PathNode;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,6 +71,24 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         } catch (IOException e) {
             log.error("Failed to move file from {} to {}", sourcePath, destinationPath, e);
             throw new RuntimeException("Failed to move file: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void save(InputStream content, String pathString, long size, UUID userId) {
+        Path targetPath = resolveTarget(pathString);
+
+        if (Files.exists(targetPath)) {
+            throw new IllegalArgumentException("File already exists: " + targetPath);
+        }
+
+        try {
+            Files.createDirectories(targetPath.getParent());
+            Files.copy(content, targetPath);
+            log.info("User {} uploaded file: {} (Size: {})", userId, targetPath, size);
+        } catch (IOException e) {
+            log.error("Failed to upload file to: {}", targetPath, e);
+            throw new RuntimeException("Failed to upload file", e);
         }
     }
 

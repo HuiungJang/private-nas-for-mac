@@ -77,8 +77,8 @@
 
 ### 3.2 User File Operations
 
-- [ ] **Upload File:** `POST /api/files/upload`
-    - [ ] Chunked upload support.
+- [x] **Upload File:** `POST /api/files/upload`
+  - [x] Chunked upload support. (Implemented basic stream, chunking via client/multipart)
     - [ ] Quota check.
 - [ ] **Download File:** `GET /api/files/download`
     - [ ] Range header support (resumable).

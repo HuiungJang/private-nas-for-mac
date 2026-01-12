@@ -31,4 +31,16 @@ public interface FileStoragePort {
      * @param userId          Optional user ID.
      */
     void move(String sourcePath, String destinationPath, UUID userId);
+
+    /**
+     * Saves content to the specified path.
+     *
+     * @param content InputStream of the file content.
+     * @param path    Logical path where the file should be saved.
+     * @param size    Size of the file in bytes.
+     * @param userId  User ID performing the upload.
+     * @throws SecurityException        if path is outside allowed scope.
+     * @throws IllegalArgumentException if destination already exists or path is invalid.
+     */
+    void save(java.io.InputStream content, String path, long size, UUID userId);
 }
