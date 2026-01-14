@@ -82,8 +82,8 @@
     - [ ] Quota check.
 - [x] **Download File:** `GET /api/files/download`
     - [ ] Range header support (resumable).
-- [ ] **Preview:**
-    - [ ] Thumbnail generation service.
+- [x] **Preview:** `GET /api/files/preview`
+  - [x] Thumbnail generation service. (Implemented on-demand with caching)
 
 ---
 

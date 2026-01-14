@@ -4,12 +4,15 @@ import com.manas.backend.context.auth.domain.User;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
+import com.manas.backend.context.file.application.port.in.GetFilePreviewUseCase;
 import com.manas.backend.context.file.domain.FileContent;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,6 +32,7 @@ public class FileController {
 
     private final FileUploadUseCase fileUploadUseCase;
     private final DownloadFileUseCase downloadFileUseCase;
+    private final GetFilePreviewUseCase getFilePreviewUseCase;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadFile(
@@ -76,4 +80,23 @@ public class FileController {
                 .body(resource);
     }
 
+    @GetMapping("/preview")
+    public ResponseEntity<Resource> getPreview(
+            @RequestParam("path") String path,
+            @AuthenticationPrincipal User user
+    ) {
+        FileContent content = getFilePreviewUseCase.getPreview(path, user.id());
+
+        InputStreamResource resource = new InputStreamResource(content.inputStream());
+
+        // Cache previews for 1 hour in browser
+        CacheControl cacheControl = CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic();
+
+        return ResponseEntity.ok()
+                .cacheControl(cacheControl)
+                .contentType(MediaType.parseMediaType(content.contentType()))
+                .body(resource);
+    }
+
 }
+

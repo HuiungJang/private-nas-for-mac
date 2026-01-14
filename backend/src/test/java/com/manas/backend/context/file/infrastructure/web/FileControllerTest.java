@@ -11,6 +11,7 @@ import com.manas.backend.context.auth.domain.Role;
 import com.manas.backend.context.auth.domain.User;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
+import com.manas.backend.context.file.application.port.in.GetFilePreviewUseCase;
 import com.manas.backend.context.file.domain.FileContent;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
@@ -40,9 +41,13 @@ class FileControllerTest {
     @Mock
     private DownloadFileUseCase downloadFileUseCase;
 
+    @Mock
+    private GetFilePreviewUseCase getFilePreviewUseCase;
+
     @BeforeEach
     void setUp() {
-        FileController controller = new FileController(fileUploadUseCase, downloadFileUseCase);
+        FileController controller = new FileController(fileUploadUseCase, downloadFileUseCase,
+                getFilePreviewUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -58,7 +63,6 @@ class FileControllerTest {
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
         var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
 
-        // Manually set context for standalone setup (as filters aren't running)
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String path = "/test/doc.pdf";
@@ -86,4 +90,41 @@ class FileControllerTest {
             SecurityContextHolder.clearContext();
         }
     }
+
+    @Test
+    @DisplayName("Should return preview with cache control")
+    void shouldReturnPreview() throws Exception {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER));
+
+        var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
+        var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        String path = "/images/pic.jpg";
+
+        FileContent mockContent = new FileContent(
+                "thumbnail.jpg",
+                "image/jpeg",
+                500L,
+                new ByteArrayInputStream(new byte[500])
+        );
+
+        when(getFilePreviewUseCase.getPreview(anyString(), any(UUID.class)))
+                .thenReturn(mockContent);
+
+        // When/Then
+        try {
+            mockMvc.perform(get("/api/files/preview")
+                            .param("path", path))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "image/jpeg"))
+                    .andExpect(header().exists(HttpHeaders.CACHE_CONTROL));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
 }
+
