@@ -2,6 +2,7 @@ package com.manas.backend.context.file.infrastructure.fs;
 
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.file.domain.DirectoryListing;
+import com.manas.backend.context.file.domain.FileContent;
 import com.manas.backend.context.file.domain.FileNode;
 import com.manas.backend.context.file.domain.PathNode;
 import java.io.IOException;
@@ -89,6 +90,36 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         } catch (IOException e) {
             log.error("Failed to upload file to: {}", targetPath, e);
             throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    @Override
+    public FileContent retrieve(String pathString, UUID userId) {
+        Path targetPath = resolveTarget(pathString);
+
+        if (!Files.exists(targetPath)) {
+            throw new IllegalArgumentException("File does not exist: " + targetPath);
+        }
+
+        if (Files.isDirectory(targetPath)) {
+            throw new IllegalArgumentException("Path is a directory: " + targetPath);
+        }
+
+        try {
+            String contentType = Files.probeContentType(targetPath);
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+            long size = Files.size(targetPath);
+            String fileName = targetPath.getFileName().toString();
+            InputStream inputStream = Files.newInputStream(targetPath);
+
+            log.info("User {} downloading file: {}", userId, targetPath);
+
+            return new FileContent(fileName, contentType, size, inputStream);
+        } catch (IOException e) {
+            log.error("Failed to retrieve file: {}", targetPath, e);
+            throw new RuntimeException("Failed to retrieve file content", e);
         }
     }
 

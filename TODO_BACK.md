@@ -80,7 +80,7 @@
 - [x] **Upload File:** `POST /api/files/upload`
   - [x] Chunked upload support. (Implemented basic stream, chunking via client/multipart)
     - [ ] Quota check.
-- [ ] **Download File:** `GET /api/files/download`
+- [x] **Download File:** `GET /api/files/download`
     - [ ] Range header support (resumable).
 - [ ] **Preview:**
     - [ ] Thumbnail generation service.

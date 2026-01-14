@@ -1,6 +1,7 @@
 package com.manas.backend.context.file.application.port.out;
 
 import com.manas.backend.context.file.domain.DirectoryListing;
+import com.manas.backend.context.file.domain.FileContent;
 import java.util.UUID;
 
 public interface FileStoragePort {
@@ -43,4 +44,15 @@ public interface FileStoragePort {
      * @throws IllegalArgumentException if destination already exists or path is invalid.
      */
     void save(java.io.InputStream content, String path, long size, UUID userId);
+
+    /**
+     * Retrieves file content from the specified path.
+     *
+     * @param path   Logical path to the file.
+     * @param userId User ID performing the download.
+     * @return FileContent object containing stream and metadata.
+     * @throws SecurityException        if path is outside allowed scope.
+     * @throws IllegalArgumentException if file does not exist or is a directory.
+     */
+    FileContent retrieve(String path, UUID userId);
 }

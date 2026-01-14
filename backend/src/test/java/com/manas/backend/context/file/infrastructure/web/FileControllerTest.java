@@ -1,20 +1,31 @@
 package com.manas.backend.context.file.infrastructure.web;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.manas.backend.context.file.application.port.in.FileUploadCommand;
+import com.manas.backend.context.auth.domain.Role;
+import com.manas.backend.context.auth.domain.User;
+import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
+import com.manas.backend.context.file.domain.FileContent;
+import java.io.ByteArrayInputStream;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -26,37 +37,53 @@ class FileControllerTest {
     @Mock
     private FileUploadUseCase fileUploadUseCase;
 
-    @InjectMocks
-    private FileController fileController;
+    @Mock
+    private DownloadFileUseCase downloadFileUseCase;
 
     @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(fileController).build();
+    void setUp() {
+        FileController controller = new FileController(fileUploadUseCase, downloadFileUseCase);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                .build();
     }
 
     @Test
-    void uploadFile_ShouldReturnCreated_WhenValid() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test.txt",
-                MediaType.TEXT_PLAIN_VALUE,
-                "Hello, World!".getBytes()
+    @DisplayName("Should download file with correct headers")
+    void shouldDownloadFile() throws Exception {
+        // Given
+        UUID userId = UUID.randomUUID();
+        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER));
+
+        var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
+        var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
+
+        // Manually set context for standalone setup (as filters aren't running)
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        String path = "/test/doc.pdf";
+
+        FileContent mockContent = new FileContent(
+                "doc.pdf",
+                "application/pdf",
+                1024L,
+                new ByteArrayInputStream(new byte[1024])
         );
 
-        mockMvc.perform(multipart("/api/files/upload")
-                        .file(file)
-                        .param("directory", "/docs"))
-                //.with(csrf()) // Standalone setup doesn't need CSRF/Security context usually
-                .andExpect(status().isCreated());
+        when(downloadFileUseCase.download(anyString(), any(UUID.class), anyString()))
+                .thenReturn(mockContent);
 
-        verify(fileUploadUseCase).upload(any(FileUploadCommand.class));
+        // When/Then
+        try {
+            mockMvc.perform(get("/api/files/download")
+                            .param("path", path))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"doc.pdf\""))
+                    .andExpect(header().string(HttpHeaders.CONTENT_TYPE, "application/pdf"))
+                    .andExpect(header().string(HttpHeaders.CONTENT_LENGTH, "1024"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
-
-    @Test
-    void uploadFile_ShouldReturnBadRequest_WhenFileMissing() throws Exception {
-        mockMvc.perform(multipart("/api/files/upload")
-                        .param("directory", "/docs"))
-                .andExpect(status().isBadRequest());
-    }
-
 }
