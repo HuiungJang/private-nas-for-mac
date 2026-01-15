@@ -55,4 +55,11 @@ public interface FileStoragePort {
      * @throws IllegalArgumentException if file does not exist or is a directory.
      */
     FileContent retrieve(String path, UUID userId);
+
+    /**
+     * Returns the available disk space in bytes for the storage root.
+     *
+     * @return Available disk space in bytes.
+     */
+    long getAvailableDiskSpace();
 }

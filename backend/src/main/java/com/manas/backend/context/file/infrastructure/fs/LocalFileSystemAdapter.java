@@ -7,6 +7,7 @@ import com.manas.backend.context.file.domain.FileNode;
 import com.manas.backend.context.file.domain.PathNode;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -234,5 +235,16 @@ public class LocalFileSystemAdapter implements FileStoragePort {
 
         Collections.reverse(breadcrumbs);
         return breadcrumbs;
+    }
+
+    @Override
+    public long getAvailableDiskSpace() {
+        try {
+            FileStore fileStore = Files.getFileStore(rootPath);
+            return fileStore.getUsableSpace();
+        } catch (IOException e) {
+            log.error("Failed to get available disk space for root path: {}", rootPath, e);
+            throw new RuntimeException("Failed to check disk space", e);
+        }
     }
 }

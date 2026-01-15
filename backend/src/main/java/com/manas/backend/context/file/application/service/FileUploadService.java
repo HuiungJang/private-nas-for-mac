@@ -44,14 +44,23 @@ public class FileUploadService implements FileUploadUseCase {
         // 1. Domain Validation
         fileValidator.validate(command.fileName(), command.size());
 
-        // 2. Resolve Logical Path (targetDir + / + fileName)
+        // 2. Check available disk space (with 10% buffer for safety)
+        long availableSpace = fileStoragePort.getAvailableDiskSpace();
+        long requiredSpace = (long) (command.size() * 1.1); // 10% buffer
+        if (availableSpace < requiredSpace) {
+            log.warn("Insufficient disk space. Required: {} bytes, Available: {} bytes",
+                    requiredSpace, availableSpace);
+            throw new IllegalStateException("Insufficient disk space for upload");
+        }
+
+        // 3. Resolve Logical Path (targetDir + / + fileName)
         // Ensure targetDirectory doesn't have trailing slash, fileName doesn't have leading slash
         String logicalPath = getLogicalPath(command);
 
-        // 3. Persist
+        // 4. Persist
         fileStoragePort.save(command.content(), logicalPath, command.size(), command.userId());
 
-        // 4. Publish Event (Audit)
+        // 5. Publish Event (Audit)
         eventPublisher.publishEvent(new FileUploadedEvent(
                 command.userId(),
                 logicalPath,

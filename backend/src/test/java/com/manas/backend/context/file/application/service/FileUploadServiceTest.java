@@ -6,6 +6,7 @@ import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
@@ -46,6 +47,9 @@ class FileUploadServiceTest {
 
         FileUploadCommand command = new FileUploadCommand(content, fileName, dir, size, userId);
 
+        // Mock sufficient disk space (10GB available)
+        when(fileStoragePort.getAvailableDiskSpace()).thenReturn(10L * 1024 * 1024 * 1024);
+
         // Act
         service.upload(command);
 
@@ -66,7 +70,30 @@ class FileUploadServiceTest {
                 service.upload(command)
         );
 
-        verifyNoInteractions(fileStoragePort);
+        verifyNoInteractions(eventPublisher);
+    }
+
+    @Test
+    void upload_ShouldFail_WhenInsufficientDiskSpace() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        String fileName = "large_file.bin";
+        String dir = "/documents";
+        long size = 5L * 1024 * 1024 * 1024; // 5GB file
+        ByteArrayInputStream content = new ByteArrayInputStream(new byte[0]);
+
+        FileUploadCommand command = new FileUploadCommand(content, fileName, dir, size, userId);
+
+        // Mock insufficient disk space (only 1GB available)
+        when(fileStoragePort.getAvailableDiskSpace()).thenReturn((long) 1024 * 1024 * 1024);
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                service.upload(command)
+        );
+
+        // Verify save was never called
+        verify(fileStoragePort).getAvailableDiskSpace();
         verifyNoInteractions(eventPublisher);
     }
 

@@ -116,3 +116,25 @@ public record UserProfileDTO(
     *   **Length:** Maximum 255 characters.
     *   **Resolution:** Invalid characters should either cause a `400 Bad Request` or be automatically replaced/sanitized (e.g., `_`) depending on UX policy.
 *   **Rate Limiting:** Apply reasonable limits to file uploads/downloads to prevent resource exhaustion.
+
+---
+
+## 5. Infrastructure Security Requirements
+
+* **Disk Space Validation:**
+    * Before accepting file uploads, the system **MUST** verify sufficient disk space is available.
+    * A 10% safety buffer should be maintained to prevent partial writes.
+    * If insufficient space, return `507 Insufficient Storage` or `400 Bad Request` with descriptive
+      message.
+* **CORS Configuration:**
+    * **MUST** restrict `Access-Control-Allow-Origin` to configured frontend origins only.
+    * Do NOT use wildcard (`*`) in production environments.
+    * Allowed headers should be explicitly listed (e.g., `Authorization`, `Content-Type`,
+      `X-Trace-ID`).
+* **Proxy/Forwarded Headers:**
+    * Since the app runs behind Docker/Nginx, Spring Boot's `server.forward-headers-strategy` **MUST
+      ** be set to `native`.
+    * This ensures `X-Forwarded-For` headers are properly parsed for IP-based access control.
+* **JWT Security:**
+    * JWT secrets **MUST** be externalized via environment variables (`${JWT_SECRET}`).
+    * Never commit production secrets to version control.

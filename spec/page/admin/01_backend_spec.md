@@ -141,3 +141,26 @@ public record SystemSettingsDTO(
     *   **User Mgmt:** Create/Delete/Modify User.
     *   **File Mgmt:** Admin-initiated Delete/Move (Must log "Admin {username} deleted file {path} owned by {owner}").
     *   **Settings:** Any change to IP or Security settings.
+
+---
+
+## 5. Infrastructure Security Requirements
+
+* **CORS Configuration:**
+    * **MUST** restrict `Access-Control-Allow-Origin` to configured frontend origins only via
+      `cors.allowed-origins` property.
+    * Do NOT use wildcard (`*`) in production environments.
+    * Allowed headers: `Authorization`, `Content-Type`, `X-Trace-ID`.
+    * Exposed headers: `X-Trace-ID` for end-to-end tracing.
+* **Proxy/Forwarded Headers:**
+    * `server.forward-headers-strategy: native` **MUST** be configured in `application.yml`.
+    * This ensures proper parsing of `X-Forwarded-For` headers from Docker/Nginx reverse proxy.
+* **Secrets Management:**
+    * All secrets (JWT, database passwords) **MUST** be externalized via environment variables.
+    * Configuration: `jwt.secret: ${JWT_SECRET:dev_fallback}`,
+      `password: ${NAS_PASSWORD:dev_fallback}`
+    * Production deployments **MUST** set these environment variables; do not rely on fallback
+      values.
+* **Disk Space Validation:**
+    * File upload operations **MUST** check available disk space before writing.
+    * Maintain 10% safety buffer to prevent partial writes and filesystem corruption.
