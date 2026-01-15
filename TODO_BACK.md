@@ -91,7 +91,7 @@
 
 ### 4.1 User Management API
 
-- [ ] `GET /api/admin/users`: List users + usage stats.
+- [x] `GET /api/admin/users`: List users + usage stats. (Implemented basic listing)
 - [ ] `POST /api/admin/users`: Create new user.
 - [ ] `PUT /api/admin/users/{userId}`: Update status/role.
 
