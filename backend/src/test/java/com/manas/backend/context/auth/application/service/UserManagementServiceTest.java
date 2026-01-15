@@ -2,10 +2,15 @@ package com.manas.backend.context.auth.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.manas.backend.context.auth.application.port.in.CreateUserCommand;
+import com.manas.backend.context.auth.application.port.out.CheckUserExistsPort;
 import com.manas.backend.context.auth.application.port.out.LoadUsersPort;
+import com.manas.backend.context.auth.application.port.out.SaveUserPort;
 import com.manas.backend.context.auth.domain.Password;
 import com.manas.backend.context.auth.domain.Role;
 import com.manas.backend.context.auth.domain.User;
@@ -17,18 +22,26 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserManagementServiceTest {
 
     @Mock
     private LoadUsersPort loadUsersPort;
+    @Mock
+    private SaveUserPort saveUserPort;
+    @Mock
+    private CheckUserExistsPort checkUserExistsPort;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     private UserManagementService userManagementService;
 
     @BeforeEach
     void setUp() {
-        userManagementService = new UserManagementService(loadUsersPort);
+        userManagementService = new UserManagementService(loadUsersPort, saveUserPort, checkUserExistsPort,
+                passwordEncoder);
     }
 
     @Test
@@ -49,4 +62,34 @@ class UserManagementServiceTest {
         verify(loadUsersPort).findAll();
     }
 
+    @Test
+    @DisplayName("Should create user successfully")
+    void shouldCreateUser() {
+        // Given
+        CreateUserCommand command = new CreateUserCommand("newuser", "rawpass", Set.of(Role.USER));
+
+        when(checkUserExistsPort.existsByUsername("newuser")).thenReturn(false);
+        when(passwordEncoder.encode("rawpass")).thenReturn("hashedpass");
+
+        // When
+        userManagementService.createUser(command);
+
+        // Then
+        verify(checkUserExistsPort).existsByUsername("newuser");
+        verify(passwordEncoder).encode("rawpass");
+        verify(saveUserPort).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception if user already exists")
+    void shouldThrowIfUserExists() {
+        // Given
+        CreateUserCommand command = new CreateUserCommand("existing", "pass", Set.of(Role.USER));
+        when(checkUserExistsPort.existsByUsername("existing")).thenReturn(true);
+
+        // When/Then
+        assertThrows(IllegalArgumentException.class, () -> userManagementService.createUser(command));
+
+        verify(saveUserPort, org.mockito.Mockito.never()).save(any());
+    }
 }
