@@ -99,7 +99,7 @@
 
 - [ ] `GET /api/admin/settings`: Retrieve config.
 - [ ] `PUT /api/admin/settings/ip-access`: Update allowed IPs.
-- [ ] `PUT /api/admin/settings/theme`: Update UI theme config.
+- [x] `PUT /api/admin/settings/theme`: Update UI theme config.
 
 ### 4.3 Monitoring / Dashboard
 
