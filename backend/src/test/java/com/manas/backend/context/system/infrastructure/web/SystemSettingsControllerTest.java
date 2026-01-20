@@ -2,12 +2,17 @@ package com.manas.backend.context.system.infrastructure.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.manas.backend.context.system.application.port.in.GetSystemSettingsUseCase;
 import com.manas.backend.context.system.application.port.in.UpdateThemeCommand;
 import com.manas.backend.context.system.application.port.in.UpdateThemeUseCase;
+import com.manas.backend.context.system.infrastructure.web.dto.SystemSettingsResponse;
 import com.manas.backend.context.system.infrastructure.web.dto.ThemeConfigDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,12 +31,15 @@ class SystemSettingsControllerTest {
 
     @Mock
     private UpdateThemeUseCase updateThemeUseCase;
+    @Mock
+    private GetSystemSettingsUseCase getSystemSettingsUseCase;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        SystemSettingsController controller = new SystemSettingsController(updateThemeUseCase);
+        SystemSettingsController controller = new SystemSettingsController(updateThemeUseCase,
+                getSystemSettingsUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -65,4 +73,20 @@ class SystemSettingsControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("Should get settings")
+    void shouldGetSettings() throws Exception {
+        // Given
+        ThemeConfigDto theme = new ThemeConfigDto("dark", "#000000");
+        SystemSettingsResponse response = new SystemSettingsResponse(theme);
+
+        when(getSystemSettingsUseCase.getSettings()).thenReturn(response);
+
+        // When/Then
+        mockMvc.perform(get("/api/admin/settings")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.theme.mode").value("dark"))
+                .andExpect(jsonPath("$.theme.primaryColor").value("#000000"));
+    }
 }
