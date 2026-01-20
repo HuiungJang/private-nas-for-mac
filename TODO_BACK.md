@@ -93,7 +93,7 @@
 
 - [x] `GET /api/admin/users`: List users + usage stats. (Implemented basic listing)
 - [x] `POST /api/admin/users`: Create new user.
-- [ ] `PUT /api/admin/users/{userId}`: Update status/role.
+- [x] `PUT /api/admin/users/{userId}`: Update status/role.
 
 ### 4.2 System Settings
 

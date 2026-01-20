@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -12,12 +13,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.manas.backend.context.auth.application.port.in.CreateUserCommand;
 import com.manas.backend.context.auth.application.port.in.CreateUserUseCase;
 import com.manas.backend.context.auth.application.port.in.ListUsersUseCase;
+import com.manas.backend.context.auth.application.port.in.UpdateUserCommand;
+import com.manas.backend.context.auth.application.port.in.UpdateUserUseCase;
 import com.manas.backend.context.auth.domain.Password;
 import com.manas.backend.context.auth.domain.Role;
 import com.manas.backend.context.auth.domain.User;
 import com.manas.backend.context.auth.infrastructure.web.dto.CreateUserRequest;
+import com.manas.backend.context.auth.infrastructure.web.dto.UpdateUserRequest;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,87 +40,72 @@ class AdminUserControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-
     private ListUsersUseCase listUsersUseCase;
-
     @Mock
-
     private CreateUserUseCase createUserUseCase;
+    @Mock
+    private UpdateUserUseCase updateUserUseCase;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-
-
     @BeforeEach
     void setUp() {
-
-        AdminUserController controller = new AdminUserController(listUsersUseCase, createUserUseCase);
-
+        AdminUserController controller = new AdminUserController(listUsersUseCase, createUserUseCase,
+                updateUserUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
-
     }
 
     @Test
-
     @DisplayName("Should return list of users when authorized")
-
     @WithMockUser(roles = "ADMIN")
-
         // Note: Standalone setup ignores Spring Security, so this annotation is illustrative here
-
         // unless we integrate SecurityContext.
-
         // For standalone unit test of Controller logic, we assume Security is handled by FilterChain.
-
         // To test security rules, we'd need WebMvcTest or manual SecurityContext setting.
-
     void shouldListUsers() throws Exception {
-
         // Given
-
         User admin = User.create("admin", Password.of("hash"), Set.of(Role.ADMIN));
-
         when(listUsersUseCase.listAllUsers()).thenReturn(List.of(admin));
 
         // When/Then
-
         mockMvc.perform(get("/api/admin/users")
-
                         .contentType(MediaType.APPLICATION_JSON))
-
                 .andExpect(status().isOk())
-
                 .andExpect(jsonPath("$[0].username").value("admin"))
-
                 .andExpect(jsonPath("$[0].roles[0]").value("ADMIN"));
-
     }
 
     @Test
-
     @DisplayName("Should create user successfully")
     void shouldCreateUser() throws Exception {
-
         // Given
-
         CreateUserRequest request = new CreateUserRequest("newuser", "password", Set.of(Role.USER));
-
         String json = objectMapper.writeValueAsString(request);
 
         // When/Then
-
         mockMvc.perform(post("/api/admin/users")
-
                         .contentType(MediaType.APPLICATION_JSON)
-
                         .content(json))
-
                 .andExpect(status().isCreated());
 
         verify(createUserUseCase).createUser(any(CreateUserCommand.class));
+    }
 
+    @Test
+    @DisplayName("Should update user successfully")
+    void shouldUpdateUser() throws Exception {
+        // Given
+        UUID userId = UUID.randomUUID();
+        UpdateUserRequest request = new UpdateUserRequest(true, Set.of(Role.ADMIN));
+        String json = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/admin/users/" + userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
+
+        verify(updateUserUseCase).updateUser(any(UpdateUserCommand.class));
     }
 
 }
-
-

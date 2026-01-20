@@ -30,7 +30,8 @@ public class DataInitializer {
                     null,
                     "admin",
                     encodedPassword,
-                    Set.of(Role.ADMIN)
+                    Set.of(Role.ADMIN),
+                    true
             );
             userRepository.save(admin);
             log.info("Default admin user created: admin / admin123");

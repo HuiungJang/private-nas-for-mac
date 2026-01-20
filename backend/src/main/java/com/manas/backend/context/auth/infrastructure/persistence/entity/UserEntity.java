@@ -42,11 +42,15 @@ public class UserEntity {
     @Column(name = "role")
     private Set<Role> roles;
 
-    public UserEntity(UUID id, String username, String passwordHash, Set<Role> roles) {
+    @Column(nullable = false)
+    private boolean active = true;
+
+    public UserEntity(UUID id, String username, String passwordHash, Set<Role> roles, boolean active) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
         this.roles = roles;
+        this.active = active;
     }
 
 }

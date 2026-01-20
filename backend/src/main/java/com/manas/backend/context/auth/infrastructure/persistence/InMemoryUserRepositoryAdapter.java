@@ -37,4 +37,10 @@ public class InMemoryUserRepositoryAdapter implements LoadUserPort {
         return Optional.ofNullable(users.get(username));
     }
 
+    @Override
+    public Optional<User> loadUserById(java.util.UUID id) {
+        return users.values().stream()
+                .filter(u -> u.id().equals(id))
+                .findFirst();
+    }
 }

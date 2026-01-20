@@ -3,7 +3,10 @@ package com.manas.backend.context.auth.application.service;
 import com.manas.backend.context.auth.application.port.in.CreateUserCommand;
 import com.manas.backend.context.auth.application.port.in.CreateUserUseCase;
 import com.manas.backend.context.auth.application.port.in.ListUsersUseCase;
+import com.manas.backend.context.auth.application.port.in.UpdateUserCommand;
+import com.manas.backend.context.auth.application.port.in.UpdateUserUseCase;
 import com.manas.backend.context.auth.application.port.out.CheckUserExistsPort;
+import com.manas.backend.context.auth.application.port.out.LoadUserPort;
 import com.manas.backend.context.auth.application.port.out.LoadUsersPort;
 import com.manas.backend.context.auth.application.port.out.SaveUserPort;
 import com.manas.backend.context.auth.domain.Password;
@@ -21,11 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 
-public class UserManagementService implements ListUsersUseCase, CreateUserUseCase {
+public class UserManagementService implements ListUsersUseCase, CreateUserUseCase, UpdateUserUseCase {
 
 
 
     private final LoadUsersPort loadUsersPort;
+
+    private final LoadUserPort loadUserPort;
 
     private final SaveUserPort saveUserPort;
 
@@ -73,6 +78,42 @@ public class UserManagementService implements ListUsersUseCase, CreateUserUseCas
 
     }
 
+    @Override
+
+    @Transactional
+
+    public void updateUser(UpdateUserCommand command) {
+
+        log.info("Updating user: {}", command.userId());
+
+        User user = loadUserPort.loadUserById(command.userId())
+
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + command.userId()));
+
+        // Create updated user record (immutable)
+
+        User updatedUser = new User(
+
+                user.id(),
+
+                user.username(),
+
+                user.password(),
+
+                command.roles(),
+
+                command.active()
+
+        );
+
+        saveUserPort.save(updatedUser);
+
+        log.info("User updated successfully: {}", updatedUser.id());
+
+    }
+
 }
+
+
 
 

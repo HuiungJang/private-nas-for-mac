@@ -54,13 +54,18 @@ class FileControllerTest {
     }
 
     @Test
+
     @DisplayName("Should download file with correct headers")
     void shouldDownloadFile() throws Exception {
+
         // Given
+
         UUID userId = UUID.randomUUID();
-        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER));
+
+        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true);
 
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
+
         var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
 
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -92,13 +97,18 @@ class FileControllerTest {
     }
 
     @Test
+
     @DisplayName("Should return preview with cache control")
     void shouldReturnPreview() throws Exception {
+
         // Given
+
         UUID userId = UUID.randomUUID();
-        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER));
+
+        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true);
 
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
+
         var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
 
         SecurityContextHolder.getContext().setAuthentication(auth);

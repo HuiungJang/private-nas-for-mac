@@ -30,6 +30,12 @@ public class JpaUserRepositoryAdapter implements LoadUserPort, LoadUsersPort, Sa
     }
 
     @Override
+    public Optional<User> loadUserById(java.util.UUID id) {
+        return jpaUserRepository.findById(id)
+                .map(userMapper::toDomain);
+    }
+
+    @Override
     public List<User> findAll() {
         return jpaUserRepository.findAll().stream()
                 .map(userMapper::toDomain)
