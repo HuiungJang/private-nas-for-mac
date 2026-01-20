@@ -103,9 +103,9 @@
 
 ### 4.3 Monitoring / Dashboard
 
-- [ ] `GET /api/admin/system/health`:
-    - [ ] CPU/RAM usage (Micrometer/Actuator).
-    - [ ] Storage usage (Disk space).
+- [x] `GET /api/admin/system/health`:
+  - [x] CPU/RAM usage (Micrometer/Actuator).
+  - [x] Storage usage (Disk space).
 - [x] **Audit Logging:**
     - [x] Intercept critical actions (Login, Delete, Settings Change) and save to DB.
     - [x] Integrate Trace ID.
