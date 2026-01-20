@@ -1,0 +1,24 @@
+app:
+  storage:
+    root: ./build/tmp/test-storage
+    cache-dir: ./build/tmp/test-cache
+  security:
+    default-password: admin123
+
+spring:
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+security:
+  vpn:
+    allowed-subnets: 127.0.0.1/32
+
+jwt:
+  secret: test_secret_key_must_be_long_enough_for_hs256_algorithm_test
+  expiration: 3600000
+
+cors:
+  allowed-origins: "*"

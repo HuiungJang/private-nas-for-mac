@@ -3,7 +3,7 @@ server:
 
 logging:
   pattern:
-    console: %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
 app:
   storage:
     root: /mnt/host_volumes

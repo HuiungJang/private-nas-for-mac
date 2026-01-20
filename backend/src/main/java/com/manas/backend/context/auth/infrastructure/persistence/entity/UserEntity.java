@@ -8,26 +8,25 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Persistable;
 
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserEntity {
+public class UserEntity implements Persistable<UUID> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(unique = true, nullable = false)
@@ -45,6 +44,9 @@ public class UserEntity {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Transient
+    private boolean isNew = true;
+
     public UserEntity(UUID id, String username, String passwordHash, Set<Role> roles, boolean active) {
         this.id = id;
         this.username = username;
@@ -53,4 +55,8 @@ public class UserEntity {
         this.active = active;
     }
 
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
 }

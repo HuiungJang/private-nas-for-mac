@@ -45,6 +45,9 @@ public class JpaUserRepositoryAdapter implements LoadUserPort, LoadUsersPort, Sa
     @Override
     public void save(User user) {
         UserEntity entity = userMapper.toEntity(user);
+        if (jpaUserRepository.existsById(user.id())) {
+            entity.setNew(false);
+        }
         jpaUserRepository.save(entity);
     }
 

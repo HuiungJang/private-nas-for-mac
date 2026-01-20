@@ -2,7 +2,6 @@ package com.manas.backend.context.auth.infrastructure.security;
 
 import com.manas.backend.context.auth.application.port.out.IpConfigurationPort;
 import com.manas.backend.context.auth.domain.event.IpAccessChangedEvent;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -26,11 +26,7 @@ public class IpEnforcementFilter extends OncePerRequestFilter {
 
     private final IpConfigurationPort ipConfigurationPort;
     private volatile List<IpAddressMatcher> allowedMatchers = Collections.emptyList();
-
-    @PostConstruct
-    public void init() {
-        reloadConfig();
-    }
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     @EventListener
     public void onIpAccessChanged(IpAccessChangedEvent event) {
@@ -39,19 +35,27 @@ public class IpEnforcementFilter extends OncePerRequestFilter {
     }
 
     private void reloadConfig() {
-        List<String> subnets = ipConfigurationPort.getAllowedSubnets();
-        this.allowedMatchers = subnets.stream()
-                .map(String::trim)
-                .filter(StringUtils::hasText)
-                .map(IpAddressMatcher::new)
-                .toList();
-        log.info("Allowed IP Subnets updated: {}", subnets);
+        try {
+            List<String> subnets = ipConfigurationPort.getAllowedSubnets();
+            this.allowedMatchers = subnets.stream()
+                    .map(String::trim)
+                    .filter(StringUtils::hasText)
+                    .map(IpAddressMatcher::new)
+                    .toList();
+            log.info("Allowed IP Subnets updated: {}", subnets);
+        } catch (Exception e) {
+            log.error("Failed to load IP configuration", e);
+        }
     }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        if (initialized.compareAndSet(false, true)) {
+            reloadConfig();
+        }
 
         String clientIp = getClientIp(request);
 

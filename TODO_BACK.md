@@ -114,9 +114,9 @@
 
 ## 🧪 Testing & Quality
 
-- [ ] **Unit Tests:**
+- [x] **Unit Tests:**
     - [x] `LocalFileSystemAdapterTest` (Infrastructure).
-    - [ ] Service Layer Tests (Mocking Ports).
-- [ ] **Integration Tests:**
-    - [ ] Controller Tests (`MockMvc`).
-    - [ ] Testcontainers for Repository Layer (PostgreSQL).
+  - [x] Service Layer Tests (Mocking Ports).
+- [x] **Integration Tests:**
+  - [x] Controller Tests (`MockMvc`).
+  - [x] Testcontainers for Repository Layer (PostgreSQL).
