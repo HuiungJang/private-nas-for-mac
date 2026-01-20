@@ -1,14 +1,18 @@
 package com.manas.backend.context.auth.infrastructure.security;
 
+import com.manas.backend.context.auth.application.port.out.IpConfigurationPort;
+import com.manas.backend.context.auth.domain.event.IpAccessChangedEvent;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.lang.NonNull;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Component;
@@ -17,16 +21,31 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class IpEnforcementFilter extends OncePerRequestFilter {
 
-    private final List<IpAddressMatcher> allowedMatchers;
+    private final IpConfigurationPort ipConfigurationPort;
+    private volatile List<IpAddressMatcher> allowedMatchers = Collections.emptyList();
 
-    public IpEnforcementFilter(@Value("${security.vpn.allowed-subnets}") String allowedSubnets) {
-        this.allowedMatchers = Arrays.stream(allowedSubnets.split(","))
+    @PostConstruct
+    public void init() {
+        reloadConfig();
+    }
+
+    @EventListener
+    public void onIpAccessChanged(IpAccessChangedEvent event) {
+        log.info("IP Access Config changed. Reloading...");
+        reloadConfig();
+    }
+
+    private void reloadConfig() {
+        List<String> subnets = ipConfigurationPort.getAllowedSubnets();
+        this.allowedMatchers = subnets.stream()
                 .map(String::trim)
                 .filter(StringUtils::hasText)
                 .map(IpAddressMatcher::new)
                 .toList();
+        log.info("Allowed IP Subnets updated: {}", subnets);
     }
 
     @Override

@@ -20,29 +20,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
-
 class SystemSettingsServiceTest {
 
     @Mock
-
     private SaveSystemSettingPort saveSystemSettingPort;
-
     @Mock
-
     private LoadSystemSettingsPort loadSystemSettingsPort;
-
-
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private SystemSettingsService service;
 
     @BeforeEach
     void setUp() {
-
-        service = new SystemSettingsService(saveSystemSettingPort, loadSystemSettingsPort);
-
+        service = new SystemSettingsService(saveSystemSettingPort, loadSystemSettingsPort, eventPublisher);
     }
+
 
     @Test
 

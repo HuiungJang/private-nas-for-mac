@@ -98,7 +98,7 @@
 ### 4.2 System Settings
 
 - [x] `GET /api/admin/settings`: Retrieve config.
-- [ ] `PUT /api/admin/settings/ip-access`: Update allowed IPs.
+- [x] `PUT /api/admin/settings/ip-access`: Update allowed IPs.
 - [x] `PUT /api/admin/settings/theme`: Update UI theme config.
 
 ### 4.3 Monitoring / Dashboard

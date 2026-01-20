@@ -1,14 +1,19 @@
 package com.manas.backend.context.system.infrastructure.web;
 
 import com.manas.backend.context.system.application.port.in.GetSystemSettingsUseCase;
+import com.manas.backend.context.system.application.port.in.UpdateIpAccessCommand;
+import com.manas.backend.context.system.application.port.in.UpdateIpAccessUseCase;
 import com.manas.backend.context.system.application.port.in.UpdateThemeCommand;
 import com.manas.backend.context.system.application.port.in.UpdateThemeUseCase;
+import com.manas.backend.context.system.infrastructure.web.dto.IpAccessConfigDto;
 import com.manas.backend.context.system.infrastructure.web.dto.SystemSettingsResponse;
 import com.manas.backend.context.system.infrastructure.web.dto.ThemeConfigDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +31,10 @@ public class SystemSettingsController {
     private final UpdateThemeUseCase updateThemeUseCase;
 
     private final GetSystemSettingsUseCase getSystemSettingsUseCase;
+
+    private final UpdateIpAccessUseCase updateIpAccessUseCase;
+
+
 
     @GetMapping
 
@@ -53,6 +62,39 @@ public class SystemSettingsController {
 
     }
 
+    @PutMapping("/ip-access")
+
+    @PreAuthorize("hasRole('ADMIN')")
+
+    public ResponseEntity<Void> updateIpAccess(@RequestBody IpAccessConfigDto request,
+            HttpServletRequest servletRequest) {
+
+        String clientIp = getClientIp(servletRequest);
+
+        UpdateIpAccessCommand command = new UpdateIpAccessCommand(request.allowedSubnets(), clientIp);
+
+        updateIpAccessUseCase.updateIpAccess(command);
+
+        return ResponseEntity.ok().build();
+
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+
+        String xfHeader = request.getHeader("X-Forwarded-For");
+
+        if (StringUtils.hasText(xfHeader)) {
+
+            return xfHeader.split(",")[0].trim();
+
+        }
+
+        return request.getRemoteAddr();
+
+    }
+
 }
+
+
 
 

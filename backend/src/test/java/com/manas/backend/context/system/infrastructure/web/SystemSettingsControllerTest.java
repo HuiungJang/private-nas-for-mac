@@ -10,10 +10,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.manas.backend.context.system.application.port.in.GetSystemSettingsUseCase;
+import com.manas.backend.context.system.application.port.in.UpdateIpAccessUseCase;
 import com.manas.backend.context.system.application.port.in.UpdateThemeCommand;
 import com.manas.backend.context.system.application.port.in.UpdateThemeUseCase;
+import com.manas.backend.context.system.infrastructure.web.dto.IpAccessConfigDto;
 import com.manas.backend.context.system.infrastructure.web.dto.SystemSettingsResponse;
 import com.manas.backend.context.system.infrastructure.web.dto.ThemeConfigDto;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,13 +36,15 @@ class SystemSettingsControllerTest {
     private UpdateThemeUseCase updateThemeUseCase;
     @Mock
     private GetSystemSettingsUseCase getSystemSettingsUseCase;
+    @Mock
+    private UpdateIpAccessUseCase updateIpAccessUseCase;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         SystemSettingsController controller = new SystemSettingsController(updateThemeUseCase,
-                getSystemSettingsUseCase);
+                getSystemSettingsUseCase, updateIpAccessUseCase);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -78,7 +83,8 @@ class SystemSettingsControllerTest {
     void shouldGetSettings() throws Exception {
         // Given
         ThemeConfigDto theme = new ThemeConfigDto("dark", "#000000");
-        SystemSettingsResponse response = new SystemSettingsResponse(theme);
+        IpAccessConfigDto ipAccess = new IpAccessConfigDto(List.of("127.0.0.1/32"));
+        SystemSettingsResponse response = new SystemSettingsResponse(theme, ipAccess);
 
         when(getSystemSettingsUseCase.getSettings()).thenReturn(response);
 
