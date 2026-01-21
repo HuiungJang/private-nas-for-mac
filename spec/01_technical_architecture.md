@@ -20,7 +20,7 @@ graph TD
     
     subgraph "Docker Compose Private Network"
         VPN_Server -->|Allowed Traffic| Nginx[Reverse Proxy / Nginx]
-        Nginx -->|Proxy Pass (X-Trace-ID)| Frontend["Frontend Container (Node/Nginx)"]
+        Nginx -->|"Proxy Pass (X-Trace-ID)"| Frontend["Frontend Container (Node/Nginx)"]
         Nginx -->|API Requests (X-Trace-ID)| Backend["Backend Container (Spring Boot)"]
         Backend -->|Metadata R/W| Database[PostgreSQL DB]
     end
