@@ -91,8 +91,9 @@ src/
 
 ### Phase 5: Admin & Observability
 
-- [ ] **Pages/Admin:** Admin Dashboard layout.
-- [ ] **Widgets/UserTable:** List/Add/Delete users.
+- [x] **Pages/Admin:** Admin Dashboard layout.
+- [x] **Widgets/UserTable:** List/Add/Delete users.
+- [x] **Widgets/SystemHealth:** View System Health (CPU/RAM/Storage).
 - [ ] **Widgets/AuditLog:** View `audit_logs` table (Trace ID visualization).
 
 ### Phase 6: Responsive Design (Mobile Adaptation)
