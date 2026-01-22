@@ -13,6 +13,7 @@ import GridViewIcon from '@mui/icons-material/GridView';
 import {IOSBreadcrumbs} from '@/shared/ui/IOSBreadcrumbs';
 import {FileTable} from '@/widgets/file-table/ui/FileTable';
 import {useFileBrowser} from '../model/useFileBrowser';
+import {FileActionsToolbar} from '@/features/file-actions/ui/FileActionsToolbar';
 
 export const FileBrowser: React.FC = () => {
   const {
@@ -20,8 +21,12 @@ export const FileBrowser: React.FC = () => {
     isLoading,
     error,
     viewMode,
+    selectedFiles,
+    currentPath,
     navigateTo,
     toggleViewMode,
+    handleSelectionChange,
+    clearSelection,
   } = useFileBrowser();
 
   return (
@@ -30,6 +35,14 @@ export const FileBrowser: React.FC = () => {
           <Typography variant="h4" component="h1" sx={{fontWeight: 'bold'}}>
             Files
           </Typography>
+
+          <Stack direction="row" spacing={2} alignItems="center">
+            <FileActionsToolbar
+                selectedFiles={selectedFiles}
+                currentPath={currentPath}
+                onClearSelection={clearSelection}
+            />
+
           <ToggleButtonGroup
               value={viewMode}
               exclusive
@@ -44,6 +57,7 @@ export const FileBrowser: React.FC = () => {
               <GridViewIcon/>
             </ToggleButton>
           </ToggleButtonGroup>
+        </Stack>
         </Stack>
 
         {data && (
@@ -69,8 +83,11 @@ export const FileBrowser: React.FC = () => {
                 files={data.items}
                 onNavigate={navigateTo}
                 viewMode={viewMode}
+                selectedFiles={selectedFiles}
+                onSelectionChange={handleSelectionChange}
             />
         )}
       </Box>
   );
 };
+

@@ -84,10 +84,10 @@ src/
 
 ### Phase 4: File Operations (Actions)
 
-- [ ] **Features/FileActions:**
-    - [ ] **Delete:** Multi-select + Delete confirmation modal.
-    - [ ] **Move:** "Move to..." modal with folder picker.
-    - [ ] **Upload:** Drag & Drop zone + Progress bar (Resumable upload stub).
+- [x] **Features/FileActions:**
+  - [x] **Delete:** Multi-select + Delete confirmation.
+  - [x] **Move:** "Move to..." modal with folder picker.
+  - [x] **Upload:** Upload button (basic).
 
 ### Phase 5: Admin & Observability
 

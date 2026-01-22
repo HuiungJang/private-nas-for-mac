@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Box,
+  Checkbox,
   Grid,
   List,
   ListItem,
@@ -18,7 +19,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import type {FileNode} from '@/entities/file/model/types';
 import {IOSCard} from '@/shared/ui';
 import {FileIcon} from '@/entities/file/ui/FileIcon';
@@ -29,6 +29,8 @@ interface FileTableProps {
   files: FileNode[];
   onNavigate: (name: string) => void;
   viewMode?: ViewMode;
+  selectedFiles: Set<string>;
+  onSelectionChange: (selected: Set<string>) => void;
 }
 
 const StyledTableRow = styled(TableRow)(() => ({
@@ -58,14 +60,19 @@ const StyledHeaderCell = styled(TableCell)(({theme}) => ({
   letterSpacing: '0.5px',
 }));
 
-const GridItemCard = styled(Box)(({theme}) => ({
+const GridItemCard = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'selected',
+})<{ selected?: boolean }>(({theme, selected}) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   padding: '16px',
   borderRadius: '12px',
   cursor: 'pointer',
-  transition: 'background-color 0.2s',
+  position: 'relative',
+  border: selected ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
+  backgroundColor: selected ? theme.palette.action.selected : 'transparent',
+  transition: 'background-color 0.2s, border-color 0.2s',
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
   },
@@ -79,7 +86,13 @@ const formatSize = (size: number) => {
   return parseFloat((size / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
-export const FileTable: React.FC<FileTableProps> = ({files, onNavigate, viewMode = 'list'}) => {
+export const FileTable: React.FC<FileTableProps> = ({
+                                                      files,
+                                                      onNavigate,
+                                                      viewMode = 'list',
+                                                      selectedFiles,
+                                                      onSelectionChange,
+                                                    }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -89,7 +102,25 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate, viewMode
     }
   };
 
-  // Mobile View: Always List
+  const handleSelect = (name: string) => {
+    const newSelected = new Set(selectedFiles);
+    if (newSelected.has(name)) {
+      newSelected.delete(name);
+    } else {
+      newSelected.add(name);
+    }
+    onSelectionChange(newSelected);
+  };
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      onSelectionChange(new Set(files.map((f) => f.name)));
+    } else {
+      onSelectionChange(new Set());
+    }
+  };
+
+  // Mobile View: Always List (Simplified, selection via long press? Or just checkbox)
   if (isMobile) {
     return (
         <IOSCard sx={{p: 0, overflow: 'hidden'}}>
@@ -99,9 +130,11 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate, viewMode
                     key={file.name}
                     disablePadding
                     secondaryAction={
-                      file.type === 'DIRECTORY' ? (
-                          <NavigateNextIcon sx={{color: 'text.secondary', opacity: 0.5}}/>
-                      ) : null
+                      <Checkbox
+                          edge="end"
+                          checked={selectedFiles.has(file.name)}
+                          onChange={() => handleSelect(file.name)}
+                      />
                     }
                 >
                   <ListItemButton
@@ -138,30 +171,47 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate, viewMode
     return (
         <Box sx={{p: 2}}>
           <Grid container spacing={2}>
-            {files.map((file) => (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={file.name}>
-                  <GridItemCard onDoubleClick={() => handleRowClick(file)}>
-                    <FileIcon name={file.name} type={file.type} sx={{fontSize: 64, mb: 1}}/>
-                    <Typography
-                        variant="body2"
-                        align="center"
-                        sx={{
-                          fontWeight: 500,
-                          wordBreak: 'break-word',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                        }}
+            {files.map((file) => {
+              const isSelected = selectedFiles.has(file.name);
+              return (
+                  <Grid item xs={6} sm={4} md={3} lg={2} key={file.name}>
+                    <GridItemCard
+                        selected={isSelected}
+                        onDoubleClick={() => handleRowClick(file)}
+                        onClick={() => handleSelect(file.name)}
                     >
-                      {file.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {file.type === 'DIRECTORY' ? '' : formatSize(file.size)}
-                    </Typography>
-                  </GridItemCard>
-                </Grid>
-            ))}
+                      <Box sx={{position: 'absolute', top: 8, left: 8}}>
+                        <Checkbox
+                            checked={isSelected}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleSelect(file.name);
+                            }}
+                            size="small"
+                        />
+                      </Box>
+                      <FileIcon name={file.name} type={file.type} sx={{fontSize: 64, mb: 1}}/>
+                      <Typography
+                          variant="body2"
+                          align="center"
+                          sx={{
+                            fontWeight: 500,
+                            wordBreak: 'break-word',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                      >
+                        {file.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {file.type === 'DIRECTORY' ? '' : formatSize(file.size)}
+                      </Typography>
+                    </GridItemCard>
+                  </Grid>
+              );
+            })}
           </Grid>
         </Box>
     );
@@ -173,6 +223,13 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate, viewMode
         <Table sx={{minWidth: 650}} aria-label="file table">
           <TableHead>
             <TableRow>
+              <StyledHeaderCell padding="checkbox">
+                <Checkbox
+                    indeterminate={selectedFiles.size > 0 && selectedFiles.size < files.length}
+                    checked={files.length > 0 && selectedFiles.size === files.length}
+                    onChange={handleSelectAll}
+                />
+              </StyledHeaderCell>
               <StyledHeaderCell width="50px"></StyledHeaderCell>
               <StyledHeaderCell>Name</StyledHeaderCell>
               <StyledHeaderCell align="right">Size</StyledHeaderCell>
@@ -181,25 +238,43 @@ export const FileTable: React.FC<FileTableProps> = ({files, onNavigate, viewMode
             </TableRow>
           </TableHead>
           <TableBody>
-            {files.map((file) => (
-                <StyledTableRow key={file.name} onDoubleClick={() => handleRowClick(file)}>
-                  <StyledTableCell>
-                    <FileIcon name={file.name} type={file.type}/>
-                  </StyledTableCell>
-                  <StyledTableCell component="th" scope="row" sx={{fontWeight: 500}}>
-                    {file.name}
-                  </StyledTableCell>
-                  <StyledTableCell align="right">
-                    {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
-                  </StyledTableCell>
-                  <StyledTableCell align="right">{file.lastModified}</StyledTableCell>
-                  <StyledTableCell align="right" sx={{color: 'text.secondary'}}>
-                    {file.owner}
-                  </StyledTableCell>
-                </StyledTableRow>
-            ))}
+            {files.map((file) => {
+              const isSelected = selectedFiles.has(file.name);
+              return (
+                  <StyledTableRow
+                      key={file.name}
+                      selected={isSelected}
+                      onDoubleClick={() => handleRowClick(file)}
+                      onClick={() => handleSelect(file.name)}
+                  >
+                    <StyledTableCell padding="checkbox">
+                      <Checkbox
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleSelect(file.name);
+                          }}
+                      />
+                    </StyledTableCell>
+                    <StyledTableCell>
+                      <FileIcon name={file.name} type={file.type}/>
+                    </StyledTableCell>
+                    <StyledTableCell component="th" scope="row" sx={{fontWeight: 500}}>
+                      {file.name}
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
+                    </StyledTableCell>
+                    <StyledTableCell align="right">{file.lastModified}</StyledTableCell>
+                    <StyledTableCell align="right" sx={{color: 'text.secondary'}}>
+                      {file.owner}
+                    </StyledTableCell>
+                  </StyledTableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
   );
 };
+
