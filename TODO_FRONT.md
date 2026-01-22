@@ -73,7 +73,7 @@ src/
 
 ### Phase 3: File Browser Core (File Context)
 
-- [ ] **Entities/File:** Define `FileNode` type, `useFiles` (React Query).
+- [x] **Entities/File:** Define `FileNode` type, `useFiles` (React Query).
 - [ ] **Widgets/FileTable:**
     - [ ] Render List/Grid view.
     - [ ] Breadcrumb navigation.
