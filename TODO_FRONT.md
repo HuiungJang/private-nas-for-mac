@@ -78,9 +78,9 @@ src/
   - [x] Render List/Grid view.
   - [x] Breadcrumb navigation.
   - [x] File Icon integration.
-- [ ] **Features/FileBrowser:**
-    - [ ] Directory Navigation (Click to enter).
-    - [ ] Path State Management.
+- [x] **Features/FileBrowser:**
+  - [x] Directory Navigation (Click to enter).
+  - [x] Path State Management.
 
 ### Phase 4: File Operations (Actions)
 
