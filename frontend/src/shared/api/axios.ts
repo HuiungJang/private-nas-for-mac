@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {v4 as uuidv4} from 'uuid';
 import {useAuthStore} from '@/entities/user/model/store';
+import {useNotificationStore} from '@/shared/model/useNotificationStore';
 
 export const API_URL = '/api';
 
@@ -41,7 +42,10 @@ apiClient.interceptors.response.use(
       const traceId = error.config?.headers['X-Trace-ID'];
       console.error(`[API Error] TraceID: ${traceId}`, error.response?.data || error.message);
 
-      // TODO: Trigger Global Toast/Snackbar here
+      // Trigger Global Toast/Snackbar
+      const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+      useNotificationStore.getState().showNotification(message, 'error');
+
       return Promise.reject(error);
     }
 );

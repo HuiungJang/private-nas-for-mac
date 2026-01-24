@@ -1,13 +1,16 @@
 import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {fileApi} from '@/entities/file/api/fileApi';
+import {useNotificationStore} from '@/shared/model/useNotificationStore';
 
 export const useFileActions = () => {
   const queryClient = useQueryClient();
+  const showNotification = useNotificationStore((state) => state.showNotification);
 
   const deleteFilesMutation = useMutation({
     mutationFn: (paths: string[]) => fileApi.deleteFiles(paths),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['files']});
+      showNotification('Files deleted successfully', 'success');
     },
   });
 
@@ -16,6 +19,7 @@ export const useFileActions = () => {
         fileApi.uploadFile(file, directory),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['files']});
+      showNotification('File uploaded successfully', 'success');
     },
   });
 
@@ -24,6 +28,7 @@ export const useFileActions = () => {
         fileApi.moveFile(sourcePath, destinationPath),
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['files']});
+      showNotification('Files moved successfully', 'success');
     },
   });
 
@@ -36,3 +41,4 @@ export const useFileActions = () => {
     isMoving: moveFileMutation.isPending,
   };
 };
+

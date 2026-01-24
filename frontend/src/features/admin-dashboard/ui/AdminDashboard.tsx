@@ -20,6 +20,7 @@ import {AuditLogTable} from '@/widgets/audit-log-table/ui/AuditLogTable';
 import {useSystemHealth} from '@/entities/system/model/useSystemHealth';
 import {useUserMutations, useUsers} from '@/entities/user/model/useUsers';
 import {useAuditLogs} from '@/entities/audit/model/useAuditLogs';
+import {useNotificationStore} from '@/shared/model/useNotificationStore';
 
 // Simple Create User Modal (Internal to Dashboard for now)
 const CreateUserModal = ({open, onClose, onCreate}: {
@@ -80,6 +81,7 @@ export const AdminDashboard: React.FC = () => {
   const {data: usersData, isLoading: isUsersLoading} = useUsers();
   const {data: auditLogs, isLoading: isAuditLoading} = useAuditLogs();
   const {createUser} = useUserMutations();
+  const showNotification = useNotificationStore((state) => state.showNotification);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTab(newValue);
@@ -88,9 +90,10 @@ export const AdminDashboard: React.FC = () => {
   const handleCreateUser = async (data: any) => {
     try {
       await createUser(data);
+      showNotification('User created successfully', 'success');
     } catch (e) {
       console.error(e);
-      alert('Failed to create user');
+      // Error is handled globally by axios interceptor, but we catch here to prevent crash
     }
   };
 

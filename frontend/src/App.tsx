@@ -1,6 +1,7 @@
 import {AppRouter} from '@/app/providers/RouterProvider';
 import {AppThemeProvider} from '@/app/providers/ThemeProvider';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import {NotificationSnackbar} from '@/shared/ui/NotificationSnackbar';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,6 +17,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AppThemeProvider>
           <AppRouter/>
+          <NotificationSnackbar/>
         </AppThemeProvider>
       </QueryClientProvider>
   );

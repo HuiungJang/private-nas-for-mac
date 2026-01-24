@@ -108,4 +108,4 @@ src/
 
 ### Phase 7: Polish
 
-- [ ] **Error Handling:** Toast notifications (Snackbar) for API errors.
+- [x] **Error Handling:** Toast notifications (Snackbar) for API errors.
