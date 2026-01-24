@@ -25,7 +25,7 @@ export const LoginPage: React.FC = () => {
                 ? 'radial-gradient(circle at 50% 50%, #FFFFFF 0%, #F2F2F7 100%)'
                 : 'radial-gradient(circle at 50% 50%, #1c1c1e 0%, #000000 100%)',
 
-            p: isMobile ? 2 : 2,
+            p: isMobile ? 0 : 2,
           }}
       >
         <IOSCard
@@ -34,7 +34,7 @@ export const LoginPage: React.FC = () => {
 
               maxWidth: isMobile ? '100%' : 400,
 
-              minHeight: isMobile ? '50vh' : 'auto', // Give it some presence on mobile
+              minHeight: isMobile ? '100vh' : 'auto',
 
               display: 'flex',
 
@@ -46,11 +46,13 @@ export const LoginPage: React.FC = () => {
 
               p: isMobile ? 3 : 4,
 
-              backdropFilter: 'blur(10px)', // Glass effect on top of gradient
+              backdropFilter: 'blur(10px)',
 
               backgroundColor: isLight ? 'rgba(255, 255, 255, 0.6)' : 'rgba(28, 28, 30, 0.6)',
 
-              borderRadius: isMobile ? 4 : 4,
+              borderRadius: isMobile ? 0 : 4,
+
+              border: isMobile ? 'none' : undefined,
             }}
         >
           <Typography component="h1" variant={isMobile ? 'h4' : 'h4'} sx={{mb: 1, fontWeight: 700}}>
