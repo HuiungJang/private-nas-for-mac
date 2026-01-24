@@ -100,11 +100,11 @@ src/
 
 - [x] **Global Layout:** Ensure `PageLayout` handles mobile padding/margins correctly.
 - [x] **Login Page:** Full-width layout on mobile, optimized spacing.
-- [ ] **Dashboard:**
-  - [ ] **Breadcrumbs:** Horizontal scroll support for deep paths on mobile.
-  - [ ] **File Table:** Switch to `List` view on mobile (Hide detailed columns, show primary info
+- [x] **Dashboard:**
+  - [x] **Breadcrumbs:** Horizontal scroll support for deep paths on mobile.
+  - [x] **File Table:** Switch to `List` view on mobile (Hide detailed columns, show primary info
     only).
-  - [ ] **Actions:** Optimize button placement for touch.
+  - [x] **Actions:** Optimize button placement for touch.
 
 ### Phase 7: Polish
 

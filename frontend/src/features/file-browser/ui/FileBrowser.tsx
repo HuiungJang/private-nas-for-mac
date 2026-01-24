@@ -31,12 +31,19 @@ export const FileBrowser: React.FC = () => {
 
   return (
       <Box>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+        <Stack
+            direction={{xs: 'column', sm: 'row'}}
+            alignItems={{xs: 'stretch', sm: 'center'}}
+            justifyContent="space-between"
+            spacing={{xs: 2, sm: 0}}
+            mb={2}
+        >
           <Typography variant="h4" component="h1" sx={{fontWeight: 'bold'}}>
             Files
           </Typography>
 
-          <Stack direction="row" spacing={2} alignItems="center">
+          <Stack direction="row" spacing={2} alignItems="center"
+                 justifyContent={{xs: 'space-between', sm: 'flex-end'}}>
             <FileActionsToolbar
                 selectedFiles={selectedFiles}
                 currentPath={currentPath}
@@ -90,4 +97,5 @@ export const FileBrowser: React.FC = () => {
       </Box>
   );
 };
+
 

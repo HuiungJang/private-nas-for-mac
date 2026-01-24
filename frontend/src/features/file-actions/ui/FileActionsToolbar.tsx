@@ -1,5 +1,5 @@
 import React, {useRef, useState} from 'react';
-import {Button, Stack} from '@mui/material';
+import {Button, IconButton, Stack, Tooltip, useMediaQuery, useTheme} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
@@ -18,6 +18,8 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                                                                         currentPath,
                                                                         onClearSelection,
                                                                       }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const {deleteFiles, isDeleting, uploadFile, isUploading} = useFileActions();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -62,6 +64,13 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
             onChange={handleFileChange}
         />
 
+        {isMobile ? (
+            <Tooltip title="Upload">
+              <IconButton onClick={handleUploadClick} disabled={isUploading} color="primary">
+                <UploadFileIcon/>
+              </IconButton>
+            </Tooltip>
+        ) : (
         <IOSButton
             variant="contained"
             startIcon={<UploadFileIcon/>}
@@ -70,27 +79,45 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
         >
           Upload
         </IOSButton>
+        )}
 
         {selectedFiles.size > 0 && (
             <>
-              <Button
-                  variant="outlined"
-                  startIcon={<DriveFileMoveIcon/>}
-                  onClick={() => setIsMoveModalOpen(true)}
-                  sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
-              >
-                Move
-              </Button>
-              <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<DeleteIcon/>}
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
-              >
-                Delete ({selectedFiles.size})
-              </Button>
+              {isMobile ? (
+                  <Tooltip title="Move">
+                    <IconButton onClick={() => setIsMoveModalOpen(true)} color="primary">
+                      <DriveFileMoveIcon/>
+                    </IconButton>
+                  </Tooltip>
+              ) : (
+                  <Button
+                      variant="outlined"
+                      startIcon={<DriveFileMoveIcon/>}
+                      onClick={() => setIsMoveModalOpen(true)}
+                      sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
+                  >
+                    Move
+                  </Button>
+              )}
+
+              {isMobile ? (
+                  <Tooltip title={`Delete (${selectedFiles.size})`}>
+                    <IconButton onClick={handleDelete} disabled={isDeleting} color="error">
+                      <DeleteIcon/>
+                    </IconButton>
+                  </Tooltip>
+              ) : (
+                  <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<DeleteIcon/>}
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
+                  >
+                    Delete ({selectedFiles.size})
+                  </Button>
+              )}
 
               <MoveFileModal
                   open={isMoveModalOpen}
@@ -104,3 +131,4 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
       </Stack>
   );
 };
+
