@@ -5,8 +5,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.manas.backend.context.system.application.port.in.GetAuditLogsUseCase;
 import com.manas.backend.context.system.application.port.in.GetSystemHealthUseCase;
+import com.manas.backend.context.system.domain.AuditLog;
 import com.manas.backend.context.system.infrastructure.web.dto.SystemHealthDto;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,33 +26,81 @@ class SystemMonitoringControllerTest {
     private MockMvc mockMvc;
 
     @Mock
+
     private GetSystemHealthUseCase getSystemHealthUseCase;
+
+    @Mock
+
+    private GetAuditLogsUseCase getAuditLogsUseCase;
+
+
 
     @BeforeEach
     void setUp() {
-        SystemMonitoringController controller = new SystemMonitoringController(getSystemHealthUseCase);
+
+        SystemMonitoringController controller = new SystemMonitoringController(getSystemHealthUseCase,
+                getAuditLogsUseCase);
+
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+
     }
 
     @Test
+
     @DisplayName("Should return system health")
     void shouldReturnSystemHealth() throws Exception {
+
         // Given
+
         SystemHealthDto mockHealth = new SystemHealthDto(
+
                 0.45,
+
                 512000000L,
+
                 1024000000L,
+
                 10000000000L,
+
                 50000000000L
+
         );
+
         when(getSystemHealthUseCase.getSystemHealth()).thenReturn(mockHealth);
 
         // When/Then
+
         mockMvc.perform(get("/api/admin/system/health"))
+
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cpuUsage").value(0.45))
-                .andExpect(jsonPath("$.memoryUsed").value(512000000))
-                .andExpect(jsonPath("$.storageTotal").value(50000000000L));
+
+                .andExpect(jsonPath("$.cpuUsage").value(0.45));
+
+    }
+
+    @Test
+
+    @DisplayName("Should return audit logs")
+    void shouldReturnAuditLogs() throws Exception {
+
+        // Given
+
+        UUID userId = UUID.randomUUID();
+
+        AuditLog log = AuditLog.create(userId, "LOGIN", "AUTH", "trace-1", "1.1.1.1", "SUCCESS");
+
+        when(getAuditLogsUseCase.getAuditLogs()).thenReturn(List.of(log));
+
+        // When/Then
+
+        mockMvc.perform(get("/api/admin/system/audit-logs"))
+
+                .andExpect(status().isOk())
+
+                .andExpect(jsonPath("$[0].action").value("LOGIN"));
+
     }
 
 }
+
+

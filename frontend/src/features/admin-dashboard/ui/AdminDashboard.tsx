@@ -16,8 +16,10 @@ import {
 } from '@mui/material';
 import {SystemHealthWidget} from '@/widgets/system-health/ui/SystemHealthWidget';
 import {UserTable} from '@/widgets/user-table/ui/UserTable';
+import {AuditLogTable} from '@/widgets/audit-log-table/ui/AuditLogTable';
 import {useSystemHealth} from '@/entities/system/model/useSystemHealth';
 import {useUserMutations, useUsers} from '@/entities/user/model/useUsers';
+import {useAuditLogs} from '@/entities/audit/model/useAuditLogs';
 
 // Simple Create User Modal (Internal to Dashboard for now)
 const CreateUserModal = ({open, onClose, onCreate}: {
@@ -76,6 +78,7 @@ export const AdminDashboard: React.FC = () => {
 
   const {data: healthData, isLoading: isHealthLoading} = useSystemHealth();
   const {data: usersData, isLoading: isUsersLoading} = useUsers();
+  const {data: auditLogs, isLoading: isAuditLoading} = useAuditLogs();
   const {createUser} = useUserMutations();
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -97,6 +100,7 @@ export const AdminDashboard: React.FC = () => {
           <Tabs value={tab} onChange={handleTabChange} aria-label="admin tabs">
             <Tab label="System Health"/>
             <Tab label="User Management"/>
+            <Tab label="Audit Logs"/>
           </Tabs>
         </Box>
 
@@ -118,6 +122,16 @@ export const AdminDashboard: React.FC = () => {
                       onCreate={handleCreateUser}
                   />
                 </>
+            )
+        )}
+
+        {tab === 2 && (
+            isAuditLoading ? (
+                <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
+                  <CircularProgress/>
+                </Box>
+            ) : auditLogs && (
+                <AuditLogTable logs={auditLogs}/>
             )
         )}
       </Box>
