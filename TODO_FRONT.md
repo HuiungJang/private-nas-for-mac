@@ -98,7 +98,7 @@ src/
 
 ### Phase 6: Responsive Design (Mobile Adaptation)
 
-- [ ] **Global Layout:** Ensure `PageLayout` handles mobile padding/margins correctly.
+- [x] **Global Layout:** Ensure `PageLayout` handles mobile padding/margins correctly.
 - [ ] **Login Page:** Full-width layout on mobile, optimized spacing.
 - [ ] **Dashboard:**
   - [ ] **Breadcrumbs:** Horizontal scroll support for deep paths on mobile.

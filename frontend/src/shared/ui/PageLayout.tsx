@@ -20,11 +20,33 @@ const GlassAppBar = styled(AppBar)(({theme}) => ({
   top: 0,
 
   zIndex: 1100,
+
+  // Handle iOS Status Bar
+  paddingTop: 'env(safe-area-inset-top)',
 }));
 
 const ContentContainer = styled(Box)(({theme}) => ({
   flexGrow: 1,
-  padding: theme.spacing(3),
+
+  // Responsive Padding
+  padding: theme.spacing(2),
+  [theme.breakpoints.up('sm')]: {
+    padding: theme.spacing(3),
+  },
+
+  // iOS Safe Area Support
+  paddingTop: `calc(${theme.spacing(2)} + env(safe-area-inset-top))`,
+  paddingBottom: `calc(${theme.spacing(2)} + env(safe-area-inset-bottom))`,
+  paddingLeft: `calc(${theme.spacing(2)} + env(safe-area-inset-left))`,
+  paddingRight: `calc(${theme.spacing(2)} + env(safe-area-inset-right))`,
+
+  [theme.breakpoints.up('sm')]: {
+    paddingTop: `calc(${theme.spacing(3)} + env(safe-area-inset-top))`,
+    paddingBottom: `calc(${theme.spacing(3)} + env(safe-area-inset-bottom))`,
+    paddingLeft: `calc(${theme.spacing(3)} + env(safe-area-inset-left))`,
+    paddingRight: `calc(${theme.spacing(3)} + env(safe-area-inset-right))`,
+  },
+
   backgroundColor: theme.palette.background.default,
   minHeight: '100vh',
 }));
