@@ -10,13 +10,21 @@ describe('FileTable', () => {
   ];
 
   const onNavigate = vi.fn();
+  const onSelectionChange = vi.fn();
+  const selectedFiles = new Set<string>();
 
   beforeEach(() => {
     onNavigate.mockClear();
+    onSelectionChange.mockClear();
   });
 
   it('renders file list correctly', () => {
-    render(<FileTable files={mockFiles} onNavigate={onNavigate}/>);
+    render(<FileTable
+        files={mockFiles}
+        onNavigate={onNavigate}
+        selectedFiles={selectedFiles}
+        onSelectionChange={onSelectionChange}
+    />);
 
     expect(screen.getByText('folder1')).toBeInTheDocument();
     expect(screen.getByText('file1.txt')).toBeInTheDocument();
@@ -24,14 +32,24 @@ describe('FileTable', () => {
   });
 
   it('calls onNavigate when directory is clicked', () => {
-    render(<FileTable files={mockFiles} onNavigate={onNavigate}/>);
+    render(<FileTable
+        files={mockFiles}
+        onNavigate={onNavigate}
+        selectedFiles={selectedFiles}
+        onSelectionChange={onSelectionChange}
+    />);
 
     fireEvent.doubleClick(screen.getByText('folder1')); // Assuming double click navigation
     expect(onNavigate).toHaveBeenCalledWith('folder1');
   });
 
   it('does not call onNavigate when file is clicked', () => {
-    render(<FileTable files={mockFiles} onNavigate={onNavigate}/>);
+    render(<FileTable
+        files={mockFiles}
+        onNavigate={onNavigate}
+        selectedFiles={selectedFiles}
+        onSelectionChange={onSelectionChange}
+    />);
 
     fireEvent.doubleClick(screen.getByText('file1.txt'));
     expect(onNavigate).not.toHaveBeenCalled();

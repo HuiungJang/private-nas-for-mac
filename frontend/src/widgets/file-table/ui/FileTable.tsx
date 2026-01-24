@@ -174,7 +174,7 @@ export const FileTable: React.FC<FileTableProps> = ({
             {files.map((file) => {
               const isSelected = selectedFiles.has(file.name);
               return (
-                  <Grid item xs={6} sm={4} md={3} lg={2} key={file.name}>
+                  <Grid xs={6} sm={4} md={3} lg={2} key={file.name}>
                     <GridItemCard
                         selected={isSelected}
                         onDoubleClick={() => handleRowClick(file)}
