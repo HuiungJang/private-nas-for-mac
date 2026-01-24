@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Box,
   Checkbox,
-  Grid,
   List,
   ListItem,
   ListItemAvatar,
@@ -170,11 +169,20 @@ export const FileTable: React.FC<FileTableProps> = ({
   if (viewMode === 'grid') {
     return (
         <Box sx={{p: 2}}>
-          <Grid container spacing={2}>
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(3, 1fr)',
+              md: 'repeat(4, 1fr)',
+              lg: 'repeat(6, 1fr)'
+            },
+            gap: 2
+          }}>
             {files.map((file) => {
               const isSelected = selectedFiles.has(file.name);
               return (
-                  <Grid xs={6} sm={4} md={3} lg={2} key={file.name}>
+                  <Box key={file.name}>
                     <GridItemCard
                         selected={isSelected}
                         onDoubleClick={() => handleRowClick(file)}
@@ -209,10 +217,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                         {file.type === 'DIRECTORY' ? '' : formatSize(file.size)}
                       </Typography>
                     </GridItemCard>
-                  </Grid>
+                  </Box>
               );
             })}
-          </Grid>
+          </Box>
         </Box>
     );
   }
