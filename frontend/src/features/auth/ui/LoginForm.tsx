@@ -23,7 +23,7 @@ export const LoginForm: React.FC = () => {
         password,
       });
       login(response.data.token);
-      navigate('/');
+      navigate('/', {replace: true});
     } catch (err: unknown) {
       console.log('Login Error:', err);
       if (err instanceof AxiosError && err.response?.data?.detail) {

@@ -11,11 +11,19 @@ const RequireAuth: React.FC = () => {
   return isAuthenticated ? <Outlet/> : <Navigate to="/login" replace/>;
 };
 
+// Public Route Wrapper (Redirects to dashboard if already logged in)
+const RedirectIfAuthenticated: React.FC = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return isAuthenticated ? <Navigate to="/" replace/> : <Outlet/>;
+};
+
 export const AppRouter: React.FC = () => {
   return (
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage/>}/>
+          <Route element={<RedirectIfAuthenticated/>}>
+            <Route path="/login" element={<LoginPage/>}/>
+          </Route>
 
           {/* Protected Routes */}
           <Route element={<RequireAuth/>}>
