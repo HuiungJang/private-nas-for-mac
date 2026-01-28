@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.infrastructure.fs;
 
+import com.manas.backend.common.exception.ResourceNotFoundException;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.domain.FileContent;
@@ -37,7 +38,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         Path targetPath = resolveTarget(pathString);
 
         if (!Files.exists(targetPath)) {
-            throw new IllegalArgumentException("Path does not exist: " + targetPath);
+            throw new ResourceNotFoundException("Path does not exist: " + targetPath);
         }
 
         try {
@@ -57,7 +58,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         Path destinationPath = resolveTarget(destinationPathString);
 
         if (!Files.exists(sourcePath)) {
-            throw new IllegalArgumentException("Source path does not exist: " + sourcePath);
+            throw new ResourceNotFoundException("Source path does not exist: " + sourcePath);
         }
 
         if (Files.exists(destinationPath)) {
@@ -99,7 +100,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         Path targetPath = resolveTarget(pathString);
 
         if (!Files.exists(targetPath)) {
-            throw new IllegalArgumentException("File does not exist: " + targetPath);
+            throw new ResourceNotFoundException("File does not exist: " + targetPath);
         }
 
         if (Files.isDirectory(targetPath)) {
@@ -167,7 +168,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         Path targetPath = resolveTarget(pathString);
 
         if (!Files.exists(targetPath)) {
-            throw new IllegalArgumentException("Path does not exist: " + targetPath);
+            throw new ResourceNotFoundException("Path does not exist: " + targetPath);
         }
 
         if (!Files.isDirectory(targetPath)) {

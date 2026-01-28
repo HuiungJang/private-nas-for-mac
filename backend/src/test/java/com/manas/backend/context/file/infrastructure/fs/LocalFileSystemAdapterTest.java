@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.manas.backend.common.exception.ResourceNotFoundException;
 import com.manas.backend.context.file.domain.FileContent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -60,7 +61,7 @@ class LocalFileSystemAdapterTest {
     @Test
     @DisplayName("Should throw exception if file does not exist")
     void shouldThrowIfFileDoesNotExist() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ResourceNotFoundException.class, () ->
                 adapter.retrieve("/non-existent.txt", userId)
         );
     }

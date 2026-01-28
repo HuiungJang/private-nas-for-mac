@@ -1,9 +1,12 @@
 import {useEffect, useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import type {ViewMode} from '@/widgets/file-table/ui/FileTable';
 import {useFiles} from '@/entities/file/model/useFiles';
 
 export const useFileBrowser = (initialPath: string = '/') => {
-  const [currentPath, setCurrentPath] = useState<string>(initialPath);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPath = searchParams.get('path') || initialPath;
+  
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
@@ -15,7 +18,7 @@ export const useFileBrowser = (initialPath: string = '/') => {
   }, [currentPath]);
 
   const navigateTo = (path: string) => {
-    setCurrentPath(path);
+    setSearchParams({path});
   };
 
   const toggleViewMode = (_event: React.MouseEvent<HTMLElement>, newMode: ViewMode | null) => {

@@ -14,6 +14,7 @@ public interface UserMapper {
     User toDomain(UserEntity entity);
 
     @Mapping(target = "passwordHash", source = "password.hash")
+    @Mapping(target = "new", ignore = true)
     UserEntity toEntity(User domain);
 
     @Named("mapPassword")
