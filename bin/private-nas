@@ -58,6 +58,10 @@ setup() {
     read -p "VPN Admin Password [admin123]: " WG_PASSWORD
     WG_PASSWORD=${WG_PASSWORD:-admin123}
     
+    echo "Generating password hash..."
+    # Generate bcrypt hash using wg-easy container
+    WG_PASSWORD_HASH=$(docker run --rm ghcr.io/wg-easy/wg-easy wgpw "$WG_PASSWORD" | tr -d '\r\n')
+    
     if [[ "$OSTYPE" == "darwin"* ]]; then
         DEFAULT_VOLUMES="/Volumes"
     else
@@ -68,7 +72,7 @@ setup() {
     
     cat > "$ENV_FILE" <<EOF
 WG_HOST=${WG_HOST}
-WG_PASSWORD=${WG_PASSWORD}
+WG_PASSWORD_HASH=${WG_PASSWORD_HASH}
 HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH}
 EOF
     echo -e "${GREEN}Configuration saved to $ENV_FILE${NC}"

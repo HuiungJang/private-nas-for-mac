@@ -26,6 +26,9 @@ if [ ! -f .env ]; then
     read -p "Enter VPN Admin Password [admin123]: " WG_PASSWORD
     WG_PASSWORD=${WG_PASSWORD:-admin123}
     
+    echo "Generating password hash..."
+    WG_PASSWORD_HASH=$(docker run --rm ghcr.io/wg-easy/wg-easy wgpw "$WG_PASSWORD" | tr -d '\r\n')
+    
     # Detect OS for default volume path
     if [[ "$OSTYPE" == "darwin"* ]]; then
         DEFAULT_VOLUMES="/Volumes"
@@ -38,7 +41,7 @@ if [ ! -f .env ]; then
     
     cat > .env <<EOF
 WG_HOST=${WG_HOST}
-WG_PASSWORD=${WG_PASSWORD}
+WG_PASSWORD_HASH=${WG_PASSWORD_HASH}
 HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH}
 EOF
     echo -e "${GREEN}.env created!${NC}"
