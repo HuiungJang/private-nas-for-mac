@@ -37,7 +37,7 @@ spring:
     baseline-on-migrate: true
 
 jwt:
-  secret: ${JWT_SECRET:dev_only_secret_change_in_production_404E635266556A586E3272357538782F}
+  secret: ${JWT_SECRET:dGhpcy1pcy1hLXZlcnktc3Ryb25nLXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50}
   expiration: 86400000
 
 cors:
