@@ -16,34 +16,57 @@ fi
 # 2. Setup Environment Variables
 if [ ! -f .env ]; then
     echo "Creating .env file..."
-    
+
     # Try to detect public IP
     DEFAULT_HOST=$(curl -s ifconfig.me || echo "localhost")
-    
+
     read -p "Enter your Public IP/Hostname for VPN [${DEFAULT_HOST}]: " WG_HOST
     WG_HOST=${WG_HOST:-$DEFAULT_HOST}
-    
+
     read -p "Enter VPN Admin Password [admin123]: " WG_PASSWORD
     WG_PASSWORD=${WG_PASSWORD:-admin123}
+
+            echo "Generating password hash..."
+
+            RAW_HASH=$(docker run --rm --entrypoint node ghcr.io/wg-easy/wg-easy -e 'console.log(require("bcryptjs").hashSync(process.argv[1], 10))' "$WG_PASSWORD")
+
+            WG_PASSWORD_HASH=$(echo "$RAW_HASH" | sed 's/\$/\$\$/g')
+
+            
+
+            # Detect OS for default volume path
+
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+
+                DEFAULT_VOLUMES="/Volumes"
+
+            else
+
+                DEFAULT_VOLUMES="/mnt"
+
+            fi
+
+            
+
+            read -p "Enter Host Path to share [${DEFAULT_VOLUMES}]: " HOST_VOLUMES_PATH
+
+            HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH:-$DEFAULT_VOLUMES}
+
+            
+
+            cat > .env <<EOF
+
+        WG_HOST=${WG_HOST}
+
+        WG_PASSWORD_HASH=${WG_PASSWORD_HASH}
+
+        HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH}
+
+        EOF
+
+        
+
     
-    echo "Generating password hash..."
-    WG_PASSWORD_HASH=$(docker run --rm ghcr.io/wg-easy/wg-easy wgpw "$WG_PASSWORD" | tr -d '\r\n')
-    
-    # Detect OS for default volume path
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        DEFAULT_VOLUMES="/Volumes"
-    else
-        DEFAULT_VOLUMES="/mnt"
-    fi
-    
-    read -p "Enter Host Path to share [${DEFAULT_VOLUMES}]: " HOST_VOLUMES_PATH
-    HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH:-$DEFAULT_VOLUMES}
-    
-    cat > .env <<EOF
-WG_HOST=${WG_HOST}
-WG_PASSWORD_HASH=${WG_PASSWORD_HASH}
-HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH}
-EOF
     echo -e "${GREEN}.env created!${NC}"
 else
     echo -e "${GREEN}.env exists, skipping setup.${NC}"

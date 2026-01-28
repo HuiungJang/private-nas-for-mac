@@ -59,8 +59,10 @@ setup() {
     WG_PASSWORD=${WG_PASSWORD:-admin123}
     
     echo "Generating password hash..."
-    # Generate bcrypt hash using wg-easy container
-    WG_PASSWORD_HASH=$(docker run --rm ghcr.io/wg-easy/wg-easy wgpw "$WG_PASSWORD" | tr -d '\r\n')
+    # Generate bcrypt hash using node directly to ensure clean output
+    RAW_HASH=$(docker run --rm --entrypoint node ghcr.io/wg-easy/wg-easy -e 'console.log(require("bcryptjs").hashSync(process.argv[1], 10))' "$WG_PASSWORD")
+    # Escape $ characters for docker-compose (replace $ with $$)
+    WG_PASSWORD_HASH=$(echo "$RAW_HASH" | sed 's/\$/\$\$/g')
     
     if [[ "$OSTYPE" == "darwin"* ]]; then
         DEFAULT_VOLUMES="/Volumes"
