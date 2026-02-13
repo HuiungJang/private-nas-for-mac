@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public record FileNodeDTO(
     String name,
+    String path,
     String type, // "FILE" or "DIRECTORY"
     long size,
     Instant lastModified,

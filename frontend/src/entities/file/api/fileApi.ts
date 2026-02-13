@@ -1,5 +1,5 @@
 import {apiClient} from '@/shared/api/axios';
-import type {DirectoryListing} from '../model/types';
+import type {DeleteFilesResponse, DirectoryListing} from '../model/types';
 
 export const fileApi = {
   listFiles: async (path?: string): Promise<DirectoryListing> => {
@@ -8,8 +8,9 @@ export const fileApi = {
     return response.data;
   },
 
-  deleteFiles: async (paths: string[]): Promise<void> => {
-    await apiClient.post('/admin/files/delete', {paths});
+  deleteFiles: async (paths: string[]): Promise<DeleteFilesResponse> => {
+    const response = await apiClient.post<DeleteFilesResponse>('/admin/files/delete', {paths});
+    return response.data;
   },
 
   moveFile: async (sourcePath: string, destinationPath: string): Promise<void> => {

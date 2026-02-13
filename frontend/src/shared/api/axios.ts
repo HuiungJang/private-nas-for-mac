@@ -63,7 +63,11 @@ apiClient.interceptors.response.use(
               error.message ||
               'An unexpected error occurred';
 
-    useNotificationStore.getState().showNotification(message, 'error');
+    const method = error.config?.method as string | undefined;
+    const retryable = shouldRetryRequest(status, method);
+    if (!retryable) {
+      useNotificationStore.getState().showNotification(message, 'error');
+    }
 
     return Promise.reject(error);
   }

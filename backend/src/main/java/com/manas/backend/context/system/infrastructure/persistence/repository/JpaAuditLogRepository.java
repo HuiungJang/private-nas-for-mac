@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JpaAuditLogRepository extends JpaRepository<AuditLogEntity, Long> {
 
-    @Query(value = "SELECT * FROM audit_logs ORDER BY timestamp DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT * FROM audit_logs ORDER BY timestamp DESC, id DESC OFFSET :offset LIMIT :limit", nativeQuery = true)
     List<AuditLogEntity> findPageByOffsetLimit(@Param("offset") int offset, @Param("limit") int limit);
 }

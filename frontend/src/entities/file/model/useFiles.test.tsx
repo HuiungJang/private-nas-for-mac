@@ -30,7 +30,7 @@ describe('useFiles', () => {
       currentPath: '/root',
       breadcrumbs: [],
       items: [
-        {name: 'file.txt', type: 'FILE', size: 100, lastModified: '2023-01-01', owner: 'admin'},
+        {name: 'file.txt', path: '/root/file.txt', type: 'FILE', size: 100, lastModified: '2023-01-01', owner: 'admin'},
       ],
     };
 

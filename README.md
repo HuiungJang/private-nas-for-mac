@@ -130,7 +130,7 @@ curl -H "Authorization: Bearer <token>" "http://127.0.0.1/api/admin/system/audit
 ```bash
 bash scripts/smoke_e2e.sh
 ```
-This script builds/starts containers, validates core auth/health paths, and then checks all discovered backend API routes (controller annotation 기반 자동 수집) for non-404/non-5xx reachability.
+This script builds/starts containers, validates core auth/health paths, and then checks discovered backend API routes for safe-method(GET) non-404/non-5xx reachability.
 
 ### CI Quality Gates
 - Pull Request / Push(main):

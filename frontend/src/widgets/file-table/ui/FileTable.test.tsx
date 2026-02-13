@@ -5,8 +5,8 @@ import type {FileNode} from '@/entities/file/model/types';
 
 describe('FileTable', () => {
   const mockFiles: FileNode[] = [
-    {name: 'folder1', type: 'DIRECTORY', size: 0, lastModified: '2023-01-01', owner: 'admin'},
-    {name: 'file1.txt', type: 'FILE', size: 1024, lastModified: '2023-01-02', owner: 'admin'},
+    {name: 'folder1', path: '/folder1', type: 'DIRECTORY', size: 0, lastModified: '2023-01-01', owner: 'admin'},
+    {name: 'file1.txt', path: '/file1.txt', type: 'FILE', size: 1024, lastModified: '2023-01-02', owner: 'admin'},
   ];
 
   const onNavigate = vi.fn();
