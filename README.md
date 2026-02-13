@@ -123,6 +123,14 @@ bash scripts/smoke_e2e.sh
 ```
 This script builds/starts containers and validates key API paths (backend `/actuator/health`, login fail/success, protected API access).
 
+### CI Quality Gates
+- Pull Request / Push(main):
+  - backend `./gradlew test`
+  - frontend `npm ci && npm run build`
+  - frontend production dependency audit `npm audit --omit=dev --audit-level=high`
+- Push(main):
+  - `bash scripts/smoke_e2e.sh`
+
 ### Backend Profile Notes
 - Production-safe defaults are in `application.yml` (SQL logs off).
 - For local debugging with SQL logs enabled, use dev profile:
