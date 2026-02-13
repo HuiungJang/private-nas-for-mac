@@ -60,6 +60,7 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
 * [**VPN Implementation**](./spec/02_vpn_implementation.md): Details on the security model and
   networking.
 * [**Admin Page Spec**](./spec/page/admin/): UI/UX and API specs for the administration interface.
+* [**VPN Operations Runbook**](./docs/vpn_operations_runbook.md): Key rotation, revoke, upgrade/rollback checklist.
 
 ---
 
