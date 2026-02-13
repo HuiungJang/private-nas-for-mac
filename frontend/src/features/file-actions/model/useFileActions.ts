@@ -13,15 +13,32 @@ export const useFileActions = () => {
 
   const deleteFilesMutation = useMutation({
     mutationFn: async (paths: string[]) => {
-      const taskId = startTask(`Delete ${paths.length} file(s)`);
+      const taskId = startTask({type: 'file.delete', count: paths.length});
       try {
         const result = await fileApi.deleteFiles(paths);
         completeTask(taskId);
-        return result;
+        return {result, taskId, paths};
       } catch (e: any) {
         failTask(taskId, e?.message || 'Delete failed');
         throw e;
       }
+    },
+    onMutate: async (paths) => {
+      await queryClient.cancelQueries({queryKey: queryKeys.files(), exact: false});
+      const snapshots = queryClient.getQueriesData({queryKey: queryKeys.files(), exact: false});
+
+      snapshots.forEach(([key, data]: any) => {
+        if (!data?.items) return;
+        queryClient.setQueryData(key, {
+          ...data,
+          items: data.items.filter((item: any) => !paths.includes(item.path)),
+        });
+      });
+
+      return {snapshots};
+    },
+    onError: (_err, _vars, context) => {
+      context?.snapshots?.forEach(([key, data]: any) => queryClient.setQueryData(key, data));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
@@ -31,7 +48,7 @@ export const useFileActions = () => {
 
   const uploadFileMutation = useMutation({
     mutationFn: async ({file, directory}: { file: File; directory: string }) => {
-      const taskId = startTask(`Upload ${file.name}`);
+      const taskId = startTask({type: 'file.upload', fileName: file.name});
       try {
         const result = await fileApi.uploadFile(file, directory);
         completeTask(taskId);
@@ -49,15 +66,34 @@ export const useFileActions = () => {
 
   const moveFileMutation = useMutation({
     mutationFn: async ({sourcePath, destinationPath}: { sourcePath: string; destinationPath: string }) => {
-      const taskId = startTask('Move file');
+      const taskId = startTask({type: 'file.move', sourcePath, destinationPath});
       try {
         const result = await fileApi.moveFile(sourcePath, destinationPath);
         completeTask(taskId);
-        return result;
+        return {result, sourcePath, destinationPath};
       } catch (e: any) {
         failTask(taskId, e?.message || 'Move failed');
         throw e;
       }
+    },
+    onMutate: async ({sourcePath, destinationPath}) => {
+      await queryClient.cancelQueries({queryKey: queryKeys.files(), exact: false});
+      const snapshots = queryClient.getQueriesData({queryKey: queryKeys.files(), exact: false});
+
+      snapshots.forEach(([key, data]: any) => {
+        if (!data?.items) return;
+        queryClient.setQueryData(key, {
+          ...data,
+          items: data.items.map((item: any) =>
+            item.path === sourcePath ? {...item, path: destinationPath, name: destinationPath.split('/').pop() ?? item.name} : item
+          ),
+        });
+      });
+
+      return {snapshots};
+    },
+    onError: (_err, _vars, context) => {
+      context?.snapshots?.forEach(([key, data]: any) => queryClient.setQueryData(key, data));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
