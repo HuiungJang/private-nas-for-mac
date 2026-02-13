@@ -121,7 +121,7 @@ docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 ```bash
 bash scripts/smoke_e2e.sh
 ```
-This script builds/starts containers and validates key API paths (backend `/actuator/health`, login fail/success, protected API access).
+This script builds/starts containers, validates core auth/health paths, and then checks all discovered backend API routes (controller annotation 기반 자동 수집) for non-404/non-5xx reachability.
 
 ### CI Quality Gates
 - Pull Request / Push(main):
