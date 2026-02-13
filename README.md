@@ -68,6 +68,8 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed on your Mac.
 
 ### Step 1: Configure Environment
+> ⚠️ If `config/db-data` already exists, changing `NAS_USER/NAS_PASSWORD/NAS_DB` later may cause backend DB authentication failures. Reinitialize DB data (after backup) or keep credentials aligned with the existing DB.
+
 1. Copy the example environment file:
    ```bash
    cp .env.example .env
