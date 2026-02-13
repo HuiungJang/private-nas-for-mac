@@ -61,6 +61,7 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
 * [**VPN Operations Runbook**](./docs/vpn_operations_runbook.md): Key rotation, revoke, upgrade/rollback checklist.
 * [**Release Traceability (2026-02)**](./docs/release_traceability_2026-02.md): issue-PR mapping for recent hardening rounds.
 * [**Project Wiki**](./docs/WIKI.md): onboarding, architecture, run/test, operations quick reference.
+  * [OPS](./docs/wiki/OPS.md) / [DEV](./docs/wiki/DEV.md) / [SECURITY](./docs/wiki/SECURITY.md)
 
 ---
 

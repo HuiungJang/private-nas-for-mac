@@ -154,4 +154,9 @@ curl -H "Authorization: Bearer <token>" \
 
 ---
 
-필요하면 이 위키를 기반으로 **운영자용(Ops) / 개발자용(Dev) / 보안점검용(Security)**으로 분리해 확장할 수 있습니다.
+## 분리 문서
+- [OPS Wiki](./wiki/OPS.md)
+- [DEV Wiki](./wiki/DEV.md)
+- [SECURITY Wiki](./wiki/SECURITY.md)
+
+기본 위키는 개요 허브로 유지하고, 세부 운영/개발/보안 내용은 위 분리 문서에서 관리합니다.
