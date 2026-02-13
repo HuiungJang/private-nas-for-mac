@@ -1,10 +1,11 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {userApi} from '../api/userApi';
 import type {CreateUserRequest, UpdateUserRequest, UserSummary} from './types';
+import {queryKeys} from '@/shared/model/queryKeys';
 
 export const useUsers = () => {
   return useQuery<UserSummary[]>({
-    queryKey: ['users'],
+    queryKey: queryKeys.users(),
     queryFn: userApi.listUsers,
   });
 };
@@ -15,7 +16,7 @@ export const useUserMutations = () => {
   const createUserMutation = useMutation({
     mutationFn: (data: CreateUserRequest) => userApi.createUser(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['users']});
+      queryClient.invalidateQueries({queryKey: queryKeys.users()});
     },
   });
 
@@ -25,7 +26,7 @@ export const useUserMutations = () => {
       data: UpdateUserRequest
     }) => userApi.updateUser(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['users']});
+      queryClient.invalidateQueries({queryKey: queryKeys.users()});
     },
   });
 

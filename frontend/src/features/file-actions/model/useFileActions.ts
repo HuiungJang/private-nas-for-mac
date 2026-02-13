@@ -2,6 +2,7 @@ import {useMutation, useQueryClient} from '@tanstack/react-query';
 import {fileApi} from '@/entities/file/api/fileApi';
 import {useNotificationStore} from '@/shared/model/useNotificationStore';
 import {useTaskCenterStore} from '@/shared/model/useTaskCenterStore';
+import {queryKeys} from '@/shared/model/queryKeys';
 
 export const useFileActions = () => {
   const queryClient = useQueryClient();
@@ -23,7 +24,7 @@ export const useFileActions = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['files']});
+      queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
       showNotification('Files deleted successfully', 'success');
     },
   });
@@ -41,7 +42,7 @@ export const useFileActions = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['files']});
+      queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
       showNotification('File uploaded successfully', 'success');
     },
   });
@@ -59,7 +60,7 @@ export const useFileActions = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['files']});
+      queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
       showNotification('Files moved successfully', 'success');
     },
   });
