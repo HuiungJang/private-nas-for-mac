@@ -6,7 +6,10 @@ import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
 import com.manas.backend.context.file.application.port.in.GetFilePreviewUseCase;
+import com.manas.backend.context.file.application.port.in.GetUploadStatusUseCase;
+import com.manas.backend.context.file.application.port.in.UploadStatusResult;
 import com.manas.backend.context.file.domain.FileContent;
+import com.manas.backend.context.file.infrastructure.web.dto.UploadStatusResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -34,12 +37,14 @@ public class FileController {
     private final FileUploadUseCase fileUploadUseCase;
     private final DownloadFileUseCase downloadFileUseCase;
     private final GetFilePreviewUseCase getFilePreviewUseCase;
+    private final GetUploadStatusUseCase getUploadStatusUseCase;
     private final ClientIpResolver clientIpResolver;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "directory", defaultValue = "/") String directory,
+            @RequestParam(value = "checksumSha256", required = false) String checksumSha256,
             @AuthenticationPrincipal User user
     ) throws IOException {
 
@@ -50,12 +55,21 @@ public class FileController {
                 directory,
                 file.getSize(),
                 user != null ? user.id()
-                        : null // Handle potential null user in non-secured env (though tests might mock it)
+                        : null, // Handle potential null user in non-secured env (though tests might mock it)
+                checksumSha256
         );
 
         fileUploadUseCase.upload(command);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/upload/status")
+    public ResponseEntity<UploadStatusResponse> getUploadStatus(
+            @RequestParam("path") String path
+    ) {
+        UploadStatusResult result = getUploadStatusUseCase.getStatus(path);
+        return ResponseEntity.ok(new UploadStatusResponse(result.exists(), result.size()));
     }
 
     @GetMapping("/download")

@@ -57,6 +57,18 @@ public interface FileStoragePort {
     FileContent retrieve(String path, UUID userId);
 
     /**
+     * Returns whether the target path exists.
+     */
+    boolean exists(String path, UUID userId);
+
+    /**
+     * Returns file size in bytes for the target path.
+     *
+     * @throws IllegalArgumentException if path does not exist or is a directory.
+     */
+    long getFileSize(String path, UUID userId);
+
+    /**
      * Returns the available disk space in bytes for the storage root.
      *
      * @return Available disk space in bytes.
