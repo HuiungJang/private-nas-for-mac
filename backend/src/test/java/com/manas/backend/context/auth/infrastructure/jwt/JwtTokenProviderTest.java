@@ -1,6 +1,7 @@
 package com.manas.backend.context.auth.infrastructure.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -51,6 +52,15 @@ class JwtTokenProviderTest {
 
         // Then
         assertThat(shortLivedProvider.validateToken(token)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should throw when JWT secret decode length is less than 32 bytes")
+    void constructor_TooShortDecodedSecret() {
+        String shortSecret = "MTIzNDU2Nzg5MA=="; // "1234567890" (10 bytes)
+        assertThatThrownBy(() -> new JwtTokenProvider(shortSecret, expiration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("at least 32 bytes");
     }
 
 }

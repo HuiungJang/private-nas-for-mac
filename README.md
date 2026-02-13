@@ -73,10 +73,23 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
    ```bash
    cp .env.example .env
    ```
-2. Open `.env` and set your `WG_HOST` (Public IP or DDNS) and `WG_PASSWORD`.
+2. Open `.env` and configure required security values:
+   - `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD` (initial admin password)
+   - `JWT_SECRET` (Base64, decoded length >= 32 bytes)
+   - `WG_HOST` (Public IP or DDNS)
 
-### Step 2: Start VPN
-Run the Docker containers:
+   Generate a secure JWT secret:
+   ```bash
+   openssl rand -base64 32
+   ```
+
+### Step 2: Start Services (with preflight checks)
+Run the startup script (recommended):
+```bash
+./start.sh
+```
+
+Or run Docker directly:
 ```bash
 docker-compose up -d
 ```

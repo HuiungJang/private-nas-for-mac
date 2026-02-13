@@ -1,82 +1,147 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'
 
-echo -e "${BLUE}=== Private NAS Setup ===${NC}"
+print_info() { echo -e "${BLUE}$1${NC}"; }
+print_ok() { echo -e "${GREEN}$1${NC}"; }
+print_err() { echo -e "${RED}$1${NC}"; }
 
-# 1. Check Docker
-if ! command -v docker &> /dev/null; then
-    echo "Error: Docker is not installed. Please install Docker Desktop first."
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    print_err "Error: required command not found: $1"
     exit 1
-fi
+  fi
+}
 
-# 2. Setup Environment Variables
-if [ ! -f .env ]; then
-    echo "Creating .env file..."
+ensure_env_file() {
+  if [[ -f .env ]]; then
+    print_ok ".env exists, skipping interactive setup."
+    return
+  fi
 
-    # Try to detect public IP
-    DEFAULT_HOST=$(curl -s ifconfig.me || echo "localhost")
+  print_info "Creating .env file..."
 
-    read -p "Enter your Public IP/Hostname for VPN [${DEFAULT_HOST}]: " WG_HOST
-    WG_HOST=${WG_HOST:-$DEFAULT_HOST}
+  local default_host
+  default_host=$(curl -s ifconfig.me || echo "localhost")
 
-    read -p "Enter VPN Admin Password [admin123]: " WG_PASSWORD
-    WG_PASSWORD=${WG_PASSWORD:-admin123}
+  read -r -p "Enter your Public IP/Hostname for VPN [${default_host}]: " wg_host
+  wg_host=${wg_host:-$default_host}
 
-            echo "Generating password hash..."
+  read -r -p "Enter VPN Admin Password [admin123]: " wg_password
+  wg_password=${wg_password:-admin123}
 
-            RAW_HASH=$(docker run --rm --entrypoint node ghcr.io/wg-easy/wg-easy -e 'console.log(require("bcryptjs").hashSync(process.argv[1], 10))' "$WG_PASSWORD")
+  print_info "Generating WireGuard admin password hash..."
+  raw_hash=$(docker run --rm --entrypoint node ghcr.io/wg-easy/wg-easy \
+    -e 'console.log(require("bcryptjs").hashSync(process.argv[1], 10))' "$wg_password")
+  wg_password_hash=$(echo "$raw_hash" | sed 's/\$/\$\$/g')
 
-            WG_PASSWORD_HASH=$(echo "$RAW_HASH" | sed 's/\$/\$\$/g')
+  local default_volumes
+  if [[ "$OSTYPE" == darwin* ]]; then
+    default_volumes="/Volumes"
+  else
+    default_volumes="/mnt"
+  fi
 
-            
+  read -r -p "Enter Host Path to share [${default_volumes}]: " host_volumes_path
+  host_volumes_path=${host_volumes_path:-$default_volumes}
 
-            # Detect OS for default volume path
+  read -r -p "Enter bootstrap admin password [change_me_now]: " bootstrap_admin_password
+  bootstrap_admin_password=${bootstrap_admin_password:-change_me_now}
 
-            if [[ "$OSTYPE" == "darwin"* ]]; then
+  local generated_jwt_secret
+  generated_jwt_secret=$(openssl rand -base64 32)
+  read -r -p "Enter JWT_SECRET (Base64, >=32 decoded bytes) [auto-generated]: " jwt_secret
+  jwt_secret=${jwt_secret:-$generated_jwt_secret}
 
-                DEFAULT_VOLUMES="/Volumes"
+  cat > .env <<EOF
+WG_HOST=${wg_host}
+WG_PASSWORD_HASH=${wg_password_hash}
+HOST_VOLUMES_PATH=${host_volumes_path}
+APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD=${bootstrap_admin_password}
+JWT_SECRET=${jwt_secret}
+TRUSTED_PROXY_SUBNETS=127.0.0.1/32,::1/128
+EOF
 
-            else
+  print_ok ".env created."
+}
 
-                DEFAULT_VOLUMES="/mnt"
+get_env_value() {
+  local key="$1"
+  grep -E "^${key}=" .env | tail -n1 | cut -d'=' -f2-
+}
 
-            fi
+validate_jwt_secret() {
+  local jwt_secret="$1"
 
-            
+  if [[ -z "$jwt_secret" ]]; then
+    print_err "JWT_SECRET is missing in .env"
+    return 1
+  fi
 
-            read -p "Enter Host Path to share [${DEFAULT_VOLUMES}]: " HOST_VOLUMES_PATH
+  if ! printf '%s' "$jwt_secret" | base64 --decode >/tmp/nas_jwt_secret.bin 2>/dev/null; then
+    print_err "JWT_SECRET must be valid Base64"
+    return 1
+  fi
 
-            HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH:-$DEFAULT_VOLUMES}
+  local decoded_len
+  decoded_len=$(wc -c </tmp/nas_jwt_secret.bin | tr -d ' ')
+  rm -f /tmp/nas_jwt_secret.bin
 
-            
+  if [[ "$decoded_len" -lt 32 ]]; then
+    print_err "JWT_SECRET decode length must be at least 32 bytes (current: ${decoded_len})"
+    return 1
+  fi
 
-            cat > .env <<EOF
+  return 0
+}
 
-        WG_HOST=${WG_HOST}
+preflight_security_checks() {
+  print_info "Running security preflight checks..."
 
-        WG_PASSWORD_HASH=${WG_PASSWORD_HASH}
+  local wg_password_hash bootstrap_admin_password jwt_secret
+  wg_password_hash=$(get_env_value "WG_PASSWORD_HASH")
+  bootstrap_admin_password=$(get_env_value "APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD")
+  jwt_secret=$(get_env_value "JWT_SECRET")
 
-        HOST_VOLUMES_PATH=${HOST_VOLUMES_PATH}
+  if [[ -z "$wg_password_hash" ]]; then
+    print_err "WG_PASSWORD_HASH is missing in .env"
+    exit 1
+  fi
 
-        EOF
+  if [[ -z "$bootstrap_admin_password" ]]; then
+    print_err "APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD is missing in .env"
+    exit 1
+  fi
 
-        
+  if ! validate_jwt_secret "$jwt_secret"; then
+    exit 1
+  fi
 
-    
-    echo -e "${GREEN}.env created!${NC}"
-else
-    echo -e "${GREEN}.env exists, skipping setup.${NC}"
-fi
+  print_ok "Security preflight checks passed."
+}
 
-# 3. Start Services
-echo -e "${BLUE}Starting Services...${NC}"
-docker-compose up -d --build
+main() {
+  print_info "=== Private NAS Setup ==="
 
-echo -e "${GREEN}=== Setup Complete ===${NC}"
-echo -e "Frontend: http://localhost"
-echo -e "VPN Admin: http://localhost:51821 (Password: Check .env)"
-echo -e "WireGuard Port: 51820/udp"
+  require_cmd docker
+  require_cmd docker-compose
+  require_cmd openssl
+  require_cmd base64
+
+  ensure_env_file
+  preflight_security_checks
+
+  print_info "Starting services..."
+  docker-compose up -d --build
+
+  print_ok "=== Setup Complete ==="
+  echo "Frontend: http://localhost"
+  echo "VPN Admin: http://localhost:51821"
+  echo "WireGuard Port: 51820/udp"
+}
+
+main "$@"
