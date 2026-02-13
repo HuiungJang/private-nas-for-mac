@@ -1,11 +1,12 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import {BrowserRouter, Navigate, Outlet, Route, Routes} from 'react-router-dom';
 import {useAuthStore} from '@/entities/user/model/store';
-import {LoginPage} from '@/pages/login/LoginPage';
-import {DashboardPage} from '@/pages/dashboard/DashboardPage';
-import {AdminPage} from '@/pages/admin/AdminPage';
-import {ChangePasswordPage} from '@/pages/change-password/ChangePasswordPage';
 import {AppShell} from '@/shared/ui/AppShell';
+
+const LoginPage = React.lazy(() => import('@/pages/login/LoginPage').then(m => ({default: m.LoginPage})));
+const DashboardPage = React.lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({default: m.DashboardPage})));
+const AdminPage = React.lazy(() => import('@/pages/admin/AdminPage').then(m => ({default: m.AdminPage})));
+const ChangePasswordPage = React.lazy(() => import('@/pages/change-password/ChangePasswordPage').then(m => ({default: m.ChangePasswordPage})));
 
 // Protected Route Wrapper
 const RequireAuth: React.FC = () => {
@@ -46,7 +47,8 @@ const RedirectIfAuthenticated: React.FC = () => {
 
 export const AppRouter: React.FC = () => {
   return (
-      <BrowserRouter>
+    <BrowserRouter>
+      <Suspense fallback={null}>
         <Routes>
           <Route element={<RedirectIfAuthenticated/>}>
             <Route path="/login" element={<LoginPage/>}/>
@@ -64,6 +66,7 @@ export const AppRouter: React.FC = () => {
             </Route>
           </Route>
         </Routes>
-      </BrowserRouter>
+      </Suspense>
+    </BrowserRouter>
   );
 };
