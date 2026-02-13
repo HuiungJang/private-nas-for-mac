@@ -3,6 +3,7 @@ package com.manas.backend.context.auth.infrastructure.security;
 import com.manas.backend.context.auth.infrastructure.jwt.JwtAuthenticationFilter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -63,7 +64,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Parse allowed origins from configuration (comma-separated)
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        boolean hasWildcard = origins.stream()
+                .map(s -> s.toLowerCase(Locale.ROOT))
+                .anyMatch(s -> s.equals("*") || s.contains("://*"));
+        if (hasWildcard) {
+            throw new IllegalStateException("CORS wildcard origins are not allowed when credentials are enabled");
+        }
+
         configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Trace-ID"));

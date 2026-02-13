@@ -91,6 +91,9 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
 
    VPN allowed subnets 기본값에는 IPv6 loopback(`::1/128`)이 포함됩니다.
 
+   CORS 보안 가드:
+   - `allowCredentials=true` 구성에서는 `CORS_ALLOWED_ORIGINS`에 wildcard(`*`, `http://*`, `https://*`)를 사용할 수 없습니다.
+
    Generate a secure JWT secret:
    ```bash
    openssl rand -base64 32

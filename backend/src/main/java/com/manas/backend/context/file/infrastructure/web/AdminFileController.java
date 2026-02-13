@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.infrastructure.web;
 
+import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserAccessor;
 import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserPrincipal;
 import com.manas.backend.context.file.application.port.in.DeleteFilesResult;
 import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
@@ -33,6 +34,7 @@ public class AdminFileController {
     private final DeleteFilesUseCase deleteFilesUseCase;
     private final MoveFileUseCase moveFileUseCase;
     private final FileMapper fileMapper;
+    private final AuthenticatedUserAccessor authenticatedUserAccessor;
 
     @GetMapping("/list")
     @PreAuthorize("hasRole('ADMIN')")
@@ -43,10 +45,10 @@ public class AdminFileController {
             @RequestParam(defaultValue = "NAME_ASC") FileListSort sort,
             @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
-        ensureAuthenticated(user);
+        var userId = authenticatedUserAccessor.requiredUserId(user);
 
         DirectoryListing result = listDirectoryUseCase.listDirectory(
-                new ListDirectoryQuery(path, user.id(), offset, limit, sort)
+                new ListDirectoryQuery(path, userId, offset, limit, sort)
         );
         return ResponseEntity.ok(fileMapper.toDTO(result));
     }
@@ -57,9 +59,9 @@ public class AdminFileController {
             @RequestBody DeleteFilesRequest request,
             @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
-        ensureAuthenticated(user);
+        var userId = authenticatedUserAccessor.requiredUserId(user);
 
-        DeleteFilesResult result = deleteFilesUseCase.deleteFiles(request.paths(), user.id());
+        DeleteFilesResult result = deleteFilesUseCase.deleteFiles(request.paths(), userId);
         DeleteFilesResponse response = new DeleteFilesResponse(
                 result.deleted(),
                 result.failed().stream()
@@ -76,14 +78,8 @@ public class AdminFileController {
             @RequestBody MoveFileRequest request,
             @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
-        ensureAuthenticated(user);
-        moveFileUseCase.moveFile(request.sourcePath(), request.destinationPath(), user.id());
+        var userId = authenticatedUserAccessor.requiredUserId(user);
+        moveFileUseCase.moveFile(request.sourcePath(), request.destinationPath(), userId);
         return ResponseEntity.noContent().build();
-    }
-
-    private void ensureAuthenticated(AuthenticatedUserPrincipal user) {
-        if (user == null) {
-            throw new SecurityException("Unauthenticated request");
-        }
     }
 }
