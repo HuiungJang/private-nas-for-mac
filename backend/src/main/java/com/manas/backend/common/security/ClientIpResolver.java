@@ -19,8 +19,14 @@ public class ClientIpResolver {
         this.trustedProxyMatchers = Arrays.stream(trustedProxies.split(","))
                 .map(String::trim)
                 .filter(StringUtils::hasText)
-                .map(IpAddressMatcher::new)
+                .peek(this::warnIfBroadProxyRange)
+                .map(this::toMatcherOrNull)
+                .filter(java.util.Objects::nonNull)
                 .toList();
+
+        if (trustedProxyMatchers.isEmpty()) {
+            log.info("No trusted proxies configured. X-Forwarded-For will be ignored.");
+        }
     }
 
     public String resolve(HttpServletRequest request) {
@@ -53,6 +59,21 @@ public class ClientIpResolver {
         } catch (Exception e) {
             log.warn("Failed to evaluate trusted proxy range for remoteAddr={}", remoteAddr);
             return false;
+        }
+    }
+
+    private void warnIfBroadProxyRange(String cidr) {
+        if ("0.0.0.0/0".equals(cidr) || "::/0".equals(cidr)) {
+            log.warn("Overly broad trusted proxy CIDR detected: {}. This allows spoofed X-Forwarded-For.", cidr);
+        }
+    }
+
+    private IpAddressMatcher toMatcherOrNull(String cidr) {
+        try {
+            return new IpAddressMatcher(cidr);
+        } catch (Exception e) {
+            log.warn("Ignoring invalid trusted proxy CIDR: {}", cidr);
+            return null;
         }
     }
 }
