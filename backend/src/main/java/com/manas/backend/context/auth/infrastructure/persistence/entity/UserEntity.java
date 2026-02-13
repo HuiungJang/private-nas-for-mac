@@ -44,15 +44,20 @@ public class UserEntity implements Persistable<UUID> {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(nullable = false)
+    private boolean mustChangePassword = false;
+
     @Transient
     private boolean isNew = true;
 
-    public UserEntity(UUID id, String username, String passwordHash, Set<Role> roles, boolean active) {
+    public UserEntity(UUID id, String username, String passwordHash, Set<Role> roles, boolean active,
+            boolean mustChangePassword) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
         this.roles = roles;
         this.active = active;
+        this.mustChangePassword = mustChangePassword;
     }
 
     @Override

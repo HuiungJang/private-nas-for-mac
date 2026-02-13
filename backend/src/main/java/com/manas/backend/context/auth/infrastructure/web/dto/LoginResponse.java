@@ -1,5 +1,5 @@
 package com.manas.backend.context.auth.infrastructure.web.dto;
 
-public record LoginResponse(String token) {
+public record LoginResponse(String token, boolean mustChangePassword) {
 
 }

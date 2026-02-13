@@ -66,7 +66,7 @@ class FileControllerTest {
 
         UUID userId = UUID.randomUUID();
 
-        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true);
+        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true, false);
 
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
 
@@ -110,7 +110,7 @@ class FileControllerTest {
 
         UUID userId = UUID.randomUUID();
 
-        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true);
+        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true, false);
 
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
 

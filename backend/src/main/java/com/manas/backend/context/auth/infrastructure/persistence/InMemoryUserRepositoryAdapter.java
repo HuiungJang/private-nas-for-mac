@@ -32,7 +32,7 @@ public class InMemoryUserRepositoryAdapter implements LoadUserPort {
         }
 
         String encodedPassword = passwordEncoder.encode(defaultPassword);
-        User admin = User.create("admin", Password.of(encodedPassword), Set.of(Role.ADMIN));
+        User admin = User.createBootstrapAdmin("admin", Password.of(encodedPassword), Set.of(Role.ADMIN));
         users.put(admin.username(), admin);
     }
 

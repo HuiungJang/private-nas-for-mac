@@ -41,10 +41,11 @@ public class DataInitializer {
                     "admin",
                     encodedPassword,
                     Set.of(Role.ADMIN),
+                    true,
                     true
             );
             userRepository.save(admin);
-            log.info("Bootstrap admin user created. Please rotate credentials immediately.");
+            log.info("Bootstrap admin user created. Password change required on first login.");
         }
     }
 

@@ -28,7 +28,7 @@ describe('FileTable', () => {
 
     expect(screen.getByText('folder1')).toBeInTheDocument();
     expect(screen.getByText('file1.txt')).toBeInTheDocument();
-    expect(screen.getByText('1024')).toBeInTheDocument(); // Size
+    expect(screen.getByText('1 KB')).toBeInTheDocument(); // Size
   });
 
   it('calls onNavigate when directory is clicked', () => {

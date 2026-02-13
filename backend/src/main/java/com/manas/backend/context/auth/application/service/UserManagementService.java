@@ -102,7 +102,9 @@ public class UserManagementService implements ListUsersUseCase, CreateUserUseCas
 
                 command.roles(),
 
-                command.active()
+                command.active(),
+
+                user.mustChangePassword()
 
         );
 

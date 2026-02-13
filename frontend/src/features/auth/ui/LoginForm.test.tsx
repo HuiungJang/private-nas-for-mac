@@ -2,6 +2,7 @@ import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {describe, expect, it, vi} from 'vitest';
 import {LoginForm} from './LoginForm';
 import {apiClient} from '@/shared/api/axios';
+import {MemoryRouter} from 'react-router-dom';
 
 // Mock axios
 vi.mock('@/shared/api/axios', () => ({
@@ -21,7 +22,7 @@ vi.mock('@/entities/user/model/store', () => ({
 
 describe('LoginForm', () => {
   it('renders login form correctly', () => {
-    render(<LoginForm/>);
+    render(<MemoryRouter><LoginForm/></MemoryRouter>);
 
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -31,10 +32,10 @@ describe('LoginForm', () => {
   it('calls api and login action on submit', async () => {
     // Setup Mock
     (apiClient.post as any).mockResolvedValueOnce({
-      data: {token: 'jwt-token'},
+      data: {token: 'jwt-token', mustChangePassword: false},
     });
 
-    render(<LoginForm/>);
+    render(<MemoryRouter><LoginForm/></MemoryRouter>);
 
     // Fill form
     fireEvent.change(screen.getByLabelText(/username/i), {target: {value: 'admin'}});
@@ -53,7 +54,7 @@ describe('LoginForm', () => {
 
     // Assert Store action
     await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith('jwt-token');
+      expect(mockLogin).toHaveBeenCalledWith('jwt-token', false);
     });
   });
 
@@ -63,7 +64,7 @@ describe('LoginForm', () => {
       response: {data: {detail: 'Invalid credentials'}},
     });
 
-    render(<LoginForm/>);
+    render(<MemoryRouter><LoginForm/></MemoryRouter>);
 
     // Fill & Submit
     fireEvent.change(screen.getByLabelText(/username/i), {target: {value: 'admin'}});
@@ -72,7 +73,7 @@ describe('LoginForm', () => {
 
     // Assert Error Message
     await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+      expect(screen.getByText(/login failed/i)).toBeInTheDocument();
     });
   });
 });
