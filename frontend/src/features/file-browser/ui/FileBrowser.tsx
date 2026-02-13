@@ -20,7 +20,7 @@ import {
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import SearchIcon from '@mui/icons-material/Search';
-import {IOSBreadcrumbs} from '@/shared/ui/IOSBreadcrumbs';
+import {AppBreadcrumbs} from '@/shared/ui/AppBreadcrumbs';
 import {FileTable} from '@/widgets/file-table/ui/FileTable';
 import {useFileBrowser} from '../model/useFileBrowser';
 import {FileActionsToolbar} from '@/features/file-actions/ui/FileActionsToolbar';
@@ -131,7 +131,7 @@ export const FileBrowser: React.FC = () => {
 
         {data && (
             <Box mb={2}>
-              <IOSBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={navigateTo}/>
+              <AppBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={navigateTo}/>
             </Box>
         )}
 

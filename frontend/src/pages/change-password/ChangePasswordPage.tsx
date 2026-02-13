@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {Alert, Box, Card, CardContent, Typography} from '@mui/material';
 import {AxiosError} from 'axios';
 import {apiClient} from '@/shared/api/axios';
-import {IOSButton, IOSInput} from '@/shared/ui';
+import {AppButton, AppInput} from '@/shared/ui';
 import {useAuthStore} from '@/entities/user/model/store';
 import {useNavigate} from 'react-router-dom';
 
@@ -59,7 +59,7 @@ export const ChangePasswordPage: React.FC = () => {
           {success && <Alert severity="success" sx={{mb: 2}}>{success}</Alert>}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <IOSInput
+            <AppInput
               fullWidth
               margin="normal"
               label="Current Password"
@@ -68,7 +68,7 @@ export const ChangePasswordPage: React.FC = () => {
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
             />
-            <IOSInput
+            <AppInput
               fullWidth
               margin="normal"
               label="New Password"
@@ -77,7 +77,7 @@ export const ChangePasswordPage: React.FC = () => {
               onChange={(e) => setNewPassword(e.target.value)}
               required
             />
-            <IOSInput
+            <AppInput
               fullWidth
               margin="normal"
               label="Confirm New Password"
@@ -87,10 +87,10 @@ export const ChangePasswordPage: React.FC = () => {
               required
             />
 
-            <IOSButton fullWidth type="submit" variant="contained" sx={{mt: 2}}>Update Password</IOSButton>
-            <IOSButton fullWidth type="button" variant="text" sx={{mt: 1}} onClick={handleLogout}>
+            <AppButton fullWidth type="submit" variant="contained" sx={{mt: 2}}>Update Password</AppButton>
+            <AppButton fullWidth type="button" variant="text" sx={{mt: 1}} onClick={handleLogout}>
               Logout
-            </IOSButton>
+            </AppButton>
           </Box>
         </CardContent>
       </Card>

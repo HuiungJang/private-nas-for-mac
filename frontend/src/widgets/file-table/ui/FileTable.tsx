@@ -19,7 +19,7 @@ import {
   useTheme,
 } from '@mui/material';
 import type {FileNode} from '@/entities/file/model/types';
-import {IOSCard} from '@/shared/ui';
+import {AppCard} from '@/shared/ui';
 import {FileIcon} from '@/entities/file/ui/FileIcon';
 
 export type ViewMode = 'list' | 'grid';
@@ -126,7 +126,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   // Mobile View: Always List (Simplified, selection via long press? Or just checkbox)
   if (isMobile) {
     return (
-        <IOSCard sx={{p: 0, overflow: 'hidden'}}>
+        <AppCard sx={{p: 0, overflow: 'hidden'}}>
           <List disablePadding>
             {files.map((file, index) => (
                 <ListItem
@@ -169,7 +169,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                 </ListItem>
             ))}
           </List>
-        </IOSCard>
+        </AppCard>
     );
   }
 
@@ -239,7 +239,7 @@ export const FileTable: React.FC<FileTableProps> = ({
 
   // Desktop View: Table (List)
   return (
-      <TableContainer component={IOSCard} sx={{overflow: 'hidden'}}>
+      <TableContainer component={AppCard} sx={{overflow: 'hidden'}}>
         <Table sx={{minWidth: 650}} aria-label="file table">
           <TableHead>
             <TableRow>

@@ -5,7 +5,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import {useFileActions} from '../model/useFileActions';
-import {IOSButton} from '@/shared/ui';
+import {AppButton} from '@/shared/ui';
 import {MoveFileModal} from './MoveFileModal';
 
 interface FileActionsToolbarProps {
@@ -93,14 +93,14 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
               </IconButton>
             </Tooltip>
         ) : (
-        <IOSButton
+        <AppButton
             variant="contained"
             startIcon={<UploadFileIcon/>}
             onClick={handleUploadClick}
             disabled={isUploading}
         >
           Upload
-        </IOSButton>
+        </AppButton>
         )}
 
         {selectedFiles.size > 0 && (

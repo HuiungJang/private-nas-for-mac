@@ -3,7 +3,7 @@ import {Box, CircularProgress, Stack, Typography} from '@mui/material';
 import MemoryIcon from '@mui/icons-material/Memory';
 import StorageIcon from '@mui/icons-material/Storage';
 import SpeedIcon from '@mui/icons-material/Speed';
-import {IOSCard} from '@/shared/ui';
+import {AppCard} from '@/shared/ui';
 import type {SystemHealth} from '@/entities/system/model/types';
 
 interface SystemHealthWidgetProps {
@@ -25,7 +25,7 @@ const StatCard = ({title, value, icon, subValue}: {
   subValue?: string;
   icon: React.ReactNode
 }) => (
-    <IOSCard sx={{p: 3, height: '100%'}}>
+    <AppCard sx={{p: 3, height: '100%'}}>
       <Box sx={{display: 'flex', alignItems: 'center', mb: 2}}>
         <Box sx={{
           p: 1,
@@ -48,7 +48,7 @@ const StatCard = ({title, value, icon, subValue}: {
             {subValue}
           </Typography>
       )}
-    </IOSCard>
+    </AppCard>
 );
 
 export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isLoading}) => {

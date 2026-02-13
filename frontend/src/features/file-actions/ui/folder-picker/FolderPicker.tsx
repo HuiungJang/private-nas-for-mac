@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import {useFiles} from '@/entities/file/model/useFiles';
-import {IOSBreadcrumbs} from '@/shared/ui/IOSBreadcrumbs';
+import {AppBreadcrumbs} from '@/shared/ui/AppBreadcrumbs';
 
 interface FolderPickerProps {
   currentPath: string;
@@ -38,7 +38,7 @@ export const FolderPicker: React.FC<FolderPickerProps> = ({currentPath, onNaviga
   return (
       <Box sx={{minHeight: '300px'}}>
         <Box sx={{mb: 1}}>
-          <IOSBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={onNavigate}/>
+          <AppBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={onNavigate}/>
         </Box>
 
         {folders.length === 0 ? (

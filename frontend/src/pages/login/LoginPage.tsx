@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Typography, useMediaQuery, useTheme} from '@mui/material';
 import {LoginForm} from '@/features/auth/ui/LoginForm';
-import {IOSCard} from '@/shared/ui';
+import {AppCard} from '@/shared/ui';
 
 export const LoginPage: React.FC = () => {
   const theme = useTheme();
@@ -28,7 +28,7 @@ export const LoginPage: React.FC = () => {
             p: isMobile ? 0 : 2,
           }}
       >
-        <IOSCard
+        <AppCard
             sx={{
               width: '100%',
 
@@ -64,7 +64,7 @@ export const LoginPage: React.FC = () => {
           </Typography>
 
           <LoginForm/>
-        </IOSCard>
+        </AppCard>
       </Box>
   );
 };
