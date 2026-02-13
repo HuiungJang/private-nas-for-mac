@@ -3,7 +3,7 @@ app:
     root: ./build/tmp/test-storage
     cache-dir: ./build/tmp/test-cache
   security:
-    default-password: admin123
+    bootstrap-admin-password: test-admin-password
 
 spring:
   flyway:

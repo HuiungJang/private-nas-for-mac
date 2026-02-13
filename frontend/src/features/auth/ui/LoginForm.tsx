@@ -22,8 +22,9 @@ export const LoginForm: React.FC = () => {
         username,
         password,
       });
-      login(response.data.token);
-      navigate('/', {replace: true});
+      const mustChangePassword = Boolean(response.data.mustChangePassword);
+      login(response.data.token, mustChangePassword);
+      navigate(mustChangePassword ? '/change-password' : '/', {replace: true});
     } catch (err: unknown) {
       console.log('Login Error:', err);
       if (err instanceof AxiosError && err.response?.data?.detail) {

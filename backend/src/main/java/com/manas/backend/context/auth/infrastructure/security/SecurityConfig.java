@@ -27,6 +27,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final IpEnforcementFilter ipEnforcementFilter;
+    private final PasswordChangeEnforcementFilter passwordChangeEnforcementFilter;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -46,15 +47,13 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                // All other requests require authentication
+                .requestMatchers("/api/auth/login").permitAll()
                 .anyRequest().authenticated()
             )
-                // Enforce IP restrictions first
                 .addFilterBefore(ipEnforcementFilter,
                         org.springframework.security.web.header.HeaderWriterFilter.class)
-                // Then validate JWT
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(passwordChangeEnforcementFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

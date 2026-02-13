@@ -2,6 +2,8 @@ package com.manas.backend.context.auth.application.port.in;
 
 public interface LoginUseCase {
 
-    String login(String username, String password);
+    LoginResult login(String username, String password);
+
+    void changePassword(String username, String currentPassword, String newPassword);
 
 }

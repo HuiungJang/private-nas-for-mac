@@ -4,17 +4,35 @@ import {useAuthStore} from '@/entities/user/model/store';
 import {LoginPage} from '@/pages/login/LoginPage';
 import {DashboardPage} from '@/pages/dashboard/DashboardPage';
 import {AdminPage} from '@/pages/admin/AdminPage';
+import {ChangePasswordPage} from '@/pages/change-password/ChangePasswordPage';
 
 // Protected Route Wrapper
 const RequireAuth: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? <Outlet/> : <Navigate to="/login" replace/>;
+  const mustChangePassword = useAuthStore((state) => state.mustChangePassword);
+
+  if (!isAuthenticated) return <Navigate to="/login" replace/>;
+  if (mustChangePassword) return <Navigate to="/change-password" replace/>;
+
+  return <Outlet/>;
+};
+
+const RequirePasswordChange: React.FC = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const mustChangePassword = useAuthStore((state) => state.mustChangePassword);
+
+  if (!isAuthenticated) return <Navigate to="/login" replace/>;
+  if (!mustChangePassword) return <Navigate to="/" replace/>;
+
+  return <Outlet/>;
 };
 
 // Public Route Wrapper (Redirects to dashboard if already logged in)
 const RedirectIfAuthenticated: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? <Navigate to="/" replace/> : <Outlet/>;
+  const mustChangePassword = useAuthStore((state) => state.mustChangePassword);
+  if (!isAuthenticated) return <Outlet/>;
+  return <Navigate to={mustChangePassword ? '/change-password' : '/'} replace/>;
 };
 
 export const AppRouter: React.FC = () => {
@@ -23,6 +41,10 @@ export const AppRouter: React.FC = () => {
         <Routes>
           <Route element={<RedirectIfAuthenticated/>}>
             <Route path="/login" element={<LoginPage/>}/>
+          </Route>
+
+          <Route element={<RequirePasswordChange/>}>
+            <Route path="/change-password" element={<ChangePasswordPage/>}/>
           </Route>
 
           {/* Protected Routes */}

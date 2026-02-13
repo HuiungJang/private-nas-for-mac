@@ -108,7 +108,7 @@ class UserManagementServiceTest {
         User existingUser = User.create("user", Password.of("hash"), Set.of(Role.USER));
         // Mock ID since create generates random
         existingUser = new User(userId, existingUser.username(), existingUser.password(),
-                existingUser.roles(), true);
+                existingUser.roles(), true, false);
 
         UpdateUserCommand command = new UpdateUserCommand(userId, false, Set.of(Role.ADMIN));
 

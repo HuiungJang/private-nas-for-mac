@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.manas.backend.context.auth.application.port.out.LoadUserPort;
 import com.manas.backend.context.auth.application.port.out.PasswordEncoderPort;
+import com.manas.backend.context.auth.application.port.out.SaveUserPort;
 import com.manas.backend.context.auth.application.port.out.TokenGeneratorPort;
 import com.manas.backend.context.auth.domain.Password;
 import com.manas.backend.context.auth.domain.Role;
@@ -28,6 +29,8 @@ class AuthServiceTest {
     private PasswordEncoderPort passwordEncoderPort;
     @Mock
     private TokenGeneratorPort tokenGeneratorPort;
+    @Mock
+    private SaveUserPort saveUserPort;
 
     @InjectMocks
     private AuthService authService;
@@ -48,10 +51,11 @@ class AuthServiceTest {
         given(tokenGeneratorPort.generateToken(user)).willReturn(expectedToken);
 
         // When
-        String token = authService.login(username, rawPassword);
+        var result = authService.login(username, rawPassword);
 
         // Then
-        assertThat(token).isEqualTo(expectedToken);
+        assertThat(result.token()).isEqualTo(expectedToken);
+        assertThat(result.mustChangePassword()).isFalse();
     }
 
     @Test
