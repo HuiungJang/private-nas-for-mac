@@ -32,15 +32,15 @@ interface FileTableProps {
   onSelectionChange: (selected: Set<string>) => void;
 }
 
-const StyledTableRow = styled(TableRow)(() => ({
+const StyledTableRow = styled(TableRow)(({theme}) => ({
   '&:last-child td, &:last-child th': {border: 0},
   cursor: 'pointer',
-  transition: 'background-color 0.2s',
+  transition: 'background-color 0.15s',
   '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.05) !important',
+    backgroundColor: `${theme.palette.primary.main}08 !important`,
   },
-  '&:active': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1) !important',
+  '&.Mui-selected': {
+    backgroundColor: `${theme.palette.primary.main}14 !important`,
   },
 }));
 
@@ -52,11 +52,13 @@ const StyledTableCell = styled(TableCell)(({theme}) => ({
 
 const StyledHeaderCell = styled(TableCell)(({theme}) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
+  backgroundColor: '#f8fafc',
   color: theme.palette.text.secondary,
-  fontSize: '13px',
+  fontSize: '12px',
   textTransform: 'uppercase',
-  fontWeight: 600,
-  letterSpacing: '0.5px',
+  fontWeight: 700,
+  letterSpacing: '0.4px',
+  whiteSpace: 'nowrap',
 }));
 
 const GridItemCard = styled(Box, {

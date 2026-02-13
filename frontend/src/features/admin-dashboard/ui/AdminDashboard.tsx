@@ -12,7 +12,8 @@ import {
   Stack,
   Tab,
   Tabs,
-  TextField
+  TextField,
+  Typography
 } from '@mui/material';
 import {SystemHealthWidget} from '@/widgets/system-health/ui/SystemHealthWidget';
 import {UserTable} from '@/widgets/user-table/ui/UserTable';
@@ -99,8 +100,21 @@ export const AdminDashboard: React.FC = () => {
 
   return (
       <Box>
+        <Box sx={{mb: 2}}>
+          <Typography variant="h5" sx={{fontWeight: 700, mb: 0.5}}>Admin Center</Typography>
+          <Typography variant="body2" color="text.secondary">시스템 상태, 사용자, 감사 로그를 관리합니다.</Typography>
+        </Box>
         <Box sx={{borderBottom: 1, borderColor: 'divider', mb: 3}}>
-          <Tabs value={tab} onChange={handleTabChange} aria-label="admin tabs">
+          <Tabs
+            value={tab}
+            onChange={handleTabChange}
+            aria-label="admin tabs"
+            sx={{
+              minHeight: 40,
+              '& .MuiTab-root': {minHeight: 40, fontSize: 13, fontWeight: 600},
+              '& .MuiTabs-indicator': {height: 2}
+            }}
+          >
             <Tab label="System Health"/>
             <Tab label="User Management"/>
             <Tab label="Audit Logs"/>
