@@ -1,6 +1,6 @@
 # Private NAS for Mac 🍎🔒
 
-**A secure, self-hosted personal cloud solution for macOS, built with "Vibe Coding".**
+**A secure, self-hosted personal cloud solution for macOS, built with OpenClaw + Codex AI-assisted development.**
 
 ![Status](https://img.shields.io/badge/Status-In%20Development-orange)
 ![Tech](https://img.shields.io/badge/Stack-Java%20Spring%20Boot%20%7C%20React%20%7C%20Docker-blue)
@@ -25,25 +25,23 @@ Security Model**, ensuring your data is accessible only through a secure, privat
   controlled via WireGuard VPN.
 * **Mac-Native:** Optimized for macOS file systems (APFS) and external volume handling (`/Volumes`).
 * **Modern Web UI:** A responsive, drag-and-drop file manager built with React and Material UI.
-* **Robust Backend:** Powered by Java Spring Boot 3.x with Domain-Driven Design (DDD).
+* **Robust Backend:** Powered by Java Spring Boot 4.x with Domain-Driven Design (DDD).
 * **Admin Dashboard:** Comprehensive monitoring of system health, user management, and access logs.
 
 ---
 
-## 🧘 Vibe Coding Project
+## 🧘 AI-Assisted Development Workflow
 
-This project is being developed using **Vibe Coding** methodologies.
-> *It's not just about writing code; it's about the flow, the intuition, and the seamless
-collaboration between human intent and AI execution.*
+This project is developed with an AI-assisted workflow focused on fast iteration and tight feedback loops.
 
-We are leveraging "Gemini" agents to iterate rapidly on specifications, architecture, and
-implementation, focusing on "feeling" the right solution before committing to the syntax.
+We use **OpenClaw** as the orchestration layer and **Codex agents/models** for implementation,
+review, and refactoring across specs, architecture, backend, frontend, and operations.
 
 ---
 
 ## 🛠 Tech Stack
 
-* **Backend:** Java 21, Spring Boot 3.x, Spring Security, JPA/Hibernate
+* **Backend:** Java 25, Spring Boot 4.x, Spring Security, JPA/Hibernate
 * **Frontend:** TypeScript, React, Vite, Material UI (MUI), Zustand
 * **Infrastructure:** Docker, Docker Compose, WireGuard (VPN), PostgreSQL
 * **Architecture:** Hexagonal Architecture (Ports & Adapters)
