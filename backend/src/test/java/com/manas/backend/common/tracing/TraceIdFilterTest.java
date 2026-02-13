@@ -37,9 +37,8 @@ class TraceIdFilterTest {
         // Then
         String traceId = response.getHeader(TraceConstants.TRACE_ID_HEADER);
         assertThat(traceId).isNotNull();
-        // We can't verify MDC directly here because it's cleared in finally block,
-        // but typically integration tests or a wrapper would verify MDC state inside the chain.
         verify(filterChain).doFilter(request, response);
+        assertThat(MDC.get(TraceConstants.TRACE_ID_MDC_KEY)).isNull();
     }
 
     @Test
@@ -58,6 +57,23 @@ class TraceIdFilterTest {
         // Then
         assertThat(response.getHeader(TraceConstants.TRACE_ID_HEADER)).isEqualTo(existingTraceId);
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("Should expose traceId in MDC during filter chain execution")
+    void doFilterInternal_MdcAvailableInsideChain() throws ServletException, IOException {
+        String existingTraceId = "trace-for-mdc-check";
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(TraceConstants.TRACE_ID_HEADER, existingTraceId);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        FilterChain assertingChain = (req, res) ->
+                assertThat(MDC.get(TraceConstants.TRACE_ID_MDC_KEY)).isEqualTo(existingTraceId);
+
+        traceIdFilter.doFilterInternal(request, response, assertingChain);
+
+        assertThat(response.getHeader(TraceConstants.TRACE_ID_HEADER)).isEqualTo(existingTraceId);
+        assertThat(MDC.get(TraceConstants.TRACE_ID_MDC_KEY)).isNull();
     }
 
 }

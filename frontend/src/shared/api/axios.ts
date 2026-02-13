@@ -38,12 +38,13 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-      // Log error with Trace ID if available
-      const traceId = error.config?.headers['X-Trace-ID'];
+      // Prefer server trace-id for end-to-end correlation; fallback to request trace-id.
+      const responseTraceId = error.response?.headers?.['x-trace-id'];
+      const requestTraceId = error.config?.headers?.['X-Trace-ID'];
+      const traceId = responseTraceId || requestTraceId || 'unknown';
       console.error(`[API Error] TraceID: ${traceId}`, error.response?.data || error.message);
 
-      // Trigger Global Toast/Snackbar
-      const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+      const message = error.response?.data?.detail || error.response?.data?.message || error.message || 'An unexpected error occurred';
       useNotificationStore.getState().showNotification(message, 'error');
 
       return Promise.reject(error);
