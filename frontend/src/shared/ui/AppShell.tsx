@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   AppBar,
+  Badge,
   Box,
   Button,
   Drawer,
@@ -8,14 +9,18 @@ import {
   List,
   ListItemButton,
   ListItemText,
+  Popover,
   Toolbar,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {useAuthStore} from '@/entities/user/model/store';
+import {useTaskCenterStore} from '@/shared/model/useTaskCenterStore';
+import {TaskCenterPanel} from '@/shared/ui/TaskCenterPanel';
 
 const drawerWidth = 220;
 
@@ -36,6 +41,9 @@ export const AppShell: React.FC<{children: React.ReactNode}> = ({children}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((s) => s.logout);
+  const tasks = useTaskCenterStore((s) => s.tasks);
+  const runningCount = tasks.filter((t) => t.status === 'running').length;
+  const [taskAnchor, setTaskAnchor] = React.useState<HTMLElement | null>(null);
 
   const drawer = (
     <Box sx={{height: '100%', bgcolor: 'background.paper'}}>
@@ -89,6 +97,11 @@ export const AppShell: React.FC<{children: React.ReactNode}> = ({children}) => {
             <Typography variant="h6" sx={{flexGrow: 1, fontWeight: 700}}>
               {getTitle(location.pathname)}
             </Typography>
+            <IconButton onClick={(e) => setTaskAnchor(e.currentTarget)} sx={{mr: 1}}>
+              <Badge color="primary" badgeContent={runningCount}>
+                <TaskAltIcon/>
+              </Badge>
+            </IconButton>
             <Button
               variant="outlined"
               size="small"
@@ -104,6 +117,16 @@ export const AppShell: React.FC<{children: React.ReactNode}> = ({children}) => {
 
         <Box sx={{p: {xs: 2, md: 3}}}>{children}</Box>
       </Box>
+
+      <Popover
+        open={Boolean(taskAnchor)}
+        anchorEl={taskAnchor}
+        onClose={() => setTaskAnchor(null)}
+        anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
+        transformOrigin={{vertical: 'top', horizontal: 'right'}}
+      >
+        <TaskCenterPanel/>
+      </Popover>
     </Box>
   );
 };
