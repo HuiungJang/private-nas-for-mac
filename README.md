@@ -108,6 +108,10 @@ docker-compose up -d
 SPRING_PROFILES_ACTIVE=dev
 ```
 
+### Backend Build Performance Notes
+- Gradle configuration cache is enabled in `backend/gradle.properties`.
+- First build warms cache; repeated runs are faster.
+
 ### Step 3: Connect
 1. Access the Admin UI at [http://localhost:51821](http://localhost:51821).
 2. Login with the password you set in `.env`.
