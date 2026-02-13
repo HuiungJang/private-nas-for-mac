@@ -115,6 +115,12 @@ docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 - `nas-frontend`: nginx index 응답 기반 healthy
 - If Dockerfile/healthcheck was changed, run with `--build` to avoid stale image mismatch.
 
+### Local Smoke E2E
+```bash
+bash scripts/smoke_e2e.sh
+```
+This script builds/starts containers and validates key API paths (health, login fail/success, protected API access).
+
 ### Backend Profile Notes
 - Production-safe defaults are in `application.yml` (SQL logs off).
 - For local debugging with SQL logs enabled, use dev profile:
