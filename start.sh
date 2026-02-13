@@ -71,7 +71,7 @@ EOF
 
 get_env_value() {
   local key="$1"
-  grep -E "^${key}=" .env | tail -n1 | cut -d'=' -f2-
+  awk -F'=' -v k="$key" '$1==k{print substr($0, index($0,"=")+1)}' .env | tail -n1
 }
 
 validate_jwt_secret() {
@@ -82,7 +82,7 @@ validate_jwt_secret() {
     return 1
   fi
 
-  if ! printf '%s' "$jwt_secret" | base64 --decode >/tmp/nas_jwt_secret.bin 2>/dev/null; then
+  if ! printf '%s' "$jwt_secret" | openssl base64 -d -A >/tmp/nas_jwt_secret.bin 2>/dev/null; then
     print_err "JWT_SECRET must be valid Base64"
     return 1
   fi
@@ -130,7 +130,6 @@ main() {
   require_cmd docker
   require_cmd docker-compose
   require_cmd openssl
-  require_cmd base64
 
   ensure_env_file
   preflight_security_checks

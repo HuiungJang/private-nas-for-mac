@@ -77,6 +77,7 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
    - `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD` (initial admin password)
    - `JWT_SECRET` (Base64, decoded length >= 32 bytes)
    - `WG_HOST` (Public IP or DDNS)
+   - `WG_PASSWORD_HASH` (wg-easy admin password hash)
 
    Generate a secure JWT secret:
    ```bash
