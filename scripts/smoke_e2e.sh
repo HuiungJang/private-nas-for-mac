@@ -53,12 +53,12 @@ wait_healthy nas-backend
 wait_healthy nas-frontend
 
 echo "[3/5] health endpoint check"
-health=$(curl -fsS http://127.0.0.1/api/actuator/health)
+health=$(docker exec nas-backend sh -lc "curl -fsS http://127.0.0.1:8080/actuator/health")
 python3 - <<'PY' "$health"
 import json,sys
 obj=json.loads(sys.argv[1])
 assert obj.get('status')=='UP', obj
-print('  - /api/actuator/health status=UP')
+print('  - backend /actuator/health status=UP')
 PY
 
 echo "[4/5] login failure check"

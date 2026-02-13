@@ -121,7 +121,7 @@ docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 ```bash
 bash scripts/smoke_e2e.sh
 ```
-This script builds/starts containers and validates key API paths (health, login fail/success, protected API access).
+This script builds/starts containers and validates key API paths (backend `/actuator/health`, login fail/success, protected API access).
 
 ### Backend Profile Notes
 - Production-safe defaults are in `application.yml` (SQL logs off).
