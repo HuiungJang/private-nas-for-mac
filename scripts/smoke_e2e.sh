@@ -127,12 +127,20 @@ skip_exact = {
     ("POST", "/api/auth/change-password"),
 }
 
-allowed = {200, 201, 204, 400, 401, 403, 405, 415, 422}
+allowed = {200, 204, 400, 401, 403, 405}
+
+safe_methods = {"GET"}
+checked = 0
+skipped = 0
 
 for r in routes:
     method = r["method"]
     path = r["path"]
     if (method, path) in skip_exact:
+        skipped += 1
+        continue
+    if method not in safe_methods:
+        skipped += 1
         continue
 
     call_path = path.replace("{userId}", "1")
@@ -146,15 +154,14 @@ for r in routes:
         url,
     ]
 
-    if method in {"POST", "PUT", "PATCH", "DELETE"}:
-        cmd.extend(["-d", "{}"])
-
     status = subprocess.check_output(cmd, text=True).strip()
     try:
         code = int(status)
     except ValueError:
         print(f"route check non-http status: {method} {path} -> {status}")
         sys.exit(1)
+
+    checked += 1
 
     if code == 404 or code >= 500 or code not in allowed:
         body = ""
@@ -167,6 +174,7 @@ for r in routes:
             print(body)
         sys.exit(1)
 
-print(f"  - routes checked: {len(routes)}")
+print(f"  - routes checked(safe): {checked}")
+print(f"  - routes skipped(unsafe/auth): {skipped}")
 print("SMOKE_E2E_OK")
 PY

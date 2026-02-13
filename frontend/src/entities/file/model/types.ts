@@ -1,5 +1,6 @@
 export interface FileNode {
   name: string;
+  path: string;
   type: 'FILE' | 'DIRECTORY';
   size: number;
   lastModified: string;
@@ -9,6 +10,16 @@ export interface FileNode {
 export interface PathNode {
   name: string;
   path: string;
+}
+
+export interface DeleteFilesFailure {
+  path: string;
+  reason: string;
+}
+
+export interface DeleteFilesResponse {
+  deleted: string[];
+  failed: DeleteFilesFailure[];
 }
 
 export interface DirectoryListing {

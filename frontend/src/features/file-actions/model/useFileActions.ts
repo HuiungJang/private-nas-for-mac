@@ -40,9 +40,14 @@ export const useFileActions = () => {
     onError: (_err, _vars, context) => {
       context?.snapshots?.forEach(([key, data]: any) => queryClient.setQueryData(key, data));
     },
-    onSuccess: () => {
+    onSuccess: (payload) => {
       queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
-      showNotification('Files deleted successfully', 'success');
+      const failedCount = payload.result.failed.length;
+      if (failedCount > 0) {
+        showNotification(`Delete completed with ${failedCount} failure(s)`, 'error');
+      } else {
+        showNotification('Files deleted successfully', 'success');
+      }
     },
   });
 
