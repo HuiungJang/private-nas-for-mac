@@ -26,9 +26,11 @@ public class JpaAuditLogAdapter implements SaveAuditLogPort, LoadAuditLogsPort {
     public List<AuditLog> loadPage(int offset, int limit) {
         int page = offset / limit;
         int inPageOffset = offset % limit;
+        int fetchSize = limit + inPageOffset;
 
-        return jpaAuditLogRepository.findAllByOrderByTimestampDesc(PageRequest.of(page, limit)).stream()
+        return jpaAuditLogRepository.findAllByOrderByTimestampDesc(PageRequest.of(page, fetchSize)).stream()
                 .skip(inPageOffset)
+                .limit(limit)
                 .map(auditLogMapper::toDomain)
                 .toList();
     }
