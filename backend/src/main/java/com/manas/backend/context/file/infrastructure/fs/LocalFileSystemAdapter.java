@@ -239,6 +239,32 @@ public class LocalFileSystemAdapter implements FileStoragePort {
     }
 
     @Override
+    public boolean exists(String pathString, UUID userId) {
+        Path targetPath = resolveTarget(pathString);
+        return Files.exists(targetPath);
+    }
+
+    @Override
+    public long getFileSize(String pathString, UUID userId) {
+        Path targetPath = resolveTarget(pathString);
+
+        if (!Files.exists(targetPath)) {
+            throw new ResourceNotFoundException("File does not exist: " + targetPath);
+        }
+
+        if (Files.isDirectory(targetPath)) {
+            throw new IllegalArgumentException("Path is a directory: " + targetPath);
+        }
+
+        try {
+            return Files.size(targetPath);
+        } catch (IOException e) {
+            log.error("Failed to get file size: {}", targetPath, e);
+            throw new RuntimeException("Failed to get file size", e);
+        }
+    }
+
+    @Override
     public long getAvailableDiskSpace() {
         try {
             FileStore fileStore = Files.getFileStore(rootPath);

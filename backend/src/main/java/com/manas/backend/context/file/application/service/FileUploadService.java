@@ -3,14 +3,19 @@ package com.manas.backend.context.file.application.service;
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
+import com.manas.backend.context.file.domain.FileContent;
 import com.manas.backend.context.file.domain.FileValidator;
 import com.manas.backend.context.file.domain.event.FileUploadedEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -60,6 +65,8 @@ public class FileUploadService implements FileUploadUseCase {
         // 4. Persist
         fileStoragePort.save(command.content(), logicalPath, command.size(), command.userId());
 
+        verifyChecksumIfPresent(command, logicalPath);
+
         // 5. Publish Event (Audit)
         eventPublisher.publishEvent(new FileUploadedEvent(
                 command.userId(),
@@ -71,4 +78,44 @@ public class FileUploadService implements FileUploadUseCase {
         log.info("File uploaded successfully: {}", logicalPath);
     }
 
+    private void verifyChecksumIfPresent(FileUploadCommand command, String logicalPath) {
+        if (!StringUtils.hasText(command.checksumSha256())) {
+            return;
+        }
+
+        String expected = command.checksumSha256().trim().toLowerCase();
+
+        try {
+            FileContent stored = fileStoragePort.retrieve(logicalPath, command.userId());
+            try (InputStream inputStream = stored.inputStream()) {
+                String actual = sha256Hex(inputStream);
+                if (!expected.equals(actual)) {
+                    fileStoragePort.delete(logicalPath, command.userId());
+                    throw new IllegalArgumentException("Checksum verification failed for uploaded file");
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to verify uploaded file checksum", e);
+        }
+    }
+
+    private String sha256Hex(InputStream inputStream) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                digest.update(buffer, 0, read);
+            }
+
+            byte[] hash = digest.digest();
+            StringBuilder sb = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
+    }
 }

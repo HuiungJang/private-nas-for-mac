@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.manas.backend.common.security.ClientIpResolver;
@@ -13,6 +14,8 @@ import com.manas.backend.context.auth.domain.User;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
 import com.manas.backend.context.file.application.port.in.GetFilePreviewUseCase;
+import com.manas.backend.context.file.application.port.in.GetUploadStatusUseCase;
+import com.manas.backend.context.file.application.port.in.UploadStatusResult;
 import com.manas.backend.context.file.domain.FileContent;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
@@ -46,24 +49,23 @@ class FileControllerTest {
     private GetFilePreviewUseCase getFilePreviewUseCase;
 
     @Mock
+    private GetUploadStatusUseCase getUploadStatusUseCase;
+
+    @Mock
     private ClientIpResolver clientIpResolver;
 
     @BeforeEach
     void setUp() {
         FileController controller = new FileController(fileUploadUseCase, downloadFileUseCase,
-                getFilePreviewUseCase, clientIpResolver);
+                getFilePreviewUseCase, getUploadStatusUseCase, clientIpResolver);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
     }
 
     @Test
-
     @DisplayName("Should download file with correct headers")
     void shouldDownloadFile() throws Exception {
-
-        // Given
-
         UUID userId = UUID.randomUUID();
 
         User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true, false);
@@ -87,7 +89,6 @@ class FileControllerTest {
         when(downloadFileUseCase.download(anyString(), any(UUID.class), anyString()))
                 .thenReturn(mockContent);
 
-        // When/Then
         try {
             mockMvc.perform(get("/api/files/download")
                             .param("path", path))
@@ -102,12 +103,8 @@ class FileControllerTest {
     }
 
     @Test
-
     @DisplayName("Should return preview with cache control")
     void shouldReturnPreview() throws Exception {
-
-        // Given
-
         UUID userId = UUID.randomUUID();
 
         User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true, false);
@@ -130,7 +127,6 @@ class FileControllerTest {
         when(getFilePreviewUseCase.getPreview(anyString(), any(UUID.class)))
                 .thenReturn(mockContent);
 
-        // When/Then
         try {
             mockMvc.perform(get("/api/files/preview")
                             .param("path", path))
@@ -141,5 +137,17 @@ class FileControllerTest {
             SecurityContextHolder.clearContext();
         }
     }
-}
 
+    @Test
+    @DisplayName("Should return upload status")
+    void shouldReturnUploadStatus() throws Exception {
+        when(getUploadStatusUseCase.getStatus("/documents/big.bin"))
+                .thenReturn(new UploadStatusResult(true, 1024L));
+
+        mockMvc.perform(get("/api/files/upload/status")
+                        .param("path", "/documents/big.bin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exists").value(true))
+                .andExpect(jsonPath("$.size").value(1024));
+    }
+}

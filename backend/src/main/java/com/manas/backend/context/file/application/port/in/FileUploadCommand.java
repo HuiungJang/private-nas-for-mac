@@ -11,13 +11,15 @@ import java.util.UUID;
  * @param targetDirectory Target logical directory path (e.g., "/documents").
  * @param size            Size of the file in bytes.
  * @param userId          User ID performing the upload.
+ * @param checksumSha256  Optional expected SHA-256 checksum (hex) for integrity verification.
  */
 public record FileUploadCommand(
         InputStream content,
         String fileName,
         String targetDirectory,
         long size,
-        UUID userId
+        UUID userId,
+        String checksumSha256
 ) {
 
 }
