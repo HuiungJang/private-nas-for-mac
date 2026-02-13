@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.infrastructure.web;
 
+import com.manas.backend.common.security.ClientIpResolver;
 import com.manas.backend.context.auth.domain.User;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
@@ -33,6 +34,7 @@ public class FileController {
     private final FileUploadUseCase fileUploadUseCase;
     private final DownloadFileUseCase downloadFileUseCase;
     private final GetFilePreviewUseCase getFilePreviewUseCase;
+    private final ClientIpResolver clientIpResolver;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadFile(
@@ -62,11 +64,7 @@ public class FileController {
             @AuthenticationPrincipal User user,
             HttpServletRequest request
     ) {
-        // Capture Client IP for Audit Log
-        String clientIp = request.getHeader("X-Forwarded-For");
-        if (clientIp == null || clientIp.isEmpty()) {
-            clientIp = request.getRemoteAddr();
-        }
+        String clientIp = clientIpResolver.resolve(request);
 
         FileContent content = downloadFileUseCase.download(path, user.id(), clientIp);
 

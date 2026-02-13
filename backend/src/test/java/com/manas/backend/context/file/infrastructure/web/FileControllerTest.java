@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.manas.backend.common.security.ClientIpResolver;
 import com.manas.backend.context.auth.domain.Role;
 import com.manas.backend.context.auth.domain.User;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
@@ -44,10 +45,13 @@ class FileControllerTest {
     @Mock
     private GetFilePreviewUseCase getFilePreviewUseCase;
 
+    @Mock
+    private ClientIpResolver clientIpResolver;
+
     @BeforeEach
     void setUp() {
         FileController controller = new FileController(fileUploadUseCase, downloadFileUseCase,
-                getFilePreviewUseCase);
+                getFilePreviewUseCase, clientIpResolver);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -79,6 +83,7 @@ class FileControllerTest {
                 new ByteArrayInputStream(new byte[1024])
         );
 
+        when(clientIpResolver.resolve(any())).thenReturn("192.168.1.10");
         when(downloadFileUseCase.download(anyString(), any(UUID.class), anyString()))
                 .thenReturn(mockContent);
 
