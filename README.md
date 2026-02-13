@@ -100,9 +100,9 @@ Run the startup script (recommended):
 ./start.sh
 ```
 
-Or run Docker directly:
+Or run Docker directly (recommended with rebuild to avoid stale images):
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 ### Health Check & Monitoring Quick Check
@@ -113,6 +113,7 @@ docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 - `nas-db`: `pg_isready` 기반 healthy
 - `nas-backend`: `GET /actuator/health` 상태 기반 healthy
 - `nas-frontend`: nginx index 응답 기반 healthy
+- If Dockerfile/healthcheck was changed, run with `--build` to avoid stale image mismatch.
 
 ### Backend Profile Notes
 - Production-safe defaults are in `application.yml` (SQL logs off).
