@@ -10,7 +10,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import {IOSCard} from '@/shared/ui';
+import {AppCard} from '@/shared/ui';
 import type {AuditLog} from '@/entities/audit/model/types';
 
 interface AuditLogTableProps {
@@ -30,7 +30,7 @@ const getStatusColor = (status: string) => {
 
 export const AuditLogTable: React.FC<AuditLogTableProps> = ({logs}) => {
   return (
-      <IOSCard sx={{p: 0, overflow: 'hidden'}}>
+      <AppCard sx={{p: 0, overflow: 'hidden'}}>
         <Box sx={{p: 2, borderBottom: 1, borderColor: 'divider'}}>
           <Typography variant="h6" fontWeight={600}>Audit Logs</Typography>
         </Box>
@@ -74,6 +74,6 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({logs}) => {
             </TableBody>
           </Table>
         </TableContainer>
-      </IOSCard>
+      </AppCard>
   );
 };

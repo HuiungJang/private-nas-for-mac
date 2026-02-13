@@ -4,7 +4,7 @@ import {useNavigate} from 'react-router-dom';
 import {AxiosError} from 'axios';
 import {apiClient} from '@/shared/api/axios';
 import {useAuthStore} from '@/entities/user/model/store';
-import {IOSButton, IOSInput} from '@/shared/ui';
+import {AppButton, AppInput} from '@/shared/ui';
 
 export const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -42,7 +42,7 @@ export const LoginForm: React.FC = () => {
             </Alert>
         )}
 
-        <IOSInput
+        <AppInput
             margin="normal"
             required
             fullWidth
@@ -54,7 +54,7 @@ export const LoginForm: React.FC = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
         />
-        <IOSInput
+        <AppInput
             margin="normal"
             required
             fullWidth
@@ -66,9 +66,9 @@ export const LoginForm: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
         />
-        <IOSButton type="submit" fullWidth variant="contained" sx={{mt: 4, mb: 2}} size="large">
+        <AppButton type="submit" fullWidth variant="contained" sx={{mt: 4, mb: 2}} size="large">
           Sign In
-        </IOSButton>
+        </AppButton>
       </Box>
   );
 };
