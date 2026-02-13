@@ -1,6 +1,7 @@
 package com.manas.backend.context.file.infrastructure.web;
 
 import com.manas.backend.common.security.ClientIpResolver;
+import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserAccessor;
 import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserPrincipal;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
@@ -39,6 +40,7 @@ public class FileController {
     private final GetFilePreviewUseCase getFilePreviewUseCase;
     private final GetUploadStatusUseCase getUploadStatusUseCase;
     private final ClientIpResolver clientIpResolver;
+    private final AuthenticatedUserAccessor authenticatedUserAccessor;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadFile(
@@ -48,16 +50,14 @@ public class FileController {
             @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) throws IOException {
 
-        if (user == null) {
-            throw new SecurityException("Unauthenticated request");
-        }
+        var userId = authenticatedUserAccessor.requiredUserId(user);
 
         FileUploadCommand command = new FileUploadCommand(
                 file.getInputStream(),
                 file.getOriginalFilename(),
                 directory,
                 file.getSize(),
-                user.id(),
+                userId,
                 checksumSha256
         );
 
@@ -80,13 +80,11 @@ public class FileController {
             @AuthenticationPrincipal AuthenticatedUserPrincipal user,
             HttpServletRequest request
     ) {
-        if (user == null) {
-            throw new SecurityException("Unauthenticated request");
-        }
+        var userId = authenticatedUserAccessor.requiredUserId(user);
 
         String clientIp = clientIpResolver.resolve(request);
 
-        FileContent content = downloadFileUseCase.download(path, user.id(), clientIp);
+        FileContent content = downloadFileUseCase.download(path, userId, clientIp);
 
         InputStreamResource resource = new InputStreamResource(content.inputStream());
 
@@ -103,11 +101,9 @@ public class FileController {
             @RequestParam("path") String path,
             @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
-        if (user == null) {
-            throw new SecurityException("Unauthenticated request");
-        }
+        var userId = authenticatedUserAccessor.requiredUserId(user);
 
-        FileContent content = getFilePreviewUseCase.getPreview(path, user.id());
+        FileContent content = getFilePreviewUseCase.getPreview(path, userId);
 
         InputStreamResource resource = new InputStreamResource(content.inputStream());
 

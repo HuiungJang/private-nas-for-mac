@@ -23,4 +23,4 @@ jwt:
 JWT_SECRET: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
 cors:
-  allowed-origins: "*"
+  allowed-origins: "http://localhost:5173"

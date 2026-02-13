@@ -7,7 +7,6 @@ import com.manas.backend.context.system.infrastructure.persistence.mapper.AuditL
 import com.manas.backend.context.system.infrastructure.persistence.repository.JpaAuditLogRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,13 +23,7 @@ public class JpaAuditLogAdapter implements SaveAuditLogPort, LoadAuditLogsPort {
 
     @Override
     public List<AuditLog> loadPage(int offset, int limit) {
-        int page = offset / limit;
-        int inPageOffset = offset % limit;
-        int fetchSize = limit + inPageOffset;
-
-        return jpaAuditLogRepository.findAllByOrderByTimestampDesc(PageRequest.of(page, fetchSize)).stream()
-                .skip(inPageOffset)
-                .limit(limit)
+        return jpaAuditLogRepository.findPageByOffsetLimit(offset, limit).stream()
                 .map(auditLogMapper::toDomain)
                 .toList();
     }
