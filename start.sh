@@ -162,6 +162,13 @@ preflight_security_checks() {
   if [[ "${frontend_bind_address:-127.0.0.1}" == "0.0.0.0" ]]; then
     print_info "Warning: FRONTEND_BIND_ADDRESS=0.0.0.0 exposes port 80 on all interfaces. Ensure router/firewall blocks public ingress."
   fi
+
+  if [[ -f "./config/db-data/PG_VERSION" ]]; then
+    print_info "Notice: Existing PostgreSQL data detected (config/db-data)."
+    print_info "If NAS_USER/NAS_PASSWORD/NAS_DB changed since first init, backend may fail to authenticate."
+    print_info "If auth fails, backup data then reinitialize db-data or align credentials with existing DB credentials."
+  fi
+
   print_ok "Security preflight checks passed."
 }
 
