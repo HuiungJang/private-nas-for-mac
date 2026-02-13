@@ -17,6 +17,11 @@ export const ChangePasswordPage: React.FC = () => {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', {replace: true});
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -83,7 +88,7 @@ export const ChangePasswordPage: React.FC = () => {
             />
 
             <IOSButton fullWidth type="submit" variant="contained" sx={{mt: 2}}>Update Password</IOSButton>
-            <IOSButton fullWidth type="button" variant="text" sx={{mt: 1}} onClick={() => {logout(); navigate('/login', {replace: true});}}>
+            <IOSButton fullWidth type="button" variant="text" sx={{mt: 1}} onClick={handleLogout}>
               Logout
             </IOSButton>
           </Box>

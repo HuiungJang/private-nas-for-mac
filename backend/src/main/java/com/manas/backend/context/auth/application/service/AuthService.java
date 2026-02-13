@@ -44,6 +44,8 @@ public class AuthService implements LoginUseCase {
             throw new SecurityException("Current password is incorrect");
         }
 
+        validateNewPassword(newPassword, currentPassword);
+
         String encoded = passwordEncoderPort.encode(newPassword);
         User updated = new User(
                 user.id(),
@@ -55,6 +57,25 @@ public class AuthService implements LoginUseCase {
         );
 
         saveUserPort.save(updated);
+    }
+
+    private void validateNewPassword(String newPassword, String currentPassword) {
+        if (newPassword == null || newPassword.length() < 10) {
+            throw new IllegalArgumentException("New password must be at least 10 characters long");
+        }
+
+        if (newPassword.equals(currentPassword)) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        boolean hasUpper = newPassword.chars().anyMatch(Character::isUpperCase);
+        boolean hasLower = newPassword.chars().anyMatch(Character::isLowerCase);
+        boolean hasDigit = newPassword.chars().anyMatch(Character::isDigit);
+
+        if (!(hasUpper && hasLower && hasDigit)) {
+            throw new IllegalArgumentException(
+                    "New password must include uppercase, lowercase, and numeric characters");
+        }
     }
 
 }

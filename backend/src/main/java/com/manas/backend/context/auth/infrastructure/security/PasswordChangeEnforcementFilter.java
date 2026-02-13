@@ -7,11 +7,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Set;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,9 +21,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class PasswordChangeEnforcementFilter extends OncePerRequestFilter {
 
-    private static final Set<String> ALLOWED_PATHS_WHEN_PASSWORD_CHANGE_REQUIRED = Set.of(
-            "/api/auth/change-password",
-            "/error"
+    private static final List<RequestMatcher> ALLOWED_MATCHERS_WHEN_PASSWORD_CHANGE_REQUIRED = List.of(
+            request -> "POST".equalsIgnoreCase(request.getMethod())
+                    && "/api/auth/change-password".equals(normalizePath(request.getRequestURI())),
+            request -> "/error".equals(normalizePath(request.getRequestURI()))
     );
 
     private final LoadUserPort loadUserPort;
@@ -39,17 +41,30 @@ public class PasswordChangeEnforcementFilter extends OncePerRequestFilter {
         }
 
         String username = authentication.getName();
-        String path = request.getRequestURI();
-
         User user = loadUserPort.loadUserByUsername(username).orElse(null);
-        if (user != null && user.mustChangePassword() && !ALLOWED_PATHS_WHEN_PASSWORD_CHANGE_REQUIRED.contains(path)) {
+        boolean isAllowedPath = ALLOWED_MATCHERS_WHEN_PASSWORD_CHANGE_REQUIRED.stream().anyMatch(m -> m.matches(request));
+
+        if (user != null && user.mustChangePassword() && !isAllowedPath) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"title\":\"Password Change Required\",\"status\":403,\"detail\":\"You must change your password before accessing other resources.\"}");
-            log.warn("Blocked request for user={} due to required password change, path={}", username, path);
+            log.warn("Blocked request for user={} due to required password change, method={}, uri={}",
+                    username, request.getMethod(), request.getRequestURI());
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private static String normalizePath(String path) {
+        if (path == null || path.isBlank()) {
+            return "/";
+        }
+
+        if (path.length() > 1 && path.endsWith("/")) {
+            return path.substring(0, path.length() - 1);
+        }
+
+        return path;
     }
 }

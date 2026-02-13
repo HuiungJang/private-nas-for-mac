@@ -1,18 +1,20 @@
 package com.manas.backend.context.auth.infrastructure.jwt;
 
+import com.manas.backend.context.auth.application.port.out.LoadUserPort;
+import com.manas.backend.context.auth.domain.Role;
+import com.manas.backend.context.auth.domain.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
+    private final LoadUserPort loadUserPort;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -36,13 +39,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 String username = tokenProvider.getUsernameFromToken(jwt);
+                User domainUser = loadUserPort.loadUserByUsername(username).orElse(null);
 
-                // TODO: Load user details & roles from Database (Context Auth)
-                // For now, we assume a valid token means an authenticated Admin user (Phase 1)
-                List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                        new SimpleGrantedAuthority("ROLE_ADMIN"));
+                if (domainUser == null || !domainUser.active()) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-                UserDetails userDetails = new User(username, "", authorities);
+                Set<Role> tokenRoles = tokenProvider.getRolesFromToken(jwt);
+                Set<Role> effectiveRoles = tokenRoles.isEmpty() ? domainUser.roles() : tokenRoles;
+
+                List<SimpleGrantedAuthority> authorities = effectiveRoles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                        .toList();
+
+                UserDetails userDetails = new org.springframework.security.core.userdetails.User(username, "", authorities);
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
@@ -52,7 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context", ex);
+            log.warn("Could not set user authentication in security context");
         }
 
         filterChain.doFilter(request, response);

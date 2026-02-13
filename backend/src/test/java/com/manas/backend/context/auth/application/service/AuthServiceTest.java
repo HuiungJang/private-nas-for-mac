@@ -3,6 +3,8 @@ package com.manas.backend.context.auth.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 import com.manas.backend.context.auth.application.port.out.LoadUserPort;
 import com.manas.backend.context.auth.application.port.out.PasswordEncoderPort;
@@ -88,6 +90,47 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(username, rawPassword))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("Invalid credentials");
+    }
+
+    @Test
+    @DisplayName("Should change password and clear mustChangePassword flag")
+    void changePassword_Success() {
+        String username = "admin";
+        String currentPassword = "Current123";
+        String newPassword = "NewPassword1";
+        String encodedPassword = "encoded_password";
+
+        User user = User.createBootstrapAdmin(username, Password.of(encodedPassword), Set.of(Role.ADMIN));
+
+        given(loadUserPort.loadUserByUsername(username)).willReturn(Optional.of(user));
+        given(passwordEncoderPort.matches(currentPassword, encodedPassword)).willReturn(true);
+        given(passwordEncoderPort.encode(newPassword)).willReturn("new_encoded_password");
+
+        authService.changePassword(username, currentPassword, newPassword);
+
+        verify(saveUserPort).save(org.mockito.ArgumentMatchers.argThat(updated ->
+                !updated.mustChangePassword() &&
+                        updated.username().equals(username) &&
+                        updated.password().hash().equals("new_encoded_password")
+        ));
+    }
+
+    @Test
+    @DisplayName("Should reject weak new password")
+    void changePassword_WeakPassword() {
+        String username = "admin";
+        String currentPassword = "Current123";
+        String encodedPassword = "encoded_password";
+
+        User user = User.createBootstrapAdmin(username, Password.of(encodedPassword), Set.of(Role.ADMIN));
+
+        given(loadUserPort.loadUserByUsername(username)).willReturn(Optional.of(user));
+        given(passwordEncoderPort.matches(currentPassword, encodedPassword)).willReturn(true);
+
+        assertThatThrownBy(() -> authService.changePassword(username, currentPassword, "short"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(saveUserPort, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
 }
