@@ -5,6 +5,7 @@ import {LoginPage} from '@/pages/login/LoginPage';
 import {DashboardPage} from '@/pages/dashboard/DashboardPage';
 import {AdminPage} from '@/pages/admin/AdminPage';
 import {ChangePasswordPage} from '@/pages/change-password/ChangePasswordPage';
+import {AppShell} from '@/shared/ui/AppShell';
 
 // Protected Route Wrapper
 const RequireAuth: React.FC = () => {
@@ -25,6 +26,14 @@ const RequirePasswordChange: React.FC = () => {
   if (!mustChangePassword) return <Navigate to="/" replace/>;
 
   return <Outlet/>;
+};
+
+const ProtectedLayout: React.FC = () => {
+  return (
+    <AppShell>
+      <Outlet/>
+    </AppShell>
+  );
 };
 
 // Public Route Wrapper (Redirects to dashboard if already logged in)
@@ -49,8 +58,10 @@ export const AppRouter: React.FC = () => {
 
           {/* Protected Routes */}
           <Route element={<RequireAuth/>}>
-            <Route path="/" element={<DashboardPage/>}/>
-            <Route path="/admin" element={<AdminPage/>}/>
+            <Route element={<ProtectedLayout/>}>
+              <Route path="/" element={<DashboardPage/>}/>
+              <Route path="/admin" element={<AdminPage/>}/>
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
