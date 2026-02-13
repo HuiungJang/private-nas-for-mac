@@ -37,7 +37,7 @@ spring:
     baseline-on-migrate: true
 
 jwt:
-  secret: ${JWT_SECRET:dGhpcy1pcy1hLXZlcnktc3Ryb25nLXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50}
+  secret: ${JWT_SECRET}
   expiration: 86400000
 
 cors:
@@ -46,3 +46,5 @@ cors:
 security:
   vpn:
     allowed-subnets: 10.8.0.0/24,127.0.0.1/32,172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
+  network:
+    trusted-proxies: ${TRUSTED_PROXY_SUBNETS:127.0.0.1/32,::1/128}

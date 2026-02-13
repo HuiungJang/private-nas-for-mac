@@ -3,6 +3,7 @@ package com.manas.backend.context.auth.infrastructure.jwt;
 import com.manas.backend.context.auth.domain.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.security.WeakKeyException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -28,8 +29,15 @@ public class JwtTokenProvider {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration}") long jwtExpiration
     ) {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(secret);
+            if (keyBytes.length < 32) {
+                throw new IllegalStateException("JWT secret must decode to at least 32 bytes");
+            }
+            this.key = Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException | WeakKeyException e) {
+            throw new IllegalStateException("Invalid JWT secret configuration", e);
+        }
         this.jwtExpiration = jwtExpiration;
     }
 

@@ -43,9 +43,9 @@ export const UserTable: React.FC<UserTableProps> = ({users, onAddUser}) => {
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Username</TableCell>
-                <TableCell>Roles</TableCell>
+              <TableRow sx={{'& th': {backgroundColor: '#f8fafc', color: 'text.secondary', fontWeight: 700, fontSize: 12}}}>
+                <TableCell>USERNAME</TableCell>
+                <TableCell>ROLES</TableCell>
                 <TableCell align="right">ID</TableCell>
               </TableRow>
             </TableHead>

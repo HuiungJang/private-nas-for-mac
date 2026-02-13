@@ -17,8 +17,10 @@ security:
     allowed-subnets: 127.0.0.1/32
 
 jwt:
-  secret: test_secret_key_must_be_long_enough_for_hs256_algorithm_test
+  secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
   expiration: 3600000
+
+JWT_SECRET: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
 cors:
   allowed-origins: "*"
