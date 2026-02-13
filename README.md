@@ -118,6 +118,10 @@ docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 ```bash
 SPRING_PROFILES_ACTIVE=dev
 ```
+- If needed, override preview cache directory explicitly:
+```bash
+APP_STORAGE_CACHE_DIR=/tmp/nas-cache
+```
 
 ### Backend Build Performance Notes
 - Gradle configuration cache is enabled in `backend/gradle.properties`.
