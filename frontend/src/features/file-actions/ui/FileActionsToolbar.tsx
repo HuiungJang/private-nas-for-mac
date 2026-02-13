@@ -3,6 +3,7 @@ import {Button, IconButton, Stack, Tooltip, useMediaQuery, useTheme} from '@mui/
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import {useFileActions} from '../model/useFileActions';
 import {IOSButton} from '@/shared/ui';
 import {MoveFileModal} from './MoveFileModal';
@@ -11,12 +12,14 @@ interface FileActionsToolbarProps {
   selectedFiles: Set<string>;
   currentPath: string;
   onClearSelection: () => void;
+  onRefresh?: () => void;
 }
 
 export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                                                                         selectedFiles,
                                                                         currentPath,
                                                                         onClearSelection,
+                                                                        onRefresh,
                                                                       }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -63,6 +66,25 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
             ref={fileInputRef}
             onChange={handleFileChange}
         />
+
+        {onRefresh && (
+          isMobile ? (
+            <Tooltip title="Refresh">
+              <IconButton onClick={onRefresh} color="inherit">
+                <RefreshIcon/>
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon/>}
+              onClick={onRefresh}
+              sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
+            >
+              Refresh
+            </Button>
+          )
+        )}
 
         {isMobile ? (
             <Tooltip title="Upload">
