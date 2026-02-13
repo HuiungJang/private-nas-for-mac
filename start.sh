@@ -49,6 +49,16 @@ ensure_env_file() {
   read -r -p "Enter Host Path to share [${default_volumes}]: " host_volumes_path
   host_volumes_path=${host_volumes_path:-$default_volumes}
 
+  read -r -p "Enter DB user [nas_user]: " nas_user
+  nas_user=${nas_user:-nas_user}
+
+  read -r -p "Enter DB password [change_db_password]: " nas_password
+  nas_password=${nas_password:-change_db_password}
+
+  read -r -p "Enter DB name [nas_db]: " nas_db
+  nas_db=${nas_db:-nas_db}
+
+
 
   read -r -p "Enter frontend bind address [127.0.0.1]: " frontend_bind_address
   frontend_bind_address=${frontend_bind_address:-127.0.0.1}
@@ -65,6 +75,9 @@ ensure_env_file() {
 WG_HOST=${wg_host}
 WG_PASSWORD_HASH=${wg_password_hash}
 HOST_VOLUMES_PATH=${host_volumes_path}
+NAS_USER=${nas_user}
+NAS_PASSWORD=${nas_password}
+NAS_DB=${nas_db}
 APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD=${bootstrap_admin_password}
 JWT_SECRET=${jwt_secret}
 TRUSTED_PROXY_SUBNETS=127.0.0.1/32,::1/128
@@ -107,11 +120,14 @@ validate_jwt_secret() {
 preflight_security_checks() {
   print_info "Running security preflight checks..."
 
-  local wg_password_hash bootstrap_admin_password jwt_secret frontend_bind_address
+  local wg_password_hash bootstrap_admin_password jwt_secret frontend_bind_address nas_user nas_password nas_db
   wg_password_hash=$(get_env_value "WG_PASSWORD_HASH")
   bootstrap_admin_password=$(get_env_value "APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD")
   jwt_secret=$(get_env_value "JWT_SECRET")
   frontend_bind_address=$(get_env_value "FRONTEND_BIND_ADDRESS")
+  nas_user=$(get_env_value "NAS_USER")
+  nas_password=$(get_env_value "NAS_PASSWORD")
+  nas_db=$(get_env_value "NAS_DB")
 
   if [[ -z "$wg_password_hash" ]]; then
     print_err "WG_PASSWORD_HASH is missing in .env"
@@ -120,6 +136,11 @@ preflight_security_checks() {
 
   if [[ -z "$bootstrap_admin_password" ]]; then
     print_err "APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD is missing in .env"
+    exit 1
+  fi
+
+  if [[ -z "$nas_user" || -z "$nas_password" || -z "$nas_db" ]]; then
+    print_err "NAS_USER/NAS_PASSWORD/NAS_DB must be set in .env"
     exit 1
   fi
 

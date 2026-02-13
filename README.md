@@ -78,6 +78,7 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
    - `JWT_SECRET` (Base64, decoded length >= 32 bytes)
    - `WG_HOST` (Public IP or DDNS)
    - `WG_PASSWORD_HASH` (wg-easy admin password hash)
+   - `NAS_USER`, `NAS_PASSWORD`, `NAS_DB` (PostgreSQL credentials)
    - `TRUSTED_PROXY_SUBNETS` (X-Forwarded-For를 신뢰할 프록시 CIDR 목록)
    - `FRONTEND_BIND_ADDRESS` (frontend host bind address, secure default: `127.0.0.1`)
 
