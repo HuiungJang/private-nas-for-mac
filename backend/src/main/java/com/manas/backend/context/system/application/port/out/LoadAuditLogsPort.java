@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface LoadAuditLogsPort {
 
-    List<AuditLog> loadAll();
+    List<AuditLog> loadPage(int offset, int limit);
 
 }

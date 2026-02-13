@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.infrastructure.web;
 
+import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserPrincipal;
 import com.manas.backend.context.file.application.port.in.DeleteFilesResult;
 import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
 import com.manas.backend.context.file.application.port.in.FileListSort;
@@ -12,10 +13,10 @@ import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesResponse
 import com.manas.backend.context.file.infrastructure.web.dto.DirectoryListingDTO;
 import com.manas.backend.context.file.infrastructure.web.dto.MoveFileRequest;
 import com.manas.backend.context.file.infrastructure.web.mapper.FileMapper;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,13 +38,15 @@ public class AdminFileController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DirectoryListingDTO> listFiles(
             @RequestParam(required = false) String path,
-            @RequestParam(required = false) UUID userId,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "100") int limit,
-            @RequestParam(defaultValue = "NAME_ASC") FileListSort sort
+            @RequestParam(defaultValue = "NAME_ASC") FileListSort sort,
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
+        ensureAuthenticated(user);
+
         DirectoryListing result = listDirectoryUseCase.listDirectory(
-                new ListDirectoryQuery(path, userId, offset, limit, sort)
+                new ListDirectoryQuery(path, user.id(), offset, limit, sort)
         );
         return ResponseEntity.ok(fileMapper.toDTO(result));
     }
@@ -52,9 +55,11 @@ public class AdminFileController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeleteFilesResponse> deleteFiles(
             @RequestBody DeleteFilesRequest request,
-            @RequestParam(required = false) UUID userId
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
-        DeleteFilesResult result = deleteFilesUseCase.deleteFiles(request.paths(), userId);
+        ensureAuthenticated(user);
+
+        DeleteFilesResult result = deleteFilesUseCase.deleteFiles(request.paths(), user.id());
         DeleteFilesResponse response = new DeleteFilesResponse(
                 result.deleted(),
                 result.failed().stream()
@@ -69,9 +74,16 @@ public class AdminFileController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> moveFile(
             @RequestBody MoveFileRequest request,
-            @RequestParam(required = false) UUID userId
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user
     ) {
-        moveFileUseCase.moveFile(request.sourcePath(), request.destinationPath(), userId);
+        ensureAuthenticated(user);
+        moveFileUseCase.moveFile(request.sourcePath(), request.destinationPath(), user.id());
         return ResponseEntity.noContent().build();
+    }
+
+    private void ensureAuthenticated(AuthenticatedUserPrincipal user) {
+        if (user == null) {
+            throw new SecurityException("Unauthenticated request");
+        }
     }
 }
