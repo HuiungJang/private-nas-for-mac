@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.application.service;
 
+import com.manas.backend.common.exception.FileOperationException;
 import com.manas.backend.context.file.application.port.in.FileUploadCommand;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
@@ -95,7 +96,7 @@ public class FileUploadService implements FileUploadUseCase {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to verify uploaded file checksum", e);
+            throw new FileOperationException("Failed to verify uploaded file checksum", e);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.infrastructure.fs;
 
+import com.manas.backend.common.exception.FileOperationException;
 import com.manas.backend.common.exception.ResourceNotFoundException;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.file.domain.DirectoryListing;
@@ -48,7 +49,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             log.info("User {} deleted file: {}", userId, targetPath);
         } catch (IOException e) {
             log.error("Failed to delete path: {}", targetPath, e);
-            throw new RuntimeException("Failed to delete file: " + e.getMessage(), e);
+            throw new FileOperationException("Failed to delete file: " + e.getMessage(), e);
         }
     }
 
@@ -73,7 +74,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             log.info("User {} moved file from {} to {}", userId, sourcePath, destinationPath);
         } catch (IOException e) {
             log.error("Failed to move file from {} to {}", sourcePath, destinationPath, e);
-            throw new RuntimeException("Failed to move file: " + e.getMessage(), e);
+            throw new FileOperationException("Failed to move file: " + e.getMessage(), e);
         }
     }
 
@@ -91,7 +92,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             log.info("User {} uploaded file: {} (Size: {})", userId, targetPath, size);
         } catch (IOException e) {
             log.error("Failed to upload file to: {}", targetPath, e);
-            throw new RuntimeException("Failed to upload file", e);
+            throw new FileOperationException("Failed to upload file", e);
         }
     }
 
@@ -121,7 +122,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             return new FileContent(fileName, contentType, size, inputStream);
         } catch (IOException e) {
             log.error("Failed to retrieve file: {}", targetPath, e);
-            throw new RuntimeException("Failed to retrieve file content", e);
+            throw new FileOperationException("Failed to retrieve file content", e);
         }
     }
 
@@ -187,7 +188,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
                     .toList();
         } catch (IOException e) {
             log.error("Failed to list directory: {}", directory, e);
-            throw new RuntimeException("Failed to list directory content", e);
+            throw new FileOperationException("Failed to list directory content", e);
         }
     }
 
@@ -260,7 +261,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             return Files.size(targetPath);
         } catch (IOException e) {
             log.error("Failed to get file size: {}", targetPath, e);
-            throw new RuntimeException("Failed to get file size", e);
+            throw new FileOperationException("Failed to get file size", e);
         }
     }
 
@@ -271,7 +272,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             return fileStore.getUsableSpace();
         } catch (IOException e) {
             log.error("Failed to get available disk space for root path: {}", rootPath, e);
-            throw new RuntimeException("Failed to check disk space", e);
+            throw new FileOperationException("Failed to check disk space", e);
         }
     }
 }

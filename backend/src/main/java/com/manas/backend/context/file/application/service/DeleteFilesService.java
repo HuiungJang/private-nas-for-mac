@@ -28,7 +28,7 @@ public class DeleteFilesService implements DeleteFilesUseCase {
             try {
                 fileStoragePort.delete(path, userId);
                 recordAuditLogUseCase.record(userId, "DELETE_FILE", path, "N/A", "SUCCESS");
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.error("Failed to delete file: {}", path, e);
                 recordAuditLogUseCase.record(userId, "DELETE_FILE", path, "N/A", "FAILURE");
                 // We choose to continue deleting others, or throw?

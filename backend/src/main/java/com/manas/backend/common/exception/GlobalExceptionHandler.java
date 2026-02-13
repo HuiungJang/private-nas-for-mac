@@ -40,6 +40,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(FileOperationException.class)
+    ProblemDetail handleFileOperationException(FileOperationException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        problemDetail.setTitle("File Operation Failed");
+        problemDetail.setType(URI.create("https://manas.com/errors/file-operation-failed"));
+        problemDetail.setProperty(DEFAULT_TIMESTAMP, Instant.now());
+        return problemDetail;
+    }
+
     @ExceptionHandler(Exception.class)
     ProblemDetail handleGenericException(Exception e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.");
