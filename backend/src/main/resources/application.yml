@@ -7,7 +7,7 @@ logging:
 app:
   storage:
     root: /mnt/host_volumes
-    cache-dir: /app/cache
+    cache-dir: ${APP_STORAGE_CACHE_DIR:/tmp/nas-cache}
   security:
     bootstrap-admin-password: ${APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD:}
 
