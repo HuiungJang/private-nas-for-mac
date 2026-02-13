@@ -2,6 +2,7 @@ package com.manas.backend.context.file.infrastructure.fs;
 
 import com.manas.backend.common.exception.FileOperationException;
 import com.manas.backend.common.exception.ResourceNotFoundException;
+import com.manas.backend.context.file.application.port.in.FileListSort;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.domain.FileContent;
@@ -127,23 +128,27 @@ public class LocalFileSystemAdapter implements FileStoragePort {
     }
 
     @Override
-    public DirectoryListing listDirectory(String pathString, UUID userId) {
-        // 1. Validate & Resolve
+    public DirectoryListing listDirectory(String pathString, UUID userId, int offset, int limit, FileListSort sort) {
         var targetPath = resolveAndValidate(pathString);
 
-        // 2. Fetch & Sort
-        var items = fetchFileNodes(targetPath);
+        var allItems = fetchFileNodes(targetPath, sort);
+        int totalCount = allItems.size();
 
-        // 3. Generate Breadcrumbs
+        int safeOffset = Math.min(Math.max(0, offset), totalCount);
+        int safeLimit = Math.max(1, limit);
+        int endExclusive = Math.min(safeOffset + safeLimit, totalCount);
+
+        var pagedItems = allItems.subList(safeOffset, endExclusive);
         var breadcrumbs = generateBreadcrumbs(targetPath);
-
-        // Calculate logical path for response
         String logicalPath = toLogicalPath(targetPath);
 
         return new DirectoryListing(
                 logicalPath,
                 breadcrumbs,
-                items
+                pagedItems,
+                totalCount,
+                safeOffset,
+                safeLimit
         );
     }
 
@@ -179,12 +184,12 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         return targetPath;
     }
 
-    private List<FileNode> fetchFileNodes(Path directory) {
+    private List<FileNode> fetchFileNodes(Path directory, FileListSort sort) {
         try (Stream<Path> stream = Files.list(directory)) {
             return stream
                     .map(this::toFileNode)
-                    .flatMap(Stream::ofNullable) // Filter out failed mappings (nulls)
-                    .sorted(byTypeThenName())
+                    .flatMap(Stream::ofNullable)
+                    .sorted(comparatorBySort(sort))
                     .toList();
         } catch (IOException e) {
             log.error("Failed to list directory: {}", directory, e);
@@ -217,9 +222,15 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         return "/" + rootPath.relativize(path);
     }
 
-    private Comparator<FileNode> byTypeThenName() {
-        return Comparator.comparing(FileNode::isDirectory).reversed()
-                .thenComparing(FileNode::name);
+    private Comparator<FileNode> comparatorBySort(FileListSort sort) {
+        Comparator<FileNode> base = Comparator.comparing(FileNode::isDirectory).reversed();
+
+        return switch (sort) {
+            case NAME_DESC -> base.thenComparing(FileNode::name, Comparator.reverseOrder());
+            case MODIFIED_DESC -> base.thenComparing(FileNode::lastModified, Comparator.reverseOrder());
+            case MODIFIED_ASC -> base.thenComparing(FileNode::lastModified);
+            case NAME_ASC -> base.thenComparing(FileNode::name);
+        };
     }
 
     private List<PathNode> generateBreadcrumbs(Path targetPath) {

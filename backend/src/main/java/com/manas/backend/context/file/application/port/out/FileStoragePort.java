@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.application.port.out;
 
+import com.manas.backend.context.file.application.port.in.FileListSort;
 import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.domain.FileContent;
 import java.util.UUID;
@@ -13,7 +14,7 @@ public interface FileStoragePort {
      * @throws SecurityException if path is outside allowed scope.
      * @throws IllegalArgumentException if path is invalid.
      */
-    DirectoryListing listDirectory(String path, UUID userId);
+    DirectoryListing listDirectory(String path, UUID userId, int offset, int limit, FileListSort sort);
 
     /**
      * Deletes a file or directory at the specified path.

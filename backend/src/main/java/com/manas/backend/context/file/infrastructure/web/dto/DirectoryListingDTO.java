@@ -5,5 +5,8 @@ import java.util.List;
 public record DirectoryListingDTO(
     String currentPath,
     List<PathNodeDTO> breadcrumbs,
-    List<FileNodeDTO> items
+    List<FileNodeDTO> items,
+    int totalCount,
+    int offset,
+    int limit
 ) {}
