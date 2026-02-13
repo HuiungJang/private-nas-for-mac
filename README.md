@@ -101,6 +101,13 @@ Or run Docker directly:
 docker-compose up -d
 ```
 
+### Backend Profile Notes
+- Production-safe defaults are in `application.yml` (SQL logs off).
+- For local debugging with SQL logs enabled, use dev profile:
+```bash
+SPRING_PROFILES_ACTIVE=dev
+```
+
 ### Step 3: Connect
 1. Access the Admin UI at [http://localhost:51821](http://localhost:51821).
 2. Login with the password you set in `.env`.
