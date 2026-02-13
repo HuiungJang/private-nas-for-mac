@@ -10,43 +10,61 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // For cookie-based auth if needed later, usually false for JWT header
+  withCredentials: true,
 });
 
-// Request Interceptor: Add Trace ID and JWT Token
+export const shouldRetryRequest = (status?: number, method?: string) => {
+  const normalizedMethod = (method ?? 'GET').toUpperCase();
+  const idempotent = ['GET', 'HEAD', 'OPTIONS'].includes(normalizedMethod);
+
+  if (!idempotent) return false;
+  if (!status) return true;
+  return status === 429 || status >= 500;
+};
+
 apiClient.interceptors.request.use(
-    (config) => {
-      // 1. Add Trace ID
-      const traceId = uuidv4();
-      config.headers['X-Trace-ID'] = traceId;
+  (config) => {
+    const traceId = uuidv4();
+    config.headers['X-Trace-ID'] = traceId;
 
-      // 2. Add JWT Token if exists
-      // Access token from Zustand store (outside React component)
-      const token = useAuthStore.getState().token;
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
+    const token = useAuthStore.getState().token;
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle Errors globally
 apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      // Prefer server trace-id for end-to-end correlation; fallback to request trace-id.
-      const responseTraceId = error.response?.headers?.['x-trace-id'];
-      const requestTraceId = error.config?.headers?.['X-Trace-ID'];
-      const traceId = responseTraceId || requestTraceId || 'unknown';
-      console.error(`[API Error] TraceID: ${traceId}`, error.response?.data || error.message);
+  (response) => response,
+  (error) => {
+    const responseTraceId = error.response?.headers?.['x-trace-id'];
+    const requestTraceId = error.config?.headers?.['X-Trace-ID'];
+    const traceId = responseTraceId || requestTraceId || 'unknown';
+    console.error(`[API Error] TraceID: ${traceId}`, error.response?.data || error.message);
 
-      const message = error.response?.data?.detail || error.response?.data?.message || error.message || 'An unexpected error occurred';
-      useNotificationStore.getState().showNotification(message, 'error');
+    const status: number | undefined = error.response?.status;
 
-      return Promise.reject(error);
+    if (status === 401) {
+      useAuthStore.getState().logout();
     }
+
+    const message =
+      status === 401
+        ? '세션이 만료되었습니다. 다시 로그인해 주세요.'
+        : status === 403
+          ? '권한이 없습니다.'
+          : status === 429
+            ? '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+            : error.response?.data?.detail ||
+              error.response?.data?.message ||
+              error.message ||
+              'An unexpected error occurred';
+
+    useNotificationStore.getState().showNotification(message, 'error');
+
+    return Promise.reject(error);
+  }
 );

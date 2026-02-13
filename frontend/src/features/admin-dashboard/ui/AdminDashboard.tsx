@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {Suspense, useState} from 'react';
 import {
   Box,
   Button,
@@ -15,9 +15,10 @@ import {
   TextField,
   Typography
 } from '@mui/material';
-import {SystemHealthWidget} from '@/widgets/system-health/ui/SystemHealthWidget';
-import {UserTable} from '@/widgets/user-table/ui/UserTable';
-import {AuditLogTable} from '@/widgets/audit-log-table/ui/AuditLogTable';
+
+const SystemHealthWidget = React.lazy(() => import('@/widgets/system-health/ui/SystemHealthWidget').then(m => ({default: m.SystemHealthWidget})));
+const UserTable = React.lazy(() => import('@/widgets/user-table/ui/UserTable').then(m => ({default: m.UserTable})));
+const AuditLogTable = React.lazy(() => import('@/widgets/audit-log-table/ui/AuditLogTable').then(m => ({default: m.AuditLogTable})));
 import {useSystemHealth} from '@/entities/system/model/useSystemHealth';
 import {useUserMutations, useUsers} from '@/entities/user/model/useUsers';
 import {useAuditLogs} from '@/entities/audit/model/useAuditLogs';
@@ -121,36 +122,38 @@ export const AdminDashboard: React.FC = () => {
           </Tabs>
         </Box>
 
-        {tab === 0 && (
-            <SystemHealthWidget data={healthData} isLoading={isHealthLoading}/>
-        )}
+        <Suspense fallback={<Box sx={{display: 'flex', justifyContent: 'center', p: 4}}><CircularProgress/></Box>}>
+          {tab === 0 && (
+              <SystemHealthWidget data={healthData} isLoading={isHealthLoading}/>
+          )}
 
-        {tab === 1 && (
-            isUsersLoading ? (
-                <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
-                  <CircularProgress/>
-                </Box>
-            ) : usersData && (
-                <>
-                  <UserTable users={usersData} onAddUser={() => setIsUserModalOpen(true)}/>
-                  <CreateUserModal
-                      open={isUserModalOpen}
-                      onClose={() => setIsUserModalOpen(false)}
-                      onCreate={handleCreateUser}
-                  />
-                </>
-            )
-        )}
+          {tab === 1 && (
+              isUsersLoading ? (
+                  <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
+                    <CircularProgress/>
+                  </Box>
+              ) : usersData && (
+                  <>
+                    <UserTable users={usersData} onAddUser={() => setIsUserModalOpen(true)}/>
+                    <CreateUserModal
+                        open={isUserModalOpen}
+                        onClose={() => setIsUserModalOpen(false)}
+                        onCreate={handleCreateUser}
+                    />
+                  </>
+              )
+          )}
 
-        {tab === 2 && (
-            isAuditLoading ? (
-                <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
-                  <CircularProgress/>
-                </Box>
-            ) : auditLogs && (
-                <AuditLogTable logs={auditLogs}/>
-            )
-        )}
+          {tab === 2 && (
+              isAuditLoading ? (
+                  <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
+                    <CircularProgress/>
+                  </Box>
+              ) : auditLogs && (
+                  <AuditLogTable logs={auditLogs}/>
+              )
+          )}
+        </Suspense>
       </Box>
   );
 };

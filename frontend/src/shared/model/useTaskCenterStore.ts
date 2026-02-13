@@ -1,4 +1,5 @@
 import {create} from 'zustand';
+import {buildTaskLabel, type FileTaskPayload} from './taskEvents';
 
 export type TaskStatus = 'running' | 'success' | 'failed';
 
@@ -13,7 +14,7 @@ export interface TaskItem {
 
 interface TaskCenterState {
   tasks: TaskItem[];
-  startTask: (label: string) => string;
+  startTask: (task: string | FileTaskPayload) => string;
   completeTask: (id: string) => void;
   failTask: (id: string, errorMessage?: string) => void;
   clearFinished: () => void;
@@ -21,8 +22,9 @@ interface TaskCenterState {
 
 export const useTaskCenterStore = create<TaskCenterState>((set) => ({
   tasks: [],
-  startTask: (label) => {
+  startTask: (taskInput) => {
     const id = crypto.randomUUID();
+    const label = typeof taskInput === 'string' ? taskInput : buildTaskLabel(taskInput);
     const task: TaskItem = {id, label, status: 'running', startedAt: Date.now()};
     set((state) => ({
       tasks: [task, ...state.tasks].slice(0, 30),
