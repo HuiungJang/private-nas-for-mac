@@ -31,6 +31,10 @@ ensure_env_file() {
   read -r -p "Enter your Public IP/Hostname for VPN [${default_host}]: " wg_host
   wg_host=${wg_host:-$default_host}
 
+  read -r -p "Enter wg-easy image version [15]: " wg_easy_version
+  wg_easy_version=${wg_easy_version:-15}
+
+
   read -r -p "Enter VPN Admin Password [admin123]: " wg_password
   wg_password=${wg_password:-admin123}
 
@@ -73,6 +77,7 @@ ensure_env_file() {
 
   cat > .env <<EOF
 WG_HOST=${wg_host}
+WG_EASY_VERSION=${wg_easy_version}
 WG_PASSWORD_HASH=${wg_password_hash}
 HOST_VOLUMES_PATH=${host_volumes_path}
 NAS_USER=${nas_user}
@@ -120,7 +125,7 @@ validate_jwt_secret() {
 preflight_security_checks() {
   print_info "Running security preflight checks..."
 
-  local wg_password_hash bootstrap_admin_password jwt_secret frontend_bind_address nas_user nas_password nas_db
+  local wg_password_hash bootstrap_admin_password jwt_secret frontend_bind_address nas_user nas_password nas_db wg_easy_version
   wg_password_hash=$(get_env_value "WG_PASSWORD_HASH")
   bootstrap_admin_password=$(get_env_value "APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD")
   jwt_secret=$(get_env_value "JWT_SECRET")
@@ -128,9 +133,15 @@ preflight_security_checks() {
   nas_user=$(get_env_value "NAS_USER")
   nas_password=$(get_env_value "NAS_PASSWORD")
   nas_db=$(get_env_value "NAS_DB")
+  wg_easy_version=$(get_env_value "WG_EASY_VERSION")
 
   if [[ -z "$wg_password_hash" ]]; then
     print_err "WG_PASSWORD_HASH is missing in .env"
+    exit 1
+  fi
+
+  if [[ -z "$wg_easy_version" ]]; then
+    print_err "WG_EASY_VERSION is missing in .env"
     exit 1
   fi
 
