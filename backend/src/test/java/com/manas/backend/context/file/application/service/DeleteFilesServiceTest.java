@@ -1,10 +1,11 @@
 package com.manas.backend.context.file.application.service;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
+import com.manas.backend.context.file.application.port.in.DeleteFilesResult;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.system.application.port.in.RecordAuditLogUseCase;
 import java.util.List;
@@ -30,7 +31,6 @@ class DeleteFilesServiceTest {
     @Test
     @DisplayName("Should delete files and record success audit log")
     void deleteFiles_Success() {
-        // Given
         UUID userId = UUID.randomUUID();
         String path1 = "/path/to/file1.txt";
         String path2 = "/path/to/file2.txt";
@@ -39,10 +39,11 @@ class DeleteFilesServiceTest {
         willDoNothing().given(fileStoragePort).delete(path1, userId);
         willDoNothing().given(fileStoragePort).delete(path2, userId);
 
-        // When
-        deleteFilesService.deleteFiles(paths, userId);
+        DeleteFilesResult result = deleteFilesService.deleteFiles(paths, userId);
 
-        // Then
+        assertThat(result.deleted()).containsExactly(path1, path2);
+        assertThat(result.failed()).isEmpty();
+
         verify(fileStoragePort).delete(path1, userId);
         verify(recordAuditLogUseCase).record(userId, "DELETE_FILE", path1, "N/A", "SUCCESS");
 
@@ -51,9 +52,8 @@ class DeleteFilesServiceTest {
     }
 
     @Test
-    @DisplayName("Should stop and throw exception when deletion fails, and record failure audit log")
+    @DisplayName("Should continue delete and return failure report when one deletion fails")
     void deleteFiles_Failure() {
-        // Given
         UUID userId = UUID.randomUUID();
         String path1 = "/path/to/success.txt";
         String path2 = "/path/to/fail.txt";
@@ -62,18 +62,17 @@ class DeleteFilesServiceTest {
         willDoNothing().given(fileStoragePort).delete(path1, userId);
         willThrow(new RuntimeException("IO Error")).given(fileStoragePort).delete(path2, userId);
 
-        // When & Then
-        assertThatThrownBy(() -> deleteFilesService.deleteFiles(paths, userId))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("IO Error");
+        DeleteFilesResult result = deleteFilesService.deleteFiles(paths, userId);
 
-        // Verify first file success
+        assertThat(result.deleted()).containsExactly(path1);
+        assertThat(result.failed()).hasSize(1);
+        assertThat(result.failed().getFirst().path()).isEqualTo(path2);
+        assertThat(result.failed().getFirst().reason()).contains("IO Error");
+
         verify(fileStoragePort).delete(path1, userId);
         verify(recordAuditLogUseCase).record(userId, "DELETE_FILE", path1, "N/A", "SUCCESS");
 
-        // Verify second file failure
         verify(fileStoragePort).delete(path2, userId);
         verify(recordAuditLogUseCase).record(userId, "DELETE_FILE", path2, "N/A", "FAILURE");
     }
-
 }

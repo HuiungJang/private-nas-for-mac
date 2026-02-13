@@ -5,6 +5,6 @@ import java.util.UUID;
 
 public interface DeleteFilesUseCase {
 
-    void deleteFiles(List<String> paths, UUID userId);
+    DeleteFilesResult deleteFiles(List<String> paths, UUID userId);
 
 }
