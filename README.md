@@ -113,7 +113,7 @@ docker-compose ps
 docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 ```
 - `nas-db`: `pg_isready` 기반 healthy
-- `nas-backend`: `GET /actuator/health` 상태 기반 healthy
+- `nas-backend`: `GET /actuator/health` 상태 기반 healthy (IPv4 loopback 127.0.0.1 고정)
 - `nas-frontend`: nginx index 응답 기반 healthy
 - If Dockerfile/healthcheck was changed, run with `--build` to avoid stale image mismatch.
 
