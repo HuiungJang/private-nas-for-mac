@@ -105,6 +105,15 @@ Or run Docker directly:
 docker-compose up -d
 ```
 
+### Health Check & Monitoring Quick Check
+```bash
+docker-compose ps
+docker-compose logs --tail=100 nas-db nas-backend nas-frontend
+```
+- `nas-db`: `pg_isready` 기반 healthy
+- `nas-backend`: `GET /actuator/health` 상태 기반 healthy
+- `nas-frontend`: nginx index 응답 기반 healthy
+
 ### Backend Profile Notes
 - Production-safe defaults are in `application.yml` (SQL logs off).
 - For local debugging with SQL logs enabled, use dev profile:
