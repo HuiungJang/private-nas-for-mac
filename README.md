@@ -77,6 +77,7 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
    - `APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD` (initial admin password)
    - `JWT_SECRET` (Base64, decoded length >= 32 bytes)
    - `WG_HOST` (Public IP or DDNS)
+   - `WG_EASY_VERSION` (pinned wg-easy image version)
    - `WG_PASSWORD_HASH` (wg-easy admin password hash)
    - `NAS_USER`, `NAS_PASSWORD`, `NAS_DB` (PostgreSQL credentials)
    - `TRUSTED_PROXY_SUBNETS` (X-Forwarded-For를 신뢰할 프록시 CIDR 목록)
@@ -124,6 +125,7 @@ SPRING_PROFILES_ACTIVE=dev
 - On your home router, **forward UDP port 51820** to your Mac's local IP address.
 - Do **not** forward port 80 publicly unless you explicitly intend to expose the frontend.
 - Keep `FRONTEND_BIND_ADDRESS=127.0.0.1` by default for safer local-only bind.
+- Keep `WG_EASY_VERSION` pinned. Upgrade by explicitly changing version, reviewing changelog, then redeploying.
 
 ---
 *© 2026 Private NAS Project. Created with Vibe.*
