@@ -1,10 +1,12 @@
 package com.manas.backend.context.file.infrastructure.web;
 
+import com.manas.backend.context.file.application.port.in.DeleteFilesResult;
 import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
 import com.manas.backend.context.file.application.port.in.ListDirectoryUseCase;
 import com.manas.backend.context.file.application.port.in.MoveFileUseCase;
 import com.manas.backend.context.file.domain.DirectoryListing;
 import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesRequest;
+import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesResponse;
 import com.manas.backend.context.file.infrastructure.web.dto.DirectoryListingDTO;
 import com.manas.backend.context.file.infrastructure.web.dto.MoveFileRequest;
 import com.manas.backend.context.file.infrastructure.web.mapper.FileMapper;
@@ -41,12 +43,19 @@ public class AdminFileController {
 
     @PostMapping("/delete")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteFiles(
+    public ResponseEntity<DeleteFilesResponse> deleteFiles(
             @RequestBody DeleteFilesRequest request,
             @RequestParam(required = false) UUID userId
     ) {
-        deleteFilesUseCase.deleteFiles(request.paths(), userId);
-        return ResponseEntity.noContent().build();
+        DeleteFilesResult result = deleteFilesUseCase.deleteFiles(request.paths(), userId);
+        DeleteFilesResponse response = new DeleteFilesResponse(
+                result.deleted(),
+                result.failed().stream()
+                        .map(f -> new DeleteFilesResponse.DeleteFailureDto(f.path(), f.reason()))
+                        .toList()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/move")
