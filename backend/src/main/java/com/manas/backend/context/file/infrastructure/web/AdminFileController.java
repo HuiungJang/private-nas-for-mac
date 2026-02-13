@@ -2,6 +2,8 @@ package com.manas.backend.context.file.infrastructure.web;
 
 import com.manas.backend.context.file.application.port.in.DeleteFilesResult;
 import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
+import com.manas.backend.context.file.application.port.in.FileListSort;
+import com.manas.backend.context.file.application.port.in.ListDirectoryQuery;
 import com.manas.backend.context.file.application.port.in.ListDirectoryUseCase;
 import com.manas.backend.context.file.application.port.in.MoveFileUseCase;
 import com.manas.backend.context.file.domain.DirectoryListing;
@@ -35,9 +37,14 @@ public class AdminFileController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DirectoryListingDTO> listFiles(
             @RequestParam(required = false) String path,
-            @RequestParam(required = false) UUID userId
+            @RequestParam(required = false) UUID userId,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(defaultValue = "NAME_ASC") FileListSort sort
     ) {
-        DirectoryListing result = listDirectoryUseCase.listDirectory(path, userId);
+        DirectoryListing result = listDirectoryUseCase.listDirectory(
+                new ListDirectoryQuery(path, userId, offset, limit, sort)
+        );
         return ResponseEntity.ok(fileMapper.toDTO(result));
     }
 
