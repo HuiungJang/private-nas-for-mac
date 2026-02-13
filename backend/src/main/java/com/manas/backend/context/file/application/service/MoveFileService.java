@@ -23,7 +23,7 @@ public class MoveFileService implements MoveFileUseCase {
         try {
             fileStoragePort.move(sourcePath, destinationPath, userId);
             recordAuditLogUseCase.record(userId, "MOVE_FILE", targetInfo, "N/A", "SUCCESS");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Failed to move file: {}", targetInfo, e);
             recordAuditLogUseCase.record(userId, "MOVE_FILE", targetInfo, "N/A", "FAILURE");
             throw e;

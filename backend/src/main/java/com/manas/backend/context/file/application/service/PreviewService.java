@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.application.service;
 
+import com.manas.backend.common.exception.FileOperationException;
 import com.manas.backend.context.file.application.port.in.GetFilePreviewUseCase;
 import com.manas.backend.context.file.application.port.out.FileStoragePort;
 import com.manas.backend.context.file.application.port.out.PreviewGeneratorPort;
@@ -42,7 +43,7 @@ public class PreviewService implements GetFilePreviewUseCase {
                 Files.createDirectories(cacheDir);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to initialize cache directory: " + cacheDir, e);
+            throw new FileOperationException("Failed to initialize cache directory: " + cacheDir, e);
         }
     }
 
@@ -124,7 +125,7 @@ public class PreviewService implements GetFilePreviewUseCase {
             byte[] hash = digest.digest(path.getBytes());
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not found", e);
+            throw new FileOperationException("SHA-256 algorithm not found", e);
         }
     }
 

@@ -1,5 +1,6 @@
 package com.manas.backend.context.file.infrastructure.image;
 
+import com.manas.backend.common.exception.FileOperationException;
 import com.manas.backend.context.file.application.port.out.PreviewGeneratorPort;
 import com.manas.backend.context.file.domain.FileContent;
 import com.manas.backend.context.file.domain.PreviewType;
@@ -48,7 +49,7 @@ public class ThumbnailatorAdapter implements PreviewGeneratorPort {
 
         } catch (IOException e) {
             log.error("Failed to generate thumbnail for {}", source.fileName(), e);
-            throw new RuntimeException("Thumbnail generation failed", e);
+            throw new FileOperationException("Thumbnail generation failed", e);
         }
     }
 
