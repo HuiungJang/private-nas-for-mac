@@ -89,6 +89,8 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
    - 단일 리버스 프록시: `<proxy-ip>/32`
    - 금지 권장: `0.0.0.0/0`, `::/0` (모든 IP 신뢰)
 
+   VPN allowed subnets 기본값에는 IPv6 loopback(`::1/128`)이 포함됩니다.
+
    Generate a secure JWT secret:
    ```bash
    openssl rand -base64 32
