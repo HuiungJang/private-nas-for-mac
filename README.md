@@ -78,6 +78,12 @@ Detailed specifications and architectural decisions can be found in the `spec/` 
    - `JWT_SECRET` (Base64, decoded length >= 32 bytes)
    - `WG_HOST` (Public IP or DDNS)
    - `WG_PASSWORD_HASH` (wg-easy admin password hash)
+   - `TRUSTED_PROXY_SUBNETS` (X-Forwarded-For를 신뢰할 프록시 CIDR 목록)
+
+   Trusted Proxy 설정 예시:
+   - 로컬 단독: `127.0.0.1/32,::1/128`
+   - 단일 리버스 프록시: `<proxy-ip>/32`
+   - 금지 권장: `0.0.0.0/0`, `::/0` (모든 IP 신뢰)
 
    Generate a secure JWT secret:
    ```bash
