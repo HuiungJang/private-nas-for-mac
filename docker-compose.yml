@@ -28,9 +28,9 @@ services:
     image: postgres:16-alpine
     container_name: nas-db
     environment:
-      POSTGRES_USER: nas_user
-      POSTGRES_PASSWORD: nas_password
-      POSTGRES_DB: nas_db
+      POSTGRES_USER: ${NAS_USER}
+      POSTGRES_PASSWORD: ${NAS_PASSWORD}
+      POSTGRES_DB: ${NAS_DB}
     volumes:
       - ./config/db-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -41,9 +41,9 @@ services:
     build: ./backend
     container_name: nas-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://nas-db:5432/nas_db
-      SPRING_DATASOURCE_USERNAME: nas_user
-      SPRING_DATASOURCE_PASSWORD: nas_password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://nas-db:5432/${NAS_DB}
+      SPRING_DATASOURCE_USERNAME: ${NAS_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NAS_PASSWORD}
       APP_STORAGE_ROOT: /mnt/host_volumes
       JWT_SECRET: ${JWT_SECRET}
       APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD: ${APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD}
