@@ -49,6 +49,10 @@ ensure_env_file() {
   read -r -p "Enter Host Path to share [${default_volumes}]: " host_volumes_path
   host_volumes_path=${host_volumes_path:-$default_volumes}
 
+
+  read -r -p "Enter frontend bind address [127.0.0.1]: " frontend_bind_address
+  frontend_bind_address=${frontend_bind_address:-127.0.0.1}
+
   read -r -p "Enter bootstrap admin password [change_me_now]: " bootstrap_admin_password
   bootstrap_admin_password=${bootstrap_admin_password:-change_me_now}
 
@@ -64,6 +68,7 @@ HOST_VOLUMES_PATH=${host_volumes_path}
 APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD=${bootstrap_admin_password}
 JWT_SECRET=${jwt_secret}
 TRUSTED_PROXY_SUBNETS=127.0.0.1/32,::1/128
+FRONTEND_BIND_ADDRESS=${frontend_bind_address}
 EOF
 
   print_ok ".env created."
@@ -102,10 +107,11 @@ validate_jwt_secret() {
 preflight_security_checks() {
   print_info "Running security preflight checks..."
 
-  local wg_password_hash bootstrap_admin_password jwt_secret
+  local wg_password_hash bootstrap_admin_password jwt_secret frontend_bind_address
   wg_password_hash=$(get_env_value "WG_PASSWORD_HASH")
   bootstrap_admin_password=$(get_env_value "APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD")
   jwt_secret=$(get_env_value "JWT_SECRET")
+  frontend_bind_address=$(get_env_value "FRONTEND_BIND_ADDRESS")
 
   if [[ -z "$wg_password_hash" ]]; then
     print_err "WG_PASSWORD_HASH is missing in .env"
@@ -121,6 +127,9 @@ preflight_security_checks() {
     exit 1
   fi
 
+  if [[ "${frontend_bind_address:-127.0.0.1}" == "0.0.0.0" ]]; then
+    print_info "Warning: FRONTEND_BIND_ADDRESS=0.0.0.0 exposes port 80 on all interfaces. Ensure router/firewall blocks public ingress."
+  fi
   print_ok "Security preflight checks passed."
 }
 

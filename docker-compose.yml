@@ -60,7 +60,7 @@ services:
     build: ./frontend
     container_name: nas-frontend
     ports:
-      - "80:80"
+      - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:80:80"
     depends_on:
       - nas-backend
     restart: unless-stopped
