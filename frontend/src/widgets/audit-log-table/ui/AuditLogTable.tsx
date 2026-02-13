@@ -37,13 +37,13 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({logs}) => {
         <TableContainer sx={{maxHeight: 600}}>
           <Table stickyHeader>
             <TableHead>
-              <TableRow>
-                <TableCell>Time</TableCell>
-                <TableCell>Action</TableCell>
-                <TableCell>Resource</TableCell>
-                <TableCell>User</TableCell>
+              <TableRow sx={{'& th': {backgroundColor: '#f8fafc', color: 'text.secondary', fontWeight: 700, fontSize: 12}}}>
+                <TableCell>TIME</TableCell>
+                <TableCell>ACTION</TableCell>
+                <TableCell>RESOURCE</TableCell>
+                <TableCell>USER</TableCell>
                 <TableCell>IP</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell>STATUS</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
