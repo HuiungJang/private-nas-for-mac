@@ -158,6 +158,7 @@ APP_STORAGE_CACHE_DIR=/tmp/nas-cache
 ### Step 3: Connect
 1. Access the Admin UI at [http://localhost:51821](http://localhost:51821).
 2. Login with the password you set in `.env`.
+   - Frontend auth token is stored in sessionStorage, so closing the browser requires login again.
 3. Create a new client (peer).
 4. Scan the QR code with the WireGuard mobile app or download the configuration for your laptop.
 
