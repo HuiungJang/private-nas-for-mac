@@ -95,24 +95,19 @@ class AuditLogServiceTest {
 
     @Test
 
-    @DisplayName("Should get all audit logs")
+    @DisplayName("Should get paged audit logs")
     void shouldGetAuditLogs() {
 
         // Given
-
         AuditLog log = AuditLog.create(UUID.randomUUID(), "LOGIN", "AUTH", "t1", "1.1.1.1", "OK");
-
-        when(loadAuditLogsPort.loadAll()).thenReturn(List.of(log));
+        when(loadAuditLogsPort.loadPage(0, 100)).thenReturn(List.of(log));
 
         // When
-
-        List<AuditLog> result = auditLogService.getAuditLogs();
+        List<AuditLog> result = auditLogService.getAuditLogs(0, 100);
 
         // Then
-
         assertEquals(1, result.size());
-
-        verify(loadAuditLogsPort).loadAll();
+        verify(loadAuditLogsPort).loadPage(0, 100);
 
     }
 

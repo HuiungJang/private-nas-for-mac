@@ -89,7 +89,7 @@ class SystemMonitoringControllerTest {
 
         AuditLog log = AuditLog.create(userId, "LOGIN", "AUTH", "trace-1", "1.1.1.1", "SUCCESS");
 
-        when(getAuditLogsUseCase.getAuditLogs()).thenReturn(List.of(log));
+        when(getAuditLogsUseCase.getAuditLogs(0, 100)).thenReturn(List.of(log));
 
         // When/Then
 

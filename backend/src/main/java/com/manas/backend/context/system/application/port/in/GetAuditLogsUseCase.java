@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface GetAuditLogsUseCase {
 
-    List<AuditLog> getAuditLogs();
+    List<AuditLog> getAuditLogs(int offset, int limit);
 
 }

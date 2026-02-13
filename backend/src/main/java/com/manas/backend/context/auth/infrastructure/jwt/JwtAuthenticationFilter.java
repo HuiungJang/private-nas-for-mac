@@ -3,6 +3,7 @@ package com.manas.backend.context.auth.infrastructure.jwt;
 import com.manas.backend.context.auth.application.port.out.LoadUserPort;
 import com.manas.backend.context.auth.domain.Role;
 import com.manas.backend.context.auth.domain.User;
+import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserPrincipal;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -53,10 +53,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
                         .toList();
 
-                UserDetails userDetails = new org.springframework.security.core.userdetails.User(username, "", authorities);
+                var principal = new AuthenticatedUserPrincipal(domainUser.id(), username, authorities);
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                        principal, null, principal.getAuthorities());
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 

@@ -9,8 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.manas.backend.common.security.ClientIpResolver;
-import com.manas.backend.context.auth.domain.Role;
-import com.manas.backend.context.auth.domain.User;
+import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserPrincipal;
 import com.manas.backend.context.file.application.port.in.DownloadFileUseCase;
 import com.manas.backend.context.file.application.port.in.FileUploadUseCase;
 import com.manas.backend.context.file.application.port.in.GetFilePreviewUseCase;
@@ -67,13 +66,9 @@ class FileControllerTest {
     @DisplayName("Should download file with correct headers")
     void shouldDownloadFile() throws Exception {
         UUID userId = UUID.randomUUID();
-
-        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true, false);
-
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
-
-        var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
-
+        var principal = new AuthenticatedUserPrincipal(userId, "testuser", authorities);
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String path = "/test/doc.pdf";
@@ -106,13 +101,9 @@ class FileControllerTest {
     @DisplayName("Should return preview with cache control")
     void shouldReturnPreview() throws Exception {
         UUID userId = UUID.randomUUID();
-
-        User mockUser = User.restore(userId, "testuser", "hash", Set.of(Role.USER), true, false);
-
         var authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
-
-        var auth = new UsernamePasswordAuthenticationToken(mockUser, null, authorities);
-
+        var principal = new AuthenticatedUserPrincipal(userId, "testuser", authorities);
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         String path = "/images/pic.jpg";

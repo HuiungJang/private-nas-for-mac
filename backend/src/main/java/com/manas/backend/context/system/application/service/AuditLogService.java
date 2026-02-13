@@ -47,7 +47,9 @@ public class AuditLogService implements RecordAuditLogUseCase, GetAuditLogsUseCa
 
     @Override
     @Transactional(readOnly = true)
-    public List<AuditLog> getAuditLogs() {
-        return loadAuditLogsPort.loadAll();
+    public List<AuditLog> getAuditLogs(int offset, int limit) {
+        int normalizedOffset = Math.max(0, offset);
+        int normalizedLimit = Math.min(Math.max(1, limit), 500);
+        return loadAuditLogsPort.loadPage(normalizedOffset, normalizedLimit);
     }
 }
