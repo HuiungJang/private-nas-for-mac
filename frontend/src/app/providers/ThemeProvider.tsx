@@ -2,59 +2,61 @@ import React from 'react';
 import {createTheme, ThemeProvider as MuiThemeProvider} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
-// iOS 17 Design Guidelines (Light Mode)
+// Synology DSM-inspired desktop theme
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#007AFF', // iOS System Blue (Light)
+      main: '#1f6feb',
+      dark: '#1a5cc1',
+      light: '#4f8cf0',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#5856D6', // iOS System Indigo (Light)
+      main: '#64748b',
     },
     error: {
-      main: '#FF3B30', // iOS System Red (Light)
+      main: '#d92d20',
+    },
+    success: {
+      main: '#1f9d55',
+    },
+    warning: {
+      main: '#b7791f',
     },
     background: {
-      default: '#F2F2F7', // iOS System Grouped Background (Light)
-      paper: '#FFFFFF', // iOS System Background (Light)
+      default: '#f3f6fa',
+      paper: '#ffffff',
     },
     text: {
-      primary: '#000000',
-      secondary: '#3C3C4399', // Label Color (Secondary) ~60%
+      primary: '#0f172a',
+      secondary: '#475569',
     },
-    divider: '#3C3C4329', // Separator Color (Opaque)
+    divider: '#dbe2ea',
   },
   typography: {
-    fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"San Francisco"',
-      '"Helvetica Neue"',
-      'Helvetica',
-      'Arial',
-      'sans-serif',
-    ].join(','),
+    fontFamily: ['"Noto Sans KR"', 'Inter', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif'].join(','),
     h1: {fontWeight: 700},
     h2: {fontWeight: 700},
-    h3: {fontWeight: 600},
-    h4: {fontWeight: 600},
+    h3: {fontWeight: 700},
+    h4: {fontWeight: 700},
     h5: {fontWeight: 600},
     h6: {fontWeight: 600},
     button: {
-      textTransform: 'none', // No uppercase for buttons
+      textTransform: 'none',
       fontWeight: 600,
     },
   },
   shape: {
-    borderRadius: 12, // More rounded corners (iOS style)
+    borderRadius: 8,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 50, // Pill shape
-          padding: '8px 20px',
+          borderRadius: 8,
+          padding: '8px 14px',
+          boxShadow: 'none',
         },
         contained: {
           boxShadow: 'none',
@@ -64,27 +66,29 @@ const theme = createTheme({
         },
       },
     },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none', // Remove Material elevation overlays
-        },
-      },
-    },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(255, 255, 255, 0.8)', // Translucent White
-          backdropFilter: 'blur(20px)', // Glassmorphism
+          backgroundColor: '#ffffff',
+          color: '#0f172a',
+          borderBottom: '1px solid #dbe2ea',
           boxShadow: 'none',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+          border: '1px solid #e3e8ef',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundColor: '#FFFFFF',
+          border: '1px solid #e3e8ef',
+          boxShadow: '0 1px 2px rgba(15, 23, 42, 0.05)',
           backgroundImage: 'none',
         },
       },
@@ -92,25 +96,8 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          scrollbarColor: '#C1C1C1 transparent',
-          '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
-            backgroundColor: 'transparent',
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
-            borderRadius: 8,
-            backgroundColor: '#C1C1C1',
-            minHeight: 24,
-          },
-          '&::-webkit-scrollbar-thumb:focus, & *::-webkit-scrollbar-thumb:focus': {
-            backgroundColor: '#A8A8A8',
-          },
-          '&::-webkit-scrollbar-thumb:active, & *::-webkit-scrollbar-thumb:active': {
-            backgroundColor: '#A8A8A8',
-          },
-          '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
-            backgroundColor: '#A8A8A8',
-          },
+          backgroundColor: '#f3f6fa',
+          color: '#0f172a',
         },
       },
     },
@@ -123,9 +110,9 @@ interface ThemeProviderProps {
 
 export const AppThemeProvider: React.FC<ThemeProviderProps> = ({children}) => {
   return (
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline/>
-        {children}
-      </MuiThemeProvider>
+    <MuiThemeProvider theme={theme}>
+      <CssBaseline/>
+      {children}
+    </MuiThemeProvider>
   );
 };
