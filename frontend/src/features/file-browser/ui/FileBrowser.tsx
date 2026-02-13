@@ -4,9 +4,12 @@ import {
   Box,
   Chip,
   CircularProgress,
+  Divider,
   FormControl,
   InputLabel,
+  Menu,
   MenuItem,
+  Paper,
   Select,
   Stack,
   TextField,
@@ -61,6 +64,8 @@ export const FileBrowser: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [sortMode, setSortMode] = React.useState<SortMode>('name-asc');
+  const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
+  const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
 
   const visibleFiles = React.useMemo(() => {
     if (!data?.items) return [];
@@ -71,6 +76,19 @@ export const FileBrowser: React.FC = () => {
 
     return sortFiles(filtered, sortMode);
   }, [data?.items, searchQuery, sortMode]);
+
+  const handleContextMenu = (event: React.MouseEvent, file: FileNode) => {
+    setFocusedFile(file);
+    setContextAnchor(event.currentTarget as HTMLElement);
+
+    const next = new Set(selectedFiles);
+    if (!next.has(file.name)) {
+      next.add(file.name);
+      handleSelectionChange(next);
+    }
+  };
+
+  const closeContextMenu = () => setContextAnchor(null);
 
   return (
       <Box>
@@ -164,14 +182,67 @@ export const FileBrowser: React.FC = () => {
         )}
 
         {data && (
-            <FileTable
-                files={visibleFiles}
-                onNavigate={navigateTo}
-                viewMode={viewMode}
-                selectedFiles={selectedFiles}
-                onSelectionChange={handleSelectionChange}
-            />
+          <Stack direction={{xs: 'column', lg: 'row'}} spacing={2}>
+            <Box sx={{flex: 1}}>
+              <FileTable
+                  files={visibleFiles}
+                  onNavigate={navigateTo}
+                  viewMode={viewMode}
+                  selectedFiles={selectedFiles}
+                  onSelectionChange={handleSelectionChange}
+                  onContextMenu={handleContextMenu}
+              />
+            </Box>
+
+            <Paper variant="outlined" sx={{width: {xs: '100%', lg: 300}, p: 2, alignSelf: 'flex-start'}}>
+              <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>Details</Typography>
+              <Divider sx={{mb: 2}}/>
+              {!focusedFile ? (
+                <Typography variant="body2" color="text.secondary">Select or right-click a file to inspect details.</Typography>
+              ) : (
+                <Stack spacing={1}>
+                  <Typography variant="body2"><strong>Name:</strong> {focusedFile.name}</Typography>
+                  <Typography variant="body2"><strong>Type:</strong> {focusedFile.type}</Typography>
+                  <Typography variant="body2"><strong>Size:</strong> {focusedFile.type === 'DIRECTORY' ? '--' : focusedFile.size}</Typography>
+                  <Typography variant="body2"><strong>Modified:</strong> {focusedFile.lastModified}</Typography>
+                  <Typography variant="body2"><strong>Owner:</strong> {focusedFile.owner}</Typography>
+                  <Typography variant="body2"><strong>Path:</strong> {currentPath.endsWith('/') ? `${currentPath}${focusedFile.name}` : `${currentPath}/${focusedFile.name}`}</Typography>
+                </Stack>
+              )}
+            </Paper>
+          </Stack>
         )}
+
+        <Menu
+          open={Boolean(contextAnchor)}
+          anchorEl={contextAnchor}
+          onClose={closeContextMenu}
+        >
+          <MenuItem
+            onClick={() => {
+              if (focusedFile?.type === 'DIRECTORY') {
+                navigateTo(focusedFile.name);
+              }
+              closeContextMenu();
+            }}
+          >
+            Open
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (focusedFile) {
+                const next = new Set(selectedFiles);
+                if (next.has(focusedFile.name)) next.delete(focusedFile.name);
+                else next.add(focusedFile.name);
+                handleSelectionChange(next);
+              }
+              closeContextMenu();
+            }}
+          >
+            Toggle Selection
+          </MenuItem>
+          <MenuItem onClick={closeContextMenu}>Show Details</MenuItem>
+        </Menu>
       </Box>
   );
 };

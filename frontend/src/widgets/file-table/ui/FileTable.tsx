@@ -30,6 +30,7 @@ interface FileTableProps {
   viewMode?: ViewMode;
   selectedFiles: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
+  onContextMenu?: (event: React.MouseEvent, file: FileNode) => void;
 }
 
 const StyledTableRow = styled(TableRow)(({theme}) => ({
@@ -93,6 +94,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                                                       viewMode = 'list',
                                                       selectedFiles,
                                                       onSelectionChange,
+                                                      onContextMenu,
                                                     }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -140,6 +142,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                 >
                   <ListItemButton
                       onClick={() => handleRowClick(file)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        onContextMenu?.(e, file);
+                      }}
                       sx={{
                         borderBottom:
                             index !== files.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
@@ -189,6 +195,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                         selected={isSelected}
                         onDoubleClick={() => handleRowClick(file)}
                         onClick={() => handleSelect(file.name)}
+                        onContextMenu={(e: React.MouseEvent) => {
+                          e.preventDefault();
+                          onContextMenu?.(e, file);
+                        }}
                     >
                       <Box sx={{position: 'absolute', top: 8, left: 8}}>
                         <Checkbox
@@ -256,6 +266,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                       selected={isSelected}
                       onDoubleClick={() => handleRowClick(file)}
                       onClick={() => handleSelect(file.name)}
+                      onContextMenu={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        onContextMenu?.(e, file);
+                      }}
                   >
                     <StyledTableCell padding="checkbox">
                       <Checkbox
