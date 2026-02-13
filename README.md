@@ -117,6 +117,12 @@ docker-compose logs --tail=100 nas-db nas-backend nas-frontend
 - `nas-frontend`: nginx index 응답 기반 healthy
 - If Dockerfile/healthcheck was changed, run with `--build` to avoid stale image mismatch.
 
+Audit logs API pagination example:
+```bash
+curl -H "Authorization: Bearer <token>" "http://127.0.0.1/api/admin/system/audit-logs?offset=0&limit=100"
+```
+(`limit` max 500)
+
 ### Local Smoke E2E
 ```bash
 bash scripts/smoke_e2e.sh
