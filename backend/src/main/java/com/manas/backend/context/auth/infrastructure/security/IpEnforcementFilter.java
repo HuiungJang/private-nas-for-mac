@@ -1,5 +1,6 @@
 package com.manas.backend.context.auth.infrastructure.security;
 
+import com.manas.backend.common.security.ClientIpResolver;
 import com.manas.backend.context.auth.application.port.out.IpConfigurationPort;
 import com.manas.backend.context.auth.domain.event.IpAccessChangedEvent;
 import jakarta.servlet.FilterChain;
@@ -25,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class IpEnforcementFilter extends OncePerRequestFilter {
 
     private final IpConfigurationPort ipConfigurationPort;
+    private final ClientIpResolver clientIpResolver;
     private volatile List<IpAddressMatcher> allowedMatchers = Collections.emptyList();
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
@@ -57,7 +59,7 @@ public class IpEnforcementFilter extends OncePerRequestFilter {
             reloadConfig();
         }
 
-        String clientIp = getClientIp(request);
+        String clientIp = clientIpResolver.resolve(request);
 
         boolean isAllowed = allowedMatchers.stream()
                 .anyMatch(matcher -> matcher.matches(clientIp));
@@ -72,15 +74,6 @@ public class IpEnforcementFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (StringUtils.hasText(xfHeader)) {
-            // X-Forwarded-For: client, proxy1, proxy2
-            return xfHeader.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 
 }

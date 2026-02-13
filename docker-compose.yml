@@ -45,6 +45,9 @@ services:
       SPRING_DATASOURCE_USERNAME: nas_user
       SPRING_DATASOURCE_PASSWORD: nas_password
       APP_STORAGE_ROOT: /mnt/host_volumes
+      JWT_SECRET: ${JWT_SECRET}
+      APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD: ${APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD}
+      TRUSTED_PROXY_SUBNETS: ${TRUSTED_PROXY_SUBNETS:-127.0.0.1/32,::1/128}
     volumes:
       - ${HOST_VOLUMES_PATH:-/Volumes}:/mnt/host_volumes:rw
     depends_on:

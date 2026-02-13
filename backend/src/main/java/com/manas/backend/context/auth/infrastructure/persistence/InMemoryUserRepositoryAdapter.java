@@ -14,6 +14,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -21,12 +22,15 @@ public class InMemoryUserRepositoryAdapter implements LoadUserPort {
 
     private final PasswordEncoder passwordEncoder;
     private final Map<String, User> users = new ConcurrentHashMap<>();
-    @Value("${app.security.default-password}")
+    @Value("${app.security.bootstrap-admin-password:${app.security.default-password:}}")
     private String defaultPassword;
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
-        // Create default admin user
+        if (!StringUtils.hasText(defaultPassword)) {
+            return;
+        }
+
         String encodedPassword = passwordEncoder.encode(defaultPassword);
         User admin = User.create("admin", Password.of(encodedPassword), Set.of(Role.ADMIN));
         users.put(admin.username(), admin);
