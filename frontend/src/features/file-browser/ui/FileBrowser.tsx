@@ -2,8 +2,13 @@ import React from 'react';
 import {
   Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControl,
   InputLabel,
@@ -68,6 +73,8 @@ export const FileBrowser: React.FC = () => {
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
+  const [draggingCount, setDraggingCount] = React.useState(0);
+  const [pendingMove, setPendingMove] = React.useState<{ sourceNames: string[]; targetDirectoryName: string } | null>(null);
   const {moveFile, uploadFile} = useFileActions();
 
   const visibleFiles = React.useMemo(() => {
@@ -100,14 +107,22 @@ export const FileBrowser: React.FC = () => {
 
   const handleDropToDirectory = async (sourceNames: string[], targetDirectoryName: string) => {
     const uniqueNames = Array.from(new Set(sourceNames));
+    if (uniqueNames.length === 0) return;
+    setPendingMove({sourceNames: uniqueNames, targetDirectoryName});
+  };
 
-    for (const name of uniqueNames) {
-      if (name === targetDirectoryName) continue;
+  const handleConfirmMove = async () => {
+    if (!pendingMove) return;
+
+    for (const name of pendingMove.sourceNames) {
+      if (name === pendingMove.targetDirectoryName) continue;
       const sourcePath = joinPath(currentPath, name);
-      const destinationPath = `${joinPath(currentPath, targetDirectoryName)}/${name}`;
+      const destinationPath = `${joinPath(currentPath, pendingMove.targetDirectoryName)}/${name}`;
       await moveFile({sourcePath, destinationPath});
     }
 
+    setPendingMove(null);
+    setDraggingCount(0);
     clearSelection();
   };
 
@@ -125,6 +140,7 @@ export const FileBrowser: React.FC = () => {
     if (!event.dataTransfer.files?.length) return;
     event.preventDefault();
     setIsDropzoneActive(false);
+    setDraggingCount(0);
 
     const droppedFiles = Array.from(event.dataTransfer.files);
     for (const file of droppedFiles) {
@@ -175,6 +191,12 @@ export const FileBrowser: React.FC = () => {
             <Box mb={2}>
               <AppBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={navigateTo}/>
             </Box>
+        )}
+
+        {draggingCount > 0 && (
+          <Alert severity="info" sx={{mb: 2}}>
+            Dragging {draggingCount} item(s). Drop on a folder to move.
+          </Alert>
         )}
 
         {isDropzoneActive && (
@@ -242,6 +264,7 @@ export const FileBrowser: React.FC = () => {
                   onDropToDirectory={(sourceNames, targetDirectoryName) => {
                     void handleDropToDirectory(sourceNames, targetDirectoryName);
                   }}
+                  onDragSelectionCountChange={setDraggingCount}
               />
             </Box>
 
@@ -263,6 +286,19 @@ export const FileBrowser: React.FC = () => {
             </Paper>
           </Stack>
         )}
+
+        <Dialog open={Boolean(pendingMove)} onClose={() => { setPendingMove(null); setDraggingCount(0); }}>
+          <DialogTitle>Confirm Move</DialogTitle>
+          <DialogContent>
+            Move {pendingMove?.sourceNames.length ?? 0} item(s) into folder
+            {' '}
+            <strong>{pendingMove?.targetDirectoryName}</strong>?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setPendingMove(null); setDraggingCount(0); }}>Cancel</Button>
+            <Button variant="contained" onClick={() => void handleConfirmMove()}>Move</Button>
+          </DialogActions>
+        </Dialog>
 
         <Menu
           open={Boolean(contextAnchor)}

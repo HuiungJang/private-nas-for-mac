@@ -32,6 +32,7 @@ interface FileTableProps {
   onSelectionChange: (selected: Set<string>) => void;
   onContextMenu?: (event: React.MouseEvent, file: FileNode) => void;
   onDropToDirectory?: (sourceNames: string[], targetDirectoryName: string) => void;
+  onDragSelectionCountChange?: (count: number) => void;
 }
 
 const StyledTableRow = styled(TableRow)(({theme}) => ({
@@ -97,6 +98,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                                                       onSelectionChange,
                                                       onContextMenu,
                                                       onDropToDirectory,
+                                                      onDragSelectionCountChange,
                                                     }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -134,9 +136,16 @@ export const FileTable: React.FC<FileTableProps> = ({
   };
 
   const handleDragStart = (event: React.DragEvent, file: FileNode) => {
-    const payload = JSON.stringify(getDraggedNames(file));
+    const names = getDraggedNames(file);
+    const payload = JSON.stringify(names);
     event.dataTransfer.setData('application/x-nas-file-names', payload);
     event.dataTransfer.effectAllowed = 'move';
+    onDragSelectionCountChange?.(names.length);
+  };
+
+  const handleDragEnd = () => {
+    setDragOverDir(null);
+    onDragSelectionCountChange?.(0);
   };
 
   const handleDragOverDirectory = (event: React.DragEvent, directoryName: string) => {
@@ -183,6 +192,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                   <ListItemButton
                       draggable
                       onDragStart={(e) => handleDragStart(e, file)}
+                      onDragEnd={handleDragEnd}
                       onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
                       onDragLeave={() => setDragOverDir(null)}
                       onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
@@ -241,6 +251,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                         selected={isSelected}
                         draggable
                         onDragStart={(e) => handleDragStart(e, file)}
+                        onDragEnd={handleDragEnd}
                         onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
                         onDragLeave={() => setDragOverDir(null)}
                         onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
@@ -318,6 +329,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                       selected={isSelected}
                       draggable
                       onDragStart={(e) => handleDragStart(e, file)}
+                      onDragEnd={handleDragEnd}
                       onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
                       onDragLeave={() => setDragOverDir(null)}
                       onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
