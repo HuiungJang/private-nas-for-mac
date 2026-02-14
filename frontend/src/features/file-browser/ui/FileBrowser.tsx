@@ -39,6 +39,7 @@ import {isPreviewableMedia} from '@/entities/file/ui/mediaPreview';
 
 type SortMode = 'name-asc' | 'name-desc' | 'date-desc' | 'date-asc';
 type FilterPreset = 'all' | 'recent' | 'large' | 'media' | 'documents';
+const TRASH_PATH = '/.trash';
 
 const sortFiles = (items: FileNode[], mode: SortMode) => {
   const sorted = [...items];
@@ -103,8 +104,10 @@ export const FileBrowser: React.FC = () => {
   const [isMoveModalOpen, setIsMoveModalOpen] = React.useState(false);
   const [renameTarget, setRenameTarget] = React.useState<FileNode | null>(null);
   const [renameValue, setRenameValue] = React.useState('');
-  const {moveFilesBatch, uploadFile, deleteFiles} = useFileActions();
+  const {moveFilesBatch, uploadFile, deleteFiles, createDirectory} = useFileActions();
   const showNotification = useNotificationStore((s) => s.showNotification);
+
+  const isTrashView = currentPath === TRASH_PATH;
 
   const visibleFiles = React.useMemo(() => {
     if (!data?.items) return [];
@@ -214,7 +217,7 @@ export const FileBrowser: React.FC = () => {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [focusedFile, selectedFiles, currentPath]);
+  }, [focusedFile, selectedFiles, currentPath, isTrashView]);
 
   React.useEffect(() => {
     localStorage.setItem('fileBrowser.favorites', JSON.stringify(favorites));
@@ -275,17 +278,54 @@ export const FileBrowser: React.FC = () => {
 
   const getFocusedPath = () => (focusedFile ? joinPath(currentPath, focusedFile.name) : null);
 
+  const ensureTrashDirectory = async () => {
+    try {
+      await createDirectory({parentPath: '/', name: '.trash'});
+    } catch {
+      // noop
+    }
+  };
+
+  const moveNamesToTrash = async (names: string[]) => {
+    if (names.length === 0) return;
+    await ensureTrashDirectory();
+    await moveFilesBatch(names.map((name) => ({
+      sourcePath: joinPath(currentPath, name),
+      destinationPath: `${TRASH_PATH}/${name}`,
+    })));
+  };
+
+  const restoreNamesFromTrash = async (names: string[]) => {
+    if (names.length === 0) return;
+    await moveFilesBatch(names.map((name) => ({
+      sourcePath: `${TRASH_PATH}/${name}`,
+      destinationPath: `/${name}`,
+    })));
+  };
+
   const handleDeleteFocused = async () => {
     const targetPath = getFocusedPath();
     if (!targetPath || !focusedFile) return;
-    await deleteFiles([targetPath]);
+
+    if (isTrashView) {
+      await deleteFiles([targetPath]);
+    } else {
+      await moveNamesToTrash([focusedFile.name]);
+    }
+
     setContextAnchor(null);
   };
 
   const handleDeleteSelection = async () => {
-    const targets = Array.from(selectedFiles).map((name) => joinPath(currentPath, name));
-    if (targets.length === 0) return;
-    await deleteFiles(targets);
+    const names = Array.from(selectedFiles);
+    if (names.length === 0) return;
+
+    if (isTrashView) {
+      await deleteFiles(names.map((name) => `${TRASH_PATH}/${name}`));
+    } else {
+      await moveNamesToTrash(names);
+    }
+
     clearSelection();
   };
 
@@ -483,11 +523,14 @@ export const FileBrowser: React.FC = () => {
                   ))}
                 </Stack>
               </Box>
-              <Box sx={{display: 'flex', alignItems: 'flex-start'}}>
+              <Stack spacing={1} sx={{display: 'flex', alignItems: 'flex-start'}}>
                 <Button size="small" variant={favorites.includes(currentPath) ? 'contained' : 'outlined'} onClick={toggleFavoritePath}>
                   {favorites.includes(currentPath) ? 'Unfavorite current path' : 'Favorite current path'}
                 </Button>
-              </Box>
+                <Button size="small" variant={isTrashView ? 'contained' : 'outlined'} color={isTrashView ? 'warning' : 'inherit'} onClick={() => navigateToPath(TRASH_PATH)}>
+                  Open Trash
+                </Button>
+              </Stack>
             </Stack>
           </Paper>
         )}
@@ -570,8 +613,11 @@ export const FileBrowser: React.FC = () => {
               <Typography variant="body2" sx={{fontWeight: 600}}>
                 {selectedFiles.size} item(s) selected · Shift for range, Cmd/Ctrl for toggle · Delete/F2/Enter shortcuts enabled
               </Typography>
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                 <Button size="small" onClick={() => handleSelectionChange(new Set(visibleFiles.map((f) => f.name)))}>Select All Visible</Button>
+                {!isTrashView && <Button size="small" color="warning" onClick={() => void moveNamesToTrash(Array.from(selectedFiles))}>Move to Trash</Button>}
+                {isTrashView && <Button size="small" color="success" onClick={() => void restoreNamesFromTrash(Array.from(selectedFiles))}>Restore</Button>}
+                {isTrashView && <Button size="small" color="error" onClick={() => void deleteFiles(Array.from(selectedFiles).map((name) => `${TRASH_PATH}/${name}`))}>Delete Permanently</Button>}
                 <Button size="small" onClick={clearSelection}>Clear</Button>
               </Stack>
             </Stack>
@@ -596,9 +642,9 @@ export const FileBrowser: React.FC = () => {
 
         {data && visibleFiles.length === 0 && (
           <Paper variant="outlined" sx={{p: 4, mb: 2, textAlign: 'center'}}>
-            <Typography variant="h6" sx={{mb: 1}}>This folder is empty</Typography>
+            <Typography variant="h6" sx={{mb: 1}}>{isTrashView ? 'Trash is empty' : 'This folder is empty'}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
-              Upload files or create a new folder to get started.
+              {isTrashView ? 'Deleted items will appear here. Restore them anytime.' : 'Upload files or create a new folder to get started.'}
             </Typography>
             <Stack direction="row" spacing={1} justifyContent="center">
               <Button variant="outlined" onClick={() => navigateTo('/')}>Go to root</Button>
@@ -686,7 +732,15 @@ export const FileBrowser: React.FC = () => {
             setRenameValue(focusedFile.name);
             closeContextMenu();
           }}>Rename</MenuItem>
-          <MenuItem disabled={!focusedFile} onClick={() => void handleDeleteFocused()}>Delete</MenuItem>
+          <MenuItem disabled={!focusedFile} onClick={() => void handleDeleteFocused()}>{isTrashView ? 'Delete Permanently' : 'Move to Trash'}</MenuItem>
+          <MenuItem
+            disabled={!focusedFile || !isTrashView}
+            onClick={() => {
+              if (!focusedFile || !isTrashView) return;
+              void restoreNamesFromTrash([focusedFile.name]);
+              closeContextMenu();
+            }}
+          >Restore</MenuItem>
           <MenuItem disabled={!focusedFile} onClick={() => void handleShareFocused()}>Share</MenuItem>
         </Menu>
 
