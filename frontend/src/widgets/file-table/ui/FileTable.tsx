@@ -31,6 +31,7 @@ interface FileTableProps {
   selectedFiles: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
   onContextMenu?: (event: React.MouseEvent, file: FileNode) => void;
+  onDropToDirectory?: (sourceNames: string[], targetDirectoryName: string) => void;
 }
 
 const StyledTableRow = styled(TableRow)(({theme}) => ({
@@ -95,9 +96,11 @@ export const FileTable: React.FC<FileTableProps> = ({
                                                       selectedFiles,
                                                       onSelectionChange,
                                                       onContextMenu,
+                                                      onDropToDirectory,
                                                     }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [dragOverDir, setDragOverDir] = React.useState<string | null>(null);
 
   const handleRowClick = (file: FileNode) => {
     if (file.type === 'DIRECTORY') {
@@ -123,6 +126,43 @@ export const FileTable: React.FC<FileTableProps> = ({
     }
   };
 
+  const getDraggedNames = (file: FileNode): string[] => {
+    if (selectedFiles.has(file.name) && selectedFiles.size > 0) {
+      return Array.from(selectedFiles);
+    }
+    return [file.name];
+  };
+
+  const handleDragStart = (event: React.DragEvent, file: FileNode) => {
+    const payload = JSON.stringify(getDraggedNames(file));
+    event.dataTransfer.setData('application/x-nas-file-names', payload);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOverDirectory = (event: React.DragEvent, directoryName: string) => {
+    if (!onDropToDirectory) return;
+    event.preventDefault();
+    setDragOverDir(directoryName);
+    event.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropDirectory = (event: React.DragEvent, directoryName: string) => {
+    if (!onDropToDirectory) return;
+    event.preventDefault();
+    setDragOverDir(null);
+
+    const raw = event.dataTransfer.getData('application/x-nas-file-names');
+    if (!raw) return;
+
+    try {
+      const names = JSON.parse(raw) as string[];
+      if (!Array.isArray(names) || names.length === 0) return;
+      onDropToDirectory(names, directoryName);
+    } catch {
+      // ignore invalid payload
+    }
+  };
+
   // Mobile View: Always List (Simplified, selection via long press? Or just checkbox)
   if (isMobile) {
     return (
@@ -141,6 +181,11 @@ export const FileTable: React.FC<FileTableProps> = ({
                     }
                 >
                   <ListItemButton
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, file)}
+                      onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
+                      onDragLeave={() => setDragOverDir(null)}
+                      onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
                       onClick={() => handleRowClick(file)}
                       onContextMenu={(e) => {
                         e.preventDefault();
@@ -150,6 +195,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                         borderBottom:
                             index !== files.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
                         py: 1.5,
+                        backgroundColor: dragOverDir === file.name ? 'action.hover' : undefined,
                       }}
                   >
                     <ListItemAvatar sx={{minWidth: 40, mr: 1}}>
@@ -193,12 +239,18 @@ export const FileTable: React.FC<FileTableProps> = ({
                   <Box key={file.name}>
                     <GridItemCard
                         selected={isSelected}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, file)}
+                        onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
+                        onDragLeave={() => setDragOverDir(null)}
+                        onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
                         onDoubleClick={() => handleRowClick(file)}
                         onClick={() => handleSelect(file.name)}
                         onContextMenu={(e: React.MouseEvent) => {
                           e.preventDefault();
                           onContextMenu?.(e, file);
                         }}
+                        sx={dragOverDir === file.name ? {outline: `2px dashed ${theme.palette.primary.main}`} : undefined}
                     >
                       <Box sx={{position: 'absolute', top: 8, left: 8}}>
                         <Checkbox
@@ -264,12 +316,18 @@ export const FileTable: React.FC<FileTableProps> = ({
                   <StyledTableRow
                       key={file.name}
                       selected={isSelected}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, file)}
+                      onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
+                      onDragLeave={() => setDragOverDir(null)}
+                      onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
                       onDoubleClick={() => handleRowClick(file)}
                       onClick={() => handleSelect(file.name)}
                       onContextMenu={(e: React.MouseEvent) => {
                         e.preventDefault();
                         onContextMenu?.(e, file);
                       }}
+                      sx={dragOverDir === file.name ? {outline: `2px dashed ${theme.palette.primary.main}`} : undefined}
                   >
                     <StyledTableCell padding="checkbox">
                       <Checkbox

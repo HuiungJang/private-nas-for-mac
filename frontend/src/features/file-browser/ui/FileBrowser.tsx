@@ -24,6 +24,7 @@ import {AppBreadcrumbs} from '@/shared/ui/AppBreadcrumbs';
 import {FileTable} from '@/widgets/file-table/ui/FileTable';
 import {useFileBrowser} from '../model/useFileBrowser';
 import {FileActionsToolbar} from '@/features/file-actions/ui/FileActionsToolbar';
+import {useFileActions} from '@/features/file-actions/model/useFileActions';
 import type {FileNode} from '@/entities/file/model/types';
 
 type SortMode = 'name-asc' | 'name-desc' | 'date-desc' | 'date-asc';
@@ -66,6 +67,8 @@ export const FileBrowser: React.FC = () => {
   const [sortMode, setSortMode] = React.useState<SortMode>('name-asc');
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
+  const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
+  const {moveFile, uploadFile} = useFileActions();
 
   const visibleFiles = React.useMemo(() => {
     if (!data?.items) return [];
@@ -90,8 +93,47 @@ export const FileBrowser: React.FC = () => {
 
   const closeContextMenu = () => setContextAnchor(null);
 
+  const joinPath = (base: string, name: string) => {
+    const normalizedBase = base === '/' ? '' : base.replace(/\/$/, '');
+    return `${normalizedBase}/${name}`;
+  };
+
+  const handleDropToDirectory = async (sourceNames: string[], targetDirectoryName: string) => {
+    const uniqueNames = Array.from(new Set(sourceNames));
+
+    for (const name of uniqueNames) {
+      if (name === targetDirectoryName) continue;
+      const sourcePath = joinPath(currentPath, name);
+      const destinationPath = `${joinPath(currentPath, targetDirectoryName)}/${name}`;
+      await moveFile({sourcePath, destinationPath});
+    }
+
+    clearSelection();
+  };
+
+  const handleDragOverBrowser = (event: React.DragEvent) => {
+    if (!event.dataTransfer.types.includes('Files')) return;
+    event.preventDefault();
+    setIsDropzoneActive(true);
+  };
+
+  const handleDragLeaveBrowser = () => {
+    setIsDropzoneActive(false);
+  };
+
+  const handleDropBrowser = async (event: React.DragEvent) => {
+    if (!event.dataTransfer.files?.length) return;
+    event.preventDefault();
+    setIsDropzoneActive(false);
+
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    for (const file of droppedFiles) {
+      await uploadFile({file, directory: currentPath});
+    }
+  };
+
   return (
-      <Box>
+      <Box onDragOver={handleDragOverBrowser} onDragLeave={handleDragLeaveBrowser} onDrop={handleDropBrowser}>
         <Stack
             direction={{xs: 'column', sm: 'row'}}
             alignItems={{xs: 'stretch', sm: 'center'}}
@@ -133,6 +175,12 @@ export const FileBrowser: React.FC = () => {
             <Box mb={2}>
               <AppBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={navigateTo}/>
             </Box>
+        )}
+
+        {isDropzoneActive && (
+          <Alert severity="info" sx={{mb: 2}}>
+            Drop files to upload into current folder.
+          </Alert>
         )}
 
         <Stack direction={{xs: 'column', md: 'row'}} spacing={2} mb={2} alignItems={{xs: 'stretch', md: 'center'}}>
@@ -191,6 +239,9 @@ export const FileBrowser: React.FC = () => {
                   selectedFiles={selectedFiles}
                   onSelectionChange={handleSelectionChange}
                   onContextMenu={handleContextMenu}
+                  onDropToDirectory={(sourceNames, targetDirectoryName) => {
+                    void handleDropToDirectory(sourceNames, targetDirectoryName);
+                  }}
               />
             </Box>
 
