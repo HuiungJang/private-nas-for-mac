@@ -129,6 +129,9 @@ export const FileBrowser: React.FC = () => {
     }
   });
   const [selectionAnchorIndex, setSelectionAnchorIndex] = React.useState<number | null>(null);
+  const [showHiddenFiles, setShowHiddenFiles] = React.useState(() => {
+    return localStorage.getItem('fileBrowser.showHiddenFiles') === 'true';
+  });
   const [isMoveModalOpen, setIsMoveModalOpen] = React.useState(false);
   const [renameTarget, setRenameTarget] = React.useState<FileNode | null>(null);
   const [renameValue, setRenameValue] = React.useState('');
@@ -144,6 +147,12 @@ export const FileBrowser: React.FC = () => {
     const filtered = data.items.filter((item) => {
       const q = searchQuery.trim().toLowerCase();
       if (q && !item.name.toLowerCase().includes(q)) return false;
+
+      if (!showHiddenFiles) {
+        const isDotFile = item.name.startsWith('.');
+        const isSystemFile = ['Thumbs.db', '.DS_Store'].includes(item.name);
+        if (isDotFile || isSystemFile) return false;
+      }
 
       if (filterPreset === 'recent') {
         return now - new Date(item.lastModified).getTime() <= 1000 * 60 * 60 * 24 * 7;
@@ -161,7 +170,7 @@ export const FileBrowser: React.FC = () => {
     });
 
     return sortFiles(filtered, sortMode);
-  }, [data?.items, searchQuery, sortMode, filterPreset]);
+  }, [data?.items, searchQuery, sortMode, filterPreset, showHiddenFiles]);
 
   const handleSelectionIntent = (
     name: string,
@@ -263,6 +272,10 @@ export const FileBrowser: React.FC = () => {
   React.useEffect(() => {
     localStorage.setItem('fileBrowser.filterPreset', filterPreset);
   }, [filterPreset]);
+
+  React.useEffect(() => {
+    localStorage.setItem('fileBrowser.showHiddenFiles', String(showHiddenFiles));
+  }, [showHiddenFiles]);
 
   React.useEffect(() => {
     setRecentPaths((prev) => {
@@ -693,6 +706,14 @@ export const FileBrowser: React.FC = () => {
           }
           variant={selectedFiles.size > 0 ? 'filled' : 'outlined'}
         />
+
+        <Button
+          size="small"
+          variant={showHiddenFiles ? 'contained' : 'outlined'}
+          onClick={() => setShowHiddenFiles((prev) => !prev)}
+        >
+          {showHiddenFiles ? 'Hide hidden files' : 'Show hidden files'}
+        </Button>
       </Stack>
 
       <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: 'auto' }}>
