@@ -87,6 +87,19 @@ services:
     networks:
       - nas_network
 
+  nas-vpn-proxy:
+    build: ./vpn-proxy
+    container_name: nas-vpn-proxy
+    network_mode: "service:wg-easy"
+    depends_on:
+      wg-easy:
+        condition: service_started
+      nas-frontend:
+        condition: service_healthy
+      nas-backend:
+        condition: service_healthy
+    restart: unless-stopped
+
 networks:
   nas_network:
     driver: bridge
