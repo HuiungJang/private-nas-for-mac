@@ -4,4 +4,8 @@ export interface SystemHealth {
   memoryTotal: number;
   storageUsed: number;
   storageTotal: number;
+  previewCacheHit: number;
+  previewCacheMiss: number;
+  previewCacheHitRatio: number;
+  auditLogsQueryP95Ms: number;
 }
