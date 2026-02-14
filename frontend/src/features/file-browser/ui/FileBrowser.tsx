@@ -34,6 +34,8 @@ import {useFileActions} from '@/features/file-actions/model/useFileActions';
 import {fileApi} from '@/entities/file/api/fileApi';
 import {useNotificationStore} from '@/shared/model/useNotificationStore';
 import type {FileNode} from '@/entities/file/model/types';
+import {FileThumbnail} from '@/entities/file/ui/FileThumbnail';
+import {isPreviewableMedia} from '@/entities/file/ui/mediaPreview';
 
 type SortMode = 'name-asc' | 'name-desc' | 'date-desc' | 'date-asc';
 
@@ -103,6 +105,7 @@ export const FileBrowser: React.FC = () => {
   }, [data?.items, searchQuery, sortMode]);
 
   const handleSelectionIntent = (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => {
+    setFocusedFile(visibleFiles[index] ?? null);
     if (options.shiftKey && selectionAnchorIndex !== null) {
       const [start, end] = [selectionAnchorIndex, index].sort((a, b) => a - b);
       const next = new Set(selectedFiles);
@@ -476,13 +479,22 @@ export const FileBrowser: React.FC = () => {
               {!focusedFile ? (
                 <Typography variant="body2" color="text.secondary">Select or right-click a file to inspect details.</Typography>
               ) : (
-                <Stack spacing={1}>
+                <Stack spacing={1.2}>
+                  {focusedFile.type === 'FILE' && isPreviewableMedia(focusedFile.name) && (
+                    <Box sx={{display: 'flex', justifyContent: 'center', mb: 1}}>
+                      <FileThumbnail name={focusedFile.name} path={focusedFile.path} size={180}/>
+                    </Box>
+                  )}
                   <Typography variant="body2"><strong>Name:</strong> {focusedFile.name}</Typography>
                   <Typography variant="body2"><strong>Type:</strong> {focusedFile.type}</Typography>
                   <Typography variant="body2"><strong>Size:</strong> {focusedFile.type === 'DIRECTORY' ? '--' : focusedFile.size}</Typography>
                   <Typography variant="body2"><strong>Modified:</strong> {focusedFile.lastModified}</Typography>
                   <Typography variant="body2"><strong>Owner:</strong> {focusedFile.owner}</Typography>
                   <Typography variant="body2"><strong>Path:</strong> {currentPath.endsWith('/') ? `${currentPath}${focusedFile.name}` : `${currentPath}/${focusedFile.name}`}</Typography>
+                  <Stack direction="row" spacing={1} sx={{pt: 1}}>
+                    <Button size="small" onClick={() => void handleShareFocused()}>Copy path</Button>
+                    {focusedFile.type === 'DIRECTORY' && <Button size="small" onClick={() => navigateTo(focusedFile.name)}>Open</Button>}
+                  </Stack>
                 </Stack>
               )}
             </Paper>
