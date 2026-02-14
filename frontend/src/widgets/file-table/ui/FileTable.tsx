@@ -53,8 +53,8 @@ const StyledTableRow = styled(TableRow)(({theme}) => ({
 
 const StyledTableCell = styled(TableCell)(({theme}) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: '16px',
-  fontSize: '15px',
+  padding: '12px 14px',
+  fontSize: '14px',
 }));
 
 const StyledHeaderCell = styled(TableCell)(({theme}) => ({
@@ -74,8 +74,8 @@ const GridItemCard = styled(Box, {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '16px',
-  borderRadius: '12px',
+  padding: '14px',
+  borderRadius: '10px',
   cursor: 'pointer',
   position: 'relative',
   border: selected ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
