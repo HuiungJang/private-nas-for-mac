@@ -3,6 +3,7 @@ package com.manas.backend.context.system.application.service;
 import com.manas.backend.context.system.application.port.in.GetSystemHealthUseCase;
 import com.manas.backend.context.system.infrastructure.web.dto.SystemHealthDto;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,12 +49,21 @@ public class SystemMonitoringService implements GetSystemHealthUseCase {
         long[] memory = getMemoryUsage();
         long[] storage = getStorageUsage();
 
+        double previewHit = getCounterValue("app.preview.cache.hit");
+        double previewMiss = getCounterValue("app.preview.cache.miss");
+        double previewRatio = (previewHit + previewMiss) <= 0 ? 0.0 : (previewHit / (previewHit + previewMiss));
+        double auditP95Ms = getAuditQueryP95Ms();
+
         SystemHealthDto computed = new SystemHealthDto(
                 cpuUsage,
                 memory[0],
                 memory[1],
                 storage[0],
-                storage[1]
+                storage[1],
+                previewHit,
+                previewMiss,
+                previewRatio,
+                auditP95Ms
         );
 
         cachedHealth = computed;
@@ -78,6 +88,31 @@ public class SystemMonitoringService implements GetSystemHealthUseCase {
         } catch (Exception e) {
             log.warn("Failed to fetch Memory usage", e);
             return new long[]{-1, -1};
+        }
+    }
+
+    private double getCounterValue(String name) {
+        try {
+            var counter = meterRegistry.find(name).counter();
+            return counter != null ? counter.count() : 0.0;
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    private double getAuditQueryP95Ms() {
+        try {
+            Timer timer = meterRegistry.find("app.audit.logs.query").timer();
+            if (timer == null) return -1.0;
+            var snapshot = timer.takeSnapshot();
+            for (var pv : snapshot.percentileValues()) {
+                if (Math.abs(pv.percentile() - 0.95) < 0.0001) {
+                    return pv.value(java.util.concurrent.TimeUnit.MILLISECONDS);
+                }
+            }
+            return timer.mean(java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            return -1.0;
         }
     }
 

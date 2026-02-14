@@ -9,6 +9,7 @@ import com.manas.backend.common.tracing.TraceConstants;
 import com.manas.backend.context.system.application.port.out.LoadAuditLogsPort;
 import com.manas.backend.context.system.application.port.out.SaveAuditLogPort;
 import com.manas.backend.context.system.domain.AuditLog;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -33,14 +34,14 @@ class AuditLogServiceTest {
 
     private LoadAuditLogsPort loadAuditLogsPort;
 
-
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     private AuditLogService auditLogService;
 
     @BeforeEach
     void setUp() {
 
-        auditLogService = new AuditLogService(saveAuditLogPort, loadAuditLogsPort);
+        auditLogService = new AuditLogService(saveAuditLogPort, loadAuditLogsPort, meterRegistry);
 
     }
 

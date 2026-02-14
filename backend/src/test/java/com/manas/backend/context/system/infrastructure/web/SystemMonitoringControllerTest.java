@@ -53,17 +53,15 @@ class SystemMonitoringControllerTest {
         // Given
 
         SystemHealthDto mockHealth = new SystemHealthDto(
-
                 0.45,
-
                 512000000L,
-
                 1024000000L,
-
                 10000000000L,
-
-                50000000000L
-
+                50000000000L,
+                10,
+                2,
+                0.8333,
+                12.5
         );
 
         when(getSystemHealthUseCase.getSystemHealth()).thenReturn(mockHealth);
