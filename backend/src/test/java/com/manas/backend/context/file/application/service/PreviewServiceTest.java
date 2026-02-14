@@ -17,6 +17,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,12 +36,18 @@ class PreviewServiceTest {
     private FileStoragePort fileStoragePort;
     @Mock
     private PreviewGeneratorPort previewGeneratorPort;
+    @Mock
+    private MeterRegistry meterRegistry;
+    @Mock
+    private Counter counter;
     private PreviewService previewService;
     private UUID userId;
 
     @BeforeEach
     void setUp() {
-        previewService = new PreviewService(fileStoragePort, previewGeneratorPort, tempCacheDir.toString());
+        when(meterRegistry.counter(any())).thenReturn(counter);
+        previewService = new PreviewService(fileStoragePort, previewGeneratorPort, meterRegistry,
+                tempCacheDir.toString());
         userId = UUID.randomUUID();
     }
 
