@@ -1,5 +1,5 @@
 import React from 'react';
-import {useVirtualizer} from '@tanstack/react-virtual';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Box,
   Checkbox,
@@ -15,15 +15,17 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import type {FileNode} from '@/entities/file/model/types';
-import {AppCard} from '@/shared/ui';
-import {FileIcon} from '@/entities/file/ui/FileIcon';
-import {FileThumbnail} from '@/entities/file/ui/FileThumbnail';
-import {isPreviewableMedia} from '@/entities/file/ui/mediaPreview';
+import type { FileNode } from '@/entities/file/model/types';
+import { AppCard } from '@/shared/ui';
+import { FileIcon } from '@/entities/file/ui/FileIcon';
+import { FileThumbnail } from '@/entities/file/ui/FileThumbnail';
+import { isPreviewableMedia } from '@/entities/file/ui/mediaPreview';
+import { formatExactDateTime, formatRelativeDateTime } from '@/shared/lib/datetime';
 
 export type ViewMode = 'list' | 'grid';
 
@@ -33,14 +35,18 @@ interface FileTableProps {
   viewMode?: ViewMode;
   selectedFiles: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
-  onSelectionIntent?: (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => void;
+  onSelectionIntent?: (
+    name: string,
+    index: number,
+    options: { shiftKey: boolean; toggleKey: boolean }
+  ) => void;
   onContextMenu?: (event: React.MouseEvent, file: FileNode) => void;
   onDropToDirectory?: (sourceNames: string[], targetDirectoryName: string) => void;
   onDragSelectionCountChange?: (count: number) => void;
 }
 
-const StyledTableRow = styled(TableRow)(({theme}) => ({
-  '&:last-child td, &:last-child th': {border: 0},
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:last-child td, &:last-child th': { border: 0 },
   cursor: 'pointer',
   transition: 'background-color 0.15s',
   '&:hover': {
@@ -51,13 +57,13 @@ const StyledTableRow = styled(TableRow)(({theme}) => ({
   },
 }));
 
-const StyledTableCell = styled(TableCell)(({theme}) => ({
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   padding: '12px 14px',
   fontSize: '14px',
 }));
 
-const StyledHeaderCell = styled(TableCell)(({theme}) => ({
+const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
   backgroundColor: '#f8fafc',
   color: theme.palette.text.secondary,
@@ -70,7 +76,7 @@ const StyledHeaderCell = styled(TableCell)(({theme}) => ({
 
 const GridItemCard = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'selected',
-})<{ selected?: boolean }>(({theme, selected}) => ({
+})<{ selected?: boolean }>(({ theme, selected }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -95,16 +101,16 @@ const formatSize = (size: number) => {
 };
 
 export const FileTable: React.FC<FileTableProps> = ({
-                                                      files,
-                                                      onNavigate,
-                                                      viewMode = 'list',
-                                                      selectedFiles,
-                                                      onSelectionChange,
-                                                      onSelectionIntent,
-                                                      onContextMenu,
-                                                      onDropToDirectory,
-                                                      onDragSelectionCountChange,
-                                                    }) => {
+  files,
+  onNavigate,
+  viewMode = 'list',
+  selectedFiles,
+  onSelectionChange,
+  onSelectionIntent,
+  onContextMenu,
+  onDropToDirectory,
+  onDragSelectionCountChange,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [dragOverDir, setDragOverDir] = React.useState<string | null>(null);
@@ -140,7 +146,11 @@ export const FileTable: React.FC<FileTableProps> = ({
     }
   };
 
-  const handleSelect = (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => {
+  const handleSelect = (
+    name: string,
+    index: number,
+    options: { shiftKey: boolean; toggleKey: boolean }
+  ) => {
     if (onSelectionIntent) {
       onSelectionIntent(name, index, options);
       return;
@@ -210,247 +220,311 @@ export const FileTable: React.FC<FileTableProps> = ({
   // Mobile View: Always List (Simplified, selection via long press? Or just checkbox)
   if (isMobile) {
     return (
-        <AppCard sx={{p: 0, overflow: 'hidden'}}>
-          <List disablePadding sx={{maxHeight: '70vh', overflowY: 'auto'}} onScroll={handleListScrollLoadMore}>
-            {renderedFiles.map((file, index) => (
-                <ListItem
-                    key={file.name}
-                    disablePadding
-                    secondaryAction={
-                      <Checkbox
-                          edge="end"
-                          checked={selectedFiles.has(file.name)}
-                          onChange={(e) => {
-                            const native = e.nativeEvent as MouseEvent;
-                            handleSelect(file.name, index, {shiftKey: native.shiftKey, toggleKey: native.metaKey || native.ctrlKey});
-                          }}
-                      />
-                    }
-                >
-                  <ListItemButton
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, file)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
-                      onDragLeave={() => setDragOverDir(null)}
-                      onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
-                      onClick={() => handleRowClick(file)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        onContextMenu?.(e, file);
-                      }}
-                      sx={{
-                        borderBottom:
-                            index !== renderedFiles.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
-                        py: 1.5,
-                        backgroundColor: dragOverDir === file.name ? `${theme.palette.primary.main}22` : undefined,
-                        outline: dragOverDir === file.name ? `2px dashed ${theme.palette.primary.main}` : undefined,
-                      }}
-                  >
-                    <ListItemAvatar sx={{minWidth: 40, mr: 1}}>
-                      {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
-                        <FileThumbnail name={file.name} path={file.path} size={28}/>
-                      ) : (
-                        <FileIcon name={file.name} type={file.type}/>
-                      )}
-                    </ListItemAvatar>
-                    <ListItemText
-                        primary={file.name}
-                        primaryTypographyProps={{fontWeight: 500, noWrap: true}}
-                        secondary={
-                          file.type === 'DIRECTORY'
-                              ? file.lastModified.split('T')[0]
-                              : `${formatSize(file.size)} • ${file.lastModified.split('T')[0]}`
-                        }
-                        secondaryTypographyProps={{variant: 'caption', color: 'text.secondary'}}
-                    />
-                  </ListItemButton>
-                </ListItem>
-            ))}
-          </List>
-        </AppCard>
+      <AppCard sx={{ p: 0, overflow: 'hidden' }}>
+        <List
+          disablePadding
+          sx={{ maxHeight: '70vh', overflowY: 'auto' }}
+          onScroll={handleListScrollLoadMore}
+        >
+          {renderedFiles.map((file, index) => (
+            <ListItem
+              key={file.name}
+              disablePadding
+              secondaryAction={
+                <Checkbox
+                  edge="end"
+                  checked={selectedFiles.has(file.name)}
+                  onChange={(e) => {
+                    const native = e.nativeEvent as MouseEvent;
+                    handleSelect(file.name, index, {
+                      shiftKey: native.shiftKey,
+                      toggleKey: native.metaKey || native.ctrlKey,
+                    });
+                  }}
+                />
+              }
+            >
+              <ListItemButton
+                draggable
+                onDragStart={(e) => handleDragStart(e, file)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) =>
+                  file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
+                }
+                onDragLeave={() => setDragOverDir(null)}
+                onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
+                onClick={() => handleRowClick(file)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  onContextMenu?.(e, file);
+                }}
+                sx={{
+                  borderBottom:
+                    index !== renderedFiles.length - 1
+                      ? `1px solid ${theme.palette.divider}`
+                      : 'none',
+                  py: 1.5,
+                  backgroundColor:
+                    dragOverDir === file.name ? `${theme.palette.primary.main}22` : undefined,
+                  outline:
+                    dragOverDir === file.name
+                      ? `2px dashed ${theme.palette.primary.main}`
+                      : undefined,
+                }}
+              >
+                <ListItemAvatar sx={{ minWidth: 40, mr: 1 }}>
+                  {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
+                    <FileThumbnail name={file.name} path={file.path} size={28} />
+                  ) : (
+                    <FileIcon name={file.name} type={file.type} />
+                  )}
+                </ListItemAvatar>
+                <ListItemText
+                  primary={file.name}
+                  primaryTypographyProps={{ fontWeight: 500, noWrap: true }}
+                  secondary={
+                    file.type === 'DIRECTORY'
+                      ? formatRelativeDateTime(file.lastModified)
+                      : `${formatSize(file.size)} • ${formatRelativeDateTime(file.lastModified)}`
+                  }
+                  secondaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </AppCard>
     );
   }
 
   // Desktop View: Grid
   if (viewMode === 'grid') {
     return (
-        <Box sx={{p: 2}}>
-          <Box sx={{
+      <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
             display: 'grid',
             gridTemplateColumns: {
               xs: 'repeat(2, 1fr)',
               sm: 'repeat(3, 1fr)',
               md: 'repeat(4, 1fr)',
-              lg: 'repeat(6, 1fr)'
+              lg: 'repeat(6, 1fr)',
             },
             gap: 2,
             maxHeight: '70vh',
-            overflowY: 'auto'
-          }} onScroll={handleListScrollLoadMore}>
-            {renderedFiles.map((file, index) => {
-              const isSelected = selectedFiles.has(file.name);
-              return (
-                  <Box key={file.name}>
-                    <GridItemCard
-                        selected={isSelected}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, file)}
-                        onDragEnd={handleDragEnd}
-                        onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
-                        onDragLeave={() => setDragOverDir(null)}
-                        onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
-                        onDoubleClick={() => handleRowClick(file)}
-                        onClick={(e) => handleSelect(file.name, index, {shiftKey: e.shiftKey, toggleKey: e.metaKey || e.ctrlKey})}
-                        onContextMenu={(e: React.MouseEvent) => {
-                          e.preventDefault();
-                          onContextMenu?.(e, file);
-                        }}
-                        sx={dragOverDir === file.name ? {
+            overflowY: 'auto',
+          }}
+          onScroll={handleListScrollLoadMore}
+        >
+          {renderedFiles.map((file, index) => {
+            const isSelected = selectedFiles.has(file.name);
+            return (
+              <Box key={file.name}>
+                <GridItemCard
+                  selected={isSelected}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, file)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) =>
+                    file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
+                  }
+                  onDragLeave={() => setDragOverDir(null)}
+                  onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
+                  onDoubleClick={() => handleRowClick(file)}
+                  onClick={(e) =>
+                    handleSelect(file.name, index, {
+                      shiftKey: e.shiftKey,
+                      toggleKey: e.metaKey || e.ctrlKey,
+                    })
+                  }
+                  onContextMenu={(e: React.MouseEvent) => {
+                    e.preventDefault();
+                    onContextMenu?.(e, file);
+                  }}
+                  sx={
+                    dragOverDir === file.name
+                      ? {
                           outline: `2px dashed ${theme.palette.primary.main}`,
                           backgroundColor: `${theme.palette.primary.main}14`,
-                          boxShadow: `0 0 0 2px ${theme.palette.primary.main}22 inset`
-                        } : undefined}
-                    >
-                      <Box sx={{position: 'absolute', top: 8, left: 8}}>
-                        <Checkbox
-                            checked={isSelected}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              const native = e.nativeEvent as MouseEvent;
-                              handleSelect(file.name, index, {shiftKey: native.shiftKey, toggleKey: native.metaKey || native.ctrlKey});
-                            }}
-                            size="small"
-                        />
-                      </Box>
-                      {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
-                        <FileThumbnail name={file.name} path={file.path} size={64} sx={{mb: 1}}/>
-                      ) : (
-                        <FileIcon name={file.name} type={file.type} sx={{fontSize: 64, mb: 1}}/>
-                      )}
-                      <Typography
-                          variant="body2"
-                          align="center"
-                          sx={{
-                            fontWeight: 500,
-                            wordBreak: 'break-word',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
-                      >
-                        {file.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {file.type === 'DIRECTORY' ? '' : formatSize(file.size)}
-                      </Typography>
-                    </GridItemCard>
+                          boxShadow: `0 0 0 2px ${theme.palette.primary.main}22 inset`,
+                        }
+                      : undefined
+                  }
+                >
+                  <Box sx={{ position: 'absolute', top: 8, left: 8 }}>
+                    <Checkbox
+                      checked={isSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        const native = e.nativeEvent as MouseEvent;
+                        handleSelect(file.name, index, {
+                          shiftKey: native.shiftKey,
+                          toggleKey: native.metaKey || native.ctrlKey,
+                        });
+                      }}
+                      size="small"
+                    />
                   </Box>
-              );
-            })}
-          </Box>
+                  {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
+                    <FileThumbnail name={file.name} path={file.path} size={64} sx={{ mb: 1 }} />
+                  ) : (
+                    <FileIcon name={file.name} type={file.type} sx={{ fontSize: 64, mb: 1 }} />
+                  )}
+                  <Typography
+                    variant="body2"
+                    align="center"
+                    sx={{
+                      fontWeight: 500,
+                      wordBreak: 'break-word',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {file.name}
+                  </Typography>
+                  <Tooltip title={formatExactDateTime(file.lastModified)} arrow>
+                    <Typography variant="caption" color="text.secondary">
+                      {file.type === 'DIRECTORY'
+                        ? formatRelativeDateTime(file.lastModified)
+                        : `${formatSize(file.size)} • ${formatRelativeDateTime(file.lastModified)}`}
+                    </Typography>
+                  </Tooltip>
+                </GridItemCard>
+              </Box>
+            );
+          })}
         </Box>
+      </Box>
     );
   }
 
   // Desktop View: Table (List)
   return (
-      <TableContainer ref={tableContainerRef} component={AppCard} sx={{overflow: 'auto', maxHeight: '70vh'}}>
-        <Table sx={{minWidth: 650}} aria-label="file table">
-          <TableHead>
+    <TableContainer
+      ref={tableContainerRef}
+      component={AppCard}
+      sx={{ overflow: 'auto', maxHeight: '70vh' }}
+    >
+      <Table sx={{ minWidth: 650 }} aria-label="file table">
+        <TableHead>
+          <TableRow>
+            <StyledHeaderCell padding="checkbox">
+              <Checkbox
+                indeterminate={selectedFiles.size > 0 && selectedFiles.size < files.length}
+                checked={files.length > 0 && selectedFiles.size === files.length}
+                onChange={handleSelectAll}
+              />
+            </StyledHeaderCell>
+            <StyledHeaderCell width="50px"></StyledHeaderCell>
+            <StyledHeaderCell>Name</StyledHeaderCell>
+            <StyledHeaderCell align="right">Size</StyledHeaderCell>
+            <StyledHeaderCell align="right">Date</StyledHeaderCell>
+            <StyledHeaderCell align="right">Owner</StyledHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {tableVirtualizer.getVirtualItems().length > 0 && (
             <TableRow>
-              <StyledHeaderCell padding="checkbox">
-                <Checkbox
-                    indeterminate={selectedFiles.size > 0 && selectedFiles.size < files.length}
-                    checked={files.length > 0 && selectedFiles.size === files.length}
-                    onChange={handleSelectAll}
-                />
-              </StyledHeaderCell>
-              <StyledHeaderCell width="50px"></StyledHeaderCell>
-              <StyledHeaderCell>Name</StyledHeaderCell>
-              <StyledHeaderCell align="right">Size</StyledHeaderCell>
-              <StyledHeaderCell align="right">Date</StyledHeaderCell>
-              <StyledHeaderCell align="right">Owner</StyledHeaderCell>
+              <TableCell
+                colSpan={6}
+                sx={{ height: tableVirtualizer.getVirtualItems()[0].start, p: 0, border: 0 }}
+              />
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {tableVirtualizer.getVirtualItems().length > 0 && (
-              <TableRow>
-                <TableCell colSpan={6} sx={{height: tableVirtualizer.getVirtualItems()[0].start, p: 0, border: 0}}/>
-              </TableRow>
-            )}
+          )}
 
-            {tableVirtualizer.getVirtualItems().map((virtualRow) => {
-              const file = files[virtualRow.index];
-              const isSelected = selectedFiles.has(file.name);
-              return (
-                  <StyledTableRow
-                      key={file.name}
-                      selected={isSelected}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, file)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) => file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)}
-                      onDragLeave={() => setDragOverDir(null)}
-                      onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
-                      onDoubleClick={() => handleRowClick(file)}
-                      onClick={(e) => handleSelect(file.name, virtualRow.index, {shiftKey: e.shiftKey, toggleKey: e.metaKey || e.ctrlKey})}
-                      onContextMenu={(e: React.MouseEvent) => {
-                        e.preventDefault();
-                        onContextMenu?.(e, file);
-                      }}
-                      sx={dragOverDir === file.name ? {
+          {tableVirtualizer.getVirtualItems().map((virtualRow) => {
+            const file = files[virtualRow.index];
+            const isSelected = selectedFiles.has(file.name);
+            return (
+              <StyledTableRow
+                key={file.name}
+                selected={isSelected}
+                draggable
+                onDragStart={(e) => handleDragStart(e, file)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) =>
+                  file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
+                }
+                onDragLeave={() => setDragOverDir(null)}
+                onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
+                onDoubleClick={() => handleRowClick(file)}
+                onClick={(e) =>
+                  handleSelect(file.name, virtualRow.index, {
+                    shiftKey: e.shiftKey,
+                    toggleKey: e.metaKey || e.ctrlKey,
+                  })
+                }
+                onContextMenu={(e: React.MouseEvent) => {
+                  e.preventDefault();
+                  onContextMenu?.(e, file);
+                }}
+                sx={
+                  dragOverDir === file.name
+                    ? {
                         outline: `2px dashed ${theme.palette.primary.main}`,
-                        backgroundColor: `${theme.palette.primary.main}14`
-                      } : undefined}
-                  >
-                    <StyledTableCell padding="checkbox">
-                      <Checkbox
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            const native = e.nativeEvent as MouseEvent;
-                            handleSelect(file.name, virtualRow.index, {shiftKey: native.shiftKey, toggleKey: native.metaKey || native.ctrlKey});
-                          }}
-                      />
-                    </StyledTableCell>
-                    <StyledTableCell>
-                      {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
-                        <FileThumbnail name={file.name} path={file.path} size={28}/>
-                      ) : (
-                        <FileIcon name={file.name} type={file.type}/>
-                      )}
-                    </StyledTableCell>
-                    <StyledTableCell component="th" scope="row" sx={{fontWeight: 500}}>
-                      {file.name}
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
-                    </StyledTableCell>
-                    <StyledTableCell align="right">{file.lastModified}</StyledTableCell>
-                    <StyledTableCell align="right" sx={{color: 'text.secondary'}}>
-                      {file.owner}
-                    </StyledTableCell>
-                  </StyledTableRow>
-              );
-            })}
+                        backgroundColor: `${theme.palette.primary.main}14`,
+                      }
+                    : undefined
+                }
+              >
+                <StyledTableCell padding="checkbox">
+                  <Checkbox
+                    checked={isSelected}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      const native = e.nativeEvent as MouseEvent;
+                      handleSelect(file.name, virtualRow.index, {
+                        shiftKey: native.shiftKey,
+                        toggleKey: native.metaKey || native.ctrlKey,
+                      });
+                    }}
+                  />
+                </StyledTableCell>
+                <StyledTableCell>
+                  {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
+                    <FileThumbnail name={file.name} path={file.path} size={28} />
+                  ) : (
+                    <FileIcon name={file.name} type={file.type} />
+                  )}
+                </StyledTableCell>
+                <StyledTableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
+                  {file.name}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
+                </StyledTableCell>
+                <StyledTableCell align="right">
+                  <Tooltip title={formatExactDateTime(file.lastModified)} arrow>
+                    <span>{formatRelativeDateTime(file.lastModified)}</span>
+                  </Tooltip>
+                </StyledTableCell>
+                <StyledTableCell align="right" sx={{ color: 'text.secondary' }}>
+                  {file.owner}
+                </StyledTableCell>
+              </StyledTableRow>
+            );
+          })}
 
-            {tableVirtualizer.getVirtualItems().length > 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  sx={{
-                    height: tableVirtualizer.getTotalSize() - tableVirtualizer.getVirtualItems()[tableVirtualizer.getVirtualItems().length - 1].end,
-                    p: 0,
-                    border: 0,
-                  }}
-                />
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          {tableVirtualizer.getVirtualItems().length > 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                sx={{
+                  height:
+                    tableVirtualizer.getTotalSize() -
+                    tableVirtualizer.getVirtualItems()[
+                      tableVirtualizer.getVirtualItems().length - 1
+                    ].end,
+                  p: 0,
+                  border: 0,
+                }}
+              />
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
-
