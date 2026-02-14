@@ -72,6 +72,7 @@ export const FileBrowser: React.FC = () => {
   } = useFileBrowser();
 
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [pathInput, setPathInput] = React.useState(currentPath);
   const [sortMode, setSortMode] = React.useState<SortMode>('name-asc');
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
@@ -142,6 +143,10 @@ export const FileBrowser: React.FC = () => {
       setSelectionAnchorIndex(null);
     }
   }, [selectedFiles]);
+
+  React.useEffect(() => {
+    setPathInput(currentPath);
+  }, [currentPath]);
 
   React.useEffect(() => {
     localStorage.setItem('fileBrowser.favorites', JSON.stringify(favorites));
@@ -303,6 +308,29 @@ export const FileBrowser: React.FC = () => {
 
         {data && (
             <Box mb={2}>
+              <Stack direction={{xs: 'column', md: 'row'}} spacing={1} sx={{mb: 1}}>
+                <TextField
+                  size="small"
+                  label="Path"
+                  value={pathInput}
+                  onChange={(e) => setPathInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && pathInput.trim()) navigateToPath(pathInput.trim());
+                  }}
+                  sx={{flex: 1}}
+                />
+                <FormControl size="small" sx={{minWidth: {xs: '100%', md: 220}}}>
+                  <InputLabel id="recent-path-label">Recent</InputLabel>
+                  <Select
+                    labelId="recent-path-label"
+                    label="Recent"
+                    value=""
+                    onChange={(e) => navigateToPath(e.target.value)}
+                  >
+                    {recentPaths.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Stack>
               <AppBreadcrumbs breadcrumbs={data.breadcrumbs} onNavigate={navigateTo}/>
             </Box>
         )}
