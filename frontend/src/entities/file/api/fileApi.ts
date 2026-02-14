@@ -21,11 +21,8 @@ export const fileApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('directory', directory);
-    await apiClient.post('/files/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // Do not set Content-Type manually; axios/browser must set the multipart boundary.
+    await apiClient.post('/files/upload', formData);
   },
 
   createDirectory: async (parentPath: string, name: string): Promise<void> => {
