@@ -33,6 +33,7 @@ interface FileTableProps {
   viewMode?: ViewMode;
   selectedFiles: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
+  onSelectionIntent?: (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => void;
   onContextMenu?: (event: React.MouseEvent, file: FileNode) => void;
   onDropToDirectory?: (sourceNames: string[], targetDirectoryName: string) => void;
   onDragSelectionCountChange?: (count: number) => void;
@@ -99,6 +100,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                                                       viewMode = 'list',
                                                       selectedFiles,
                                                       onSelectionChange,
+                                                      onSelectionIntent,
                                                       onContextMenu,
                                                       onDropToDirectory,
                                                       onDragSelectionCountChange,
@@ -138,7 +140,12 @@ export const FileTable: React.FC<FileTableProps> = ({
     }
   };
 
-  const handleSelect = (name: string) => {
+  const handleSelect = (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => {
+    if (onSelectionIntent) {
+      onSelectionIntent(name, index, options);
+      return;
+    }
+
     const newSelected = new Set(selectedFiles);
     if (newSelected.has(name)) {
       newSelected.delete(name);
@@ -213,7 +220,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                       <Checkbox
                           edge="end"
                           checked={selectedFiles.has(file.name)}
-                          onChange={() => handleSelect(file.name)}
+                          onChange={(e) => {
+                            const native = e.nativeEvent as MouseEvent;
+                            handleSelect(file.name, index, {shiftKey: native.shiftKey, toggleKey: native.metaKey || native.ctrlKey});
+                          }}
                       />
                     }
                 >
@@ -278,7 +288,7 @@ export const FileTable: React.FC<FileTableProps> = ({
             maxHeight: '70vh',
             overflowY: 'auto'
           }} onScroll={handleListScrollLoadMore}>
-            {renderedFiles.map((file) => {
+            {renderedFiles.map((file, index) => {
               const isSelected = selectedFiles.has(file.name);
               return (
                   <Box key={file.name}>
@@ -291,7 +301,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                         onDragLeave={() => setDragOverDir(null)}
                         onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
                         onDoubleClick={() => handleRowClick(file)}
-                        onClick={() => handleSelect(file.name)}
+                        onClick={(e) => handleSelect(file.name, index, {shiftKey: e.shiftKey, toggleKey: e.metaKey || e.ctrlKey})}
                         onContextMenu={(e: React.MouseEvent) => {
                           e.preventDefault();
                           onContextMenu?.(e, file);
@@ -307,7 +317,8 @@ export const FileTable: React.FC<FileTableProps> = ({
                             checked={isSelected}
                             onChange={(e) => {
                               e.stopPropagation();
-                              handleSelect(file.name);
+                              const native = e.nativeEvent as MouseEvent;
+                              handleSelect(file.name, index, {shiftKey: native.shiftKey, toggleKey: native.metaKey || native.ctrlKey});
                             }}
                             size="small"
                         />
@@ -384,7 +395,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                       onDragLeave={() => setDragOverDir(null)}
                       onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
                       onDoubleClick={() => handleRowClick(file)}
-                      onClick={() => handleSelect(file.name)}
+                      onClick={(e) => handleSelect(file.name, virtualRow.index, {shiftKey: e.shiftKey, toggleKey: e.metaKey || e.ctrlKey})}
                       onContextMenu={(e: React.MouseEvent) => {
                         e.preventDefault();
                         onContextMenu?.(e, file);
@@ -399,7 +410,8 @@ export const FileTable: React.FC<FileTableProps> = ({
                           checked={isSelected}
                           onChange={(e) => {
                             e.stopPropagation();
-                            handleSelect(file.name);
+                            const native = e.nativeEvent as MouseEvent;
+                            handleSelect(file.name, virtualRow.index, {shiftKey: native.shiftKey, toggleKey: native.metaKey || native.ctrlKey});
                           }}
                       />
                     </StyledTableCell>

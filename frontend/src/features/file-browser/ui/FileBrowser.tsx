@@ -77,6 +77,7 @@ export const FileBrowser: React.FC = () => {
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
   const [draggingCount, setDraggingCount] = React.useState(0);
   const [pendingMove, setPendingMove] = React.useState<{ sourceNames: string[]; targetDirectoryName: string } | null>(null);
+  const [selectionAnchorIndex, setSelectionAnchorIndex] = React.useState<number | null>(null);
   const {moveFilesBatch, uploadFile} = useFileActions();
   const showNotification = useNotificationStore((s) => s.showNotification);
 
@@ -90,6 +91,31 @@ export const FileBrowser: React.FC = () => {
     return sortFiles(filtered, sortMode);
   }, [data?.items, searchQuery, sortMode]);
 
+  const handleSelectionIntent = (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => {
+    if (options.shiftKey && selectionAnchorIndex !== null) {
+      const [start, end] = [selectionAnchorIndex, index].sort((a, b) => a - b);
+      const next = new Set(selectedFiles);
+      for (let i = start; i <= end; i++) {
+        const target = visibleFiles[i];
+        if (target) next.add(target.name);
+      }
+      handleSelectionChange(next);
+      return;
+    }
+
+    if (options.toggleKey) {
+      const next = new Set(selectedFiles);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      handleSelectionChange(next);
+      setSelectionAnchorIndex(index);
+      return;
+    }
+
+    handleSelectionChange(new Set([name]));
+    setSelectionAnchorIndex(index);
+  };
+
   const handleContextMenu = (event: React.MouseEvent, file: FileNode) => {
     setFocusedFile(file);
     setContextAnchor(event.currentTarget as HTMLElement);
@@ -100,6 +126,12 @@ export const FileBrowser: React.FC = () => {
       handleSelectionChange(next);
     }
   };
+
+  React.useEffect(() => {
+    if (selectedFiles.size === 0) {
+      setSelectionAnchorIndex(null);
+    }
+  }, [selectedFiles]);
 
   const closeContextMenu = () => setContextAnchor(null);
 
@@ -260,6 +292,20 @@ export const FileBrowser: React.FC = () => {
           />
         </Stack>
 
+        {selectedFiles.size > 0 && (
+          <Paper variant="outlined" sx={{mb: 2, p: 1.5, backgroundColor: 'primary.50'}}>
+            <Stack direction={{xs: 'column', sm: 'row'}} spacing={1} alignItems={{xs: 'stretch', sm: 'center'}} justifyContent="space-between">
+              <Typography variant="body2" sx={{fontWeight: 600}}>
+                {selectedFiles.size} item(s) selected · Shift for range, Cmd/Ctrl for toggle
+              </Typography>
+              <Stack direction="row" spacing={1}>
+                <Button size="small" onClick={() => handleSelectionChange(new Set(visibleFiles.map((f) => f.name)))}>Select All Visible</Button>
+                <Button size="small" onClick={clearSelection}>Clear</Button>
+              </Stack>
+            </Stack>
+          </Paper>
+        )}
+
         {isLoading && (
             <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
               <CircularProgress/>
@@ -281,6 +327,7 @@ export const FileBrowser: React.FC = () => {
                   viewMode={viewMode}
                   selectedFiles={selectedFiles}
                   onSelectionChange={handleSelectionChange}
+                  onSelectionIntent={handleSelectionIntent}
                   onContextMenu={handleContextMenu}
                   onDropToDirectory={(sourceNames, targetDirectoryName) => {
                     void handleDropToDirectory(sourceNames, targetDirectoryName);
