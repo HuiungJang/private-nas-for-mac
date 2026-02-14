@@ -80,6 +80,23 @@ public class LocalFileSystemAdapter implements FileStoragePort {
     }
 
     @Override
+    public void createDirectory(String pathString, UUID userId) {
+        Path targetPath = resolveTarget(pathString);
+
+        if (Files.exists(targetPath)) {
+            throw new IllegalArgumentException("Path already exists: " + targetPath);
+        }
+
+        try {
+            Files.createDirectories(targetPath);
+            log.info("User {} created directory: {}", userId, targetPath);
+        } catch (IOException e) {
+            log.error("Failed to create directory: {}", targetPath, e);
+            throw new FileOperationException("Failed to create directory", e);
+        }
+    }
+
+    @Override
     public void save(InputStream content, String pathString, long size, UUID userId) {
         Path targetPath = resolveTarget(pathString);
 

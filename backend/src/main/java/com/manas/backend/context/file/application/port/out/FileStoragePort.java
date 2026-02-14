@@ -35,6 +35,14 @@ public interface FileStoragePort {
     void move(String sourcePath, String destinationPath, UUID userId);
 
     /**
+     * Creates a directory at the specified path.
+     *
+     * @param path   Logical path to create.
+     * @param userId Optional user ID.
+     */
+    void createDirectory(String path, UUID userId);
+
+    /**
      * Saves content to the specified path.
      *
      * @param content InputStream of the file content.

@@ -4,6 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import {useFileActions} from '../model/useFileActions';
 import {AppButton} from '@/shared/ui';
 import {MoveFileModal} from './MoveFileModal';
@@ -23,7 +24,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                                                                       }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const {deleteFiles, isDeleting, uploadFile, isUploading} = useFileActions();
+  const {deleteFiles, isDeleting, uploadFile, isUploading, createDirectory, isCreatingDirectory} = useFileActions();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
 
@@ -55,6 +56,16 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const handleCreateDirectory = async () => {
+    const name = prompt('Enter new folder name');
+    if (!name) return;
+
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    await createDirectory({parentPath: currentPath, name: trimmed});
   };
 
   return (
@@ -101,6 +112,24 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
         >
           Upload
         </AppButton>
+        )}
+
+        {isMobile ? (
+          <Tooltip title="New Folder">
+            <IconButton onClick={handleCreateDirectory} disabled={isCreatingDirectory} color="primary">
+              <CreateNewFolderIcon/>
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="outlined"
+            startIcon={<CreateNewFolderIcon/>}
+            onClick={handleCreateDirectory}
+            disabled={isCreatingDirectory}
+            sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
+          >
+            New Folder
+          </Button>
         )}
 
         {selectedFiles.size > 0 && (

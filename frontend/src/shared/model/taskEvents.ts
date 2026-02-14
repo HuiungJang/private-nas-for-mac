@@ -1,4 +1,4 @@
-export type FileTaskType = 'file.delete' | 'file.upload' | 'file.move';
+export type FileTaskType = 'file.delete' | 'file.upload' | 'file.move' | 'file.mkdir';
 
 export interface FileTaskPayload {
   type: FileTaskType;
@@ -16,5 +16,7 @@ export const buildTaskLabel = (payload: FileTaskPayload): string => {
       return `Upload ${payload.fileName ?? 'file'}`;
     case 'file.move':
       return `Move ${payload.sourcePath ?? ''} -> ${payload.destinationPath ?? ''}`;
+    case 'file.mkdir':
+      return `Create folder ${payload.fileName ?? ''}`;
   }
 };
