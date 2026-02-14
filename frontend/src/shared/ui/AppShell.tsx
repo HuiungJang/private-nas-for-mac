@@ -9,7 +9,7 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  Popover,
+  Paper,
   Toolbar,
   Typography,
   useMediaQuery,
@@ -43,7 +43,9 @@ export const AppShell: React.FC<{children: React.ReactNode}> = ({children}) => {
   const logout = useAuthStore((s) => s.logout);
   const tasks = useTaskCenterStore((s) => s.tasks);
   const runningCount = tasks.filter((t) => t.status === 'running').length;
-  const [taskAnchor, setTaskAnchor] = React.useState<HTMLElement | null>(null);
+  const successCount = tasks.filter((t) => t.status === 'success').length;
+  const failedCount = tasks.filter((t) => t.status === 'failed').length;
+  const [taskDockOpen, setTaskDockOpen] = React.useState(false);
 
   const drawer = (
     <Box sx={{height: '100%', bgcolor: 'background.paper'}}>
@@ -97,7 +99,7 @@ export const AppShell: React.FC<{children: React.ReactNode}> = ({children}) => {
             <Typography variant="h6" sx={{flexGrow: 1, fontWeight: 700}}>
               {getTitle(location.pathname)}
             </Typography>
-            <IconButton onClick={(e) => setTaskAnchor(e.currentTarget)} sx={{mr: 1}}>
+            <IconButton onClick={() => setTaskDockOpen((v) => !v)} sx={{mr: 1}}>
               <Badge color="primary" badgeContent={runningCount}>
                 <TaskAltIcon/>
               </Badge>
@@ -118,15 +120,40 @@ export const AppShell: React.FC<{children: React.ReactNode}> = ({children}) => {
         <Box sx={{p: {xs: 2, md: 3}}}>{children}</Box>
       </Box>
 
-      <Popover
-        open={Boolean(taskAnchor)}
-        anchorEl={taskAnchor}
-        onClose={() => setTaskAnchor(null)}
-        anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
-        transformOrigin={{vertical: 'top', horizontal: 'right'}}
+      <Box
+        sx={{
+          position: 'fixed',
+          right: 16,
+          bottom: 16,
+          zIndex: (t) => t.zIndex.drawer + 2,
+          width: {xs: 'calc(100vw - 32px)', sm: 380},
+          maxWidth: '100vw',
+        }}
       >
-        <TaskCenterPanel/>
-      </Popover>
+        <Paper elevation={6} sx={{borderRadius: 2, overflow: 'hidden'}}>
+          <Box
+            sx={{
+              px: 1.5,
+              py: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              bgcolor: 'background.paper',
+              cursor: 'pointer',
+            }}
+            onClick={() => setTaskDockOpen((v) => !v)}
+          >
+            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+              <TaskAltIcon fontSize="small"/>
+              <Typography variant="body2" sx={{fontWeight: 700}}>Task Center</Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+              running {runningCount} · ok {successCount} · failed {failedCount}
+            </Typography>
+          </Box>
+          {taskDockOpen && <TaskCenterPanel/>}
+        </Paper>
+      </Box>
     </Box>
   );
 };
