@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -265,6 +266,20 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         );
     }
 
+    private static final Set<String> DEFAULT_SYSTEM_EXCLUDES = Set.of(
+            ".Spotlight-V100",
+            ".fseventsd",
+            ".Trashes",
+            ".TemporaryItems",
+            ".DocumentRevisions-V100",
+            ".VolumeIcon.icns"
+    );
+
+    private boolean shouldExcludeByDefault(Path path) {
+        String name = path.getFileName() == null ? "" : path.getFileName().toString();
+        return DEFAULT_SYSTEM_EXCLUDES.contains(name);
+    }
+
     private List<PathEntry> fetchEntriesSortedByName(Path directory, FileListSort sort) {
         try (Stream<Path> stream = Files.list(directory)) {
             Comparator<String> nameComparator = sort == FileListSort.NAME_DESC
@@ -275,6 +290,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
                     .thenComparing(entry -> entry.path().getFileName().toString(), nameComparator);
 
             return stream
+                    .filter(p -> !shouldExcludeByDefault(p))
                     .map(this::toPathEntry)
                     .flatMap(Stream::ofNullable)
                     .sorted(comparator)
@@ -292,6 +308,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
                             sort == FileListSort.MODIFIED_DESC ? Comparator.reverseOrder() : Comparator.naturalOrder());
 
             return stream
+                    .filter(p -> !shouldExcludeByDefault(p))
                     .map(this::toPathEntryWithModified)
                     .flatMap(Stream::ofNullable)
                     .sorted(comparator)
