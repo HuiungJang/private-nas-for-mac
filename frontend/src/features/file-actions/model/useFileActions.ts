@@ -87,6 +87,39 @@ export const useFileActions = () => {
     },
   });
 
+  const moveFilesBatchMutation = useMutation({
+    mutationFn: async (moves: Array<{ sourcePath: string; destinationPath: string }>) => {
+      const taskId = startTask(`Move ${moves.length} item(s)`);
+      let successCount = 0;
+      const failures: Array<{ sourcePath: string; reason: string }> = [];
+
+      for (const move of moves) {
+        try {
+          await fileApi.moveFile(move.sourcePath, move.destinationPath);
+          successCount += 1;
+        } catch (e: any) {
+          failures.push({sourcePath: move.sourcePath, reason: e?.message || 'Move failed'});
+        }
+      }
+
+      if (failures.length > 0) {
+        failTask(taskId, `${failures.length} failed`);
+      } else {
+        completeTask(taskId);
+      }
+
+      return {successCount, failures, total: moves.length};
+    },
+    onSuccess: ({successCount, failures, total}) => {
+      queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+      if (failures.length > 0) {
+        showNotification(`Moved ${successCount}/${total}. ${failures.length} failed`, 'error');
+      } else {
+        showNotification(`Moved ${successCount} item(s) successfully`, 'success');
+      }
+    },
+  });
+
   const moveFileMutation = useMutation({
     mutationFn: async ({sourcePath, destinationPath}: { sourcePath: string; destinationPath: string }) => {
       const taskId = startTask({type: 'file.move', sourcePath, destinationPath});
@@ -132,6 +165,7 @@ export const useFileActions = () => {
     createDirectory: createDirectoryMutation.mutateAsync,
     isCreatingDirectory: createDirectoryMutation.isPending,
     moveFile: moveFileMutation.mutateAsync,
-    isMoving: moveFileMutation.isPending,
+    moveFilesBatch: moveFilesBatchMutation.mutateAsync,
+    isMoving: moveFileMutation.isPending || moveFilesBatchMutation.isPending,
   };
 };

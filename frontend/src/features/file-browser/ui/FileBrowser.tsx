@@ -30,6 +30,8 @@ import {FileTable} from '@/widgets/file-table/ui/FileTable';
 import {useFileBrowser} from '../model/useFileBrowser';
 import {FileActionsToolbar} from '@/features/file-actions/ui/FileActionsToolbar';
 import {useFileActions} from '@/features/file-actions/model/useFileActions';
+import {fileApi} from '@/entities/file/api/fileApi';
+import {useNotificationStore} from '@/shared/model/useNotificationStore';
 import type {FileNode} from '@/entities/file/model/types';
 
 type SortMode = 'name-asc' | 'name-desc' | 'date-desc' | 'date-asc';
@@ -75,7 +77,8 @@ export const FileBrowser: React.FC = () => {
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
   const [draggingCount, setDraggingCount] = React.useState(0);
   const [pendingMove, setPendingMove] = React.useState<{ sourceNames: string[]; targetDirectoryName: string } | null>(null);
-  const {moveFile, uploadFile} = useFileActions();
+  const {moveFilesBatch, uploadFile} = useFileActions();
+  const showNotification = useNotificationStore((s) => s.showNotification);
 
   const visibleFiles = React.useMemo(() => {
     if (!data?.items) return [];
@@ -114,12 +117,30 @@ export const FileBrowser: React.FC = () => {
   const handleConfirmMove = async () => {
     if (!pendingMove) return;
 
-    for (const name of pendingMove.sourceNames) {
-      if (name === pendingMove.targetDirectoryName) continue;
-      const sourcePath = joinPath(currentPath, name);
-      const destinationPath = `${joinPath(currentPath, pendingMove.targetDirectoryName)}/${name}`;
-      await moveFile({sourcePath, destinationPath});
+    const targetPath = joinPath(currentPath, pendingMove.targetDirectoryName);
+    const targetListing = await fileApi.listFiles(targetPath);
+    const existingNames = new Set(targetListing.items.map((item) => item.name));
+
+    const conflicts = pendingMove.sourceNames.filter((name) => existingNames.has(name));
+    const movable = pendingMove.sourceNames.filter((name) => !existingNames.has(name) && name !== pendingMove.targetDirectoryName);
+
+    if (conflicts.length > 0) {
+      showNotification(`Skipped ${conflicts.length} conflicting item(s)`, 'error');
     }
+
+    if (movable.length === 0) {
+      setPendingMove(null);
+      setDraggingCount(0);
+      clearSelection();
+      return;
+    }
+
+    const moves = movable.map((name) => ({
+      sourcePath: joinPath(currentPath, name),
+      destinationPath: `${targetPath}/${name}`,
+    }));
+
+    await moveFilesBatch(moves);
 
     setPendingMove(null);
     setDraggingCount(0);

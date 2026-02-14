@@ -207,7 +207,8 @@ export const FileTable: React.FC<FileTableProps> = ({
                         borderBottom:
                             index !== files.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
                         py: 1.5,
-                        backgroundColor: dragOverDir === file.name ? 'action.hover' : undefined,
+                        backgroundColor: dragOverDir === file.name ? `${theme.palette.primary.main}22` : undefined,
+                        outline: dragOverDir === file.name ? `2px dashed ${theme.palette.primary.main}` : undefined,
                       }}
                   >
                     <ListItemAvatar sx={{minWidth: 40, mr: 1}}>
@@ -267,7 +268,11 @@ export const FileTable: React.FC<FileTableProps> = ({
                           e.preventDefault();
                           onContextMenu?.(e, file);
                         }}
-                        sx={dragOverDir === file.name ? {outline: `2px dashed ${theme.palette.primary.main}`} : undefined}
+                        sx={dragOverDir === file.name ? {
+                          outline: `2px dashed ${theme.palette.primary.main}`,
+                          backgroundColor: `${theme.palette.primary.main}14`,
+                          boxShadow: `0 0 0 2px ${theme.palette.primary.main}22 inset`
+                        } : undefined}
                     >
                       <Box sx={{position: 'absolute', top: 8, left: 8}}>
                         <Checkbox
@@ -349,7 +354,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                         e.preventDefault();
                         onContextMenu?.(e, file);
                       }}
-                      sx={dragOverDir === file.name ? {outline: `2px dashed ${theme.palette.primary.main}`} : undefined}
+                      sx={dragOverDir === file.name ? {
+                        outline: `2px dashed ${theme.palette.primary.main}`,
+                        backgroundColor: `${theme.palette.primary.main}14`
+                      } : undefined}
                   >
                     <StyledTableCell padding="checkbox">
                       <Checkbox
