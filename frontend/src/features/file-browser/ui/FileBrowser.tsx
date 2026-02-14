@@ -29,6 +29,7 @@ import {AppBreadcrumbs} from '@/shared/ui/AppBreadcrumbs';
 import {FileTable} from '@/widgets/file-table/ui/FileTable';
 import {useFileBrowser} from '../model/useFileBrowser';
 import {FileActionsToolbar} from '@/features/file-actions/ui/FileActionsToolbar';
+import {MoveFileModal} from '@/features/file-actions/ui/MoveFileModal';
 import {useFileActions} from '@/features/file-actions/model/useFileActions';
 import {fileApi} from '@/entities/file/api/fileApi';
 import {useNotificationStore} from '@/shared/model/useNotificationStore';
@@ -78,7 +79,10 @@ export const FileBrowser: React.FC = () => {
   const [draggingCount, setDraggingCount] = React.useState(0);
   const [pendingMove, setPendingMove] = React.useState<{ sourceNames: string[]; targetDirectoryName: string } | null>(null);
   const [selectionAnchorIndex, setSelectionAnchorIndex] = React.useState<number | null>(null);
-  const {moveFilesBatch, uploadFile} = useFileActions();
+  const [isMoveModalOpen, setIsMoveModalOpen] = React.useState(false);
+  const [renameTarget, setRenameTarget] = React.useState<FileNode | null>(null);
+  const [renameValue, setRenameValue] = React.useState('');
+  const {moveFilesBatch, uploadFile, deleteFiles} = useFileActions();
   const showNotification = useNotificationStore((s) => s.showNotification);
 
   const visibleFiles = React.useMemo(() => {
@@ -138,6 +142,39 @@ export const FileBrowser: React.FC = () => {
   const joinPath = (base: string, name: string) => {
     const normalizedBase = base === '/' ? '' : base.replace(/\/$/, '');
     return `${normalizedBase}/${name}`;
+  };
+
+  const getFocusedPath = () => (focusedFile ? joinPath(currentPath, focusedFile.name) : null);
+
+  const handleDeleteFocused = async () => {
+    const targetPath = getFocusedPath();
+    if (!targetPath || !focusedFile) return;
+    await deleteFiles([targetPath]);
+    setContextAnchor(null);
+  };
+
+  const handleShareFocused = async () => {
+    const targetPath = getFocusedPath();
+    if (!targetPath) return;
+    await navigator.clipboard.writeText(targetPath);
+    showNotification('Path copied for sharing', 'success');
+    setContextAnchor(null);
+  };
+
+  const handleCopyName = async () => {
+    if (!focusedFile) return;
+    await navigator.clipboard.writeText(focusedFile.name);
+    showNotification('Name copied', 'success');
+    setContextAnchor(null);
+  };
+
+  const handleRename = async () => {
+    if (!renameTarget || !renameValue.trim() || renameValue.trim() === renameTarget.name) return;
+    await fileApi.moveFile(joinPath(currentPath, renameTarget.name), joinPath(currentPath, renameValue.trim()));
+    showNotification('Renamed successfully', 'success');
+    setRenameTarget(null);
+    setRenameValue('');
+    await refetch();
   };
 
   const handleDropToDirectory = async (sourceNames: string[], targetDirectoryName: string) => {
@@ -374,30 +411,45 @@ export const FileBrowser: React.FC = () => {
           onClose={closeContextMenu}
         >
           <MenuItem
+            disabled={focusedFile?.type !== 'DIRECTORY'}
             onClick={() => {
-              if (focusedFile?.type === 'DIRECTORY') {
-                navigateTo(focusedFile.name);
-              }
+              if (focusedFile?.type === 'DIRECTORY') navigateTo(focusedFile.name);
               closeContextMenu();
             }}
-          >
-            Open
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              if (focusedFile) {
-                const next = new Set(selectedFiles);
-                if (next.has(focusedFile.name)) next.delete(focusedFile.name);
-                else next.add(focusedFile.name);
-                handleSelectionChange(next);
-              }
-              closeContextMenu();
-            }}
-          >
-            Toggle Selection
-          </MenuItem>
-          <MenuItem onClick={closeContextMenu}>Show Details</MenuItem>
+          >Open</MenuItem>
+          <MenuItem disabled={!focusedFile} onClick={() => { setIsMoveModalOpen(true); closeContextMenu(); }}>Move</MenuItem>
+          <MenuItem disabled={!focusedFile} onClick={() => void handleCopyName()}>Copy</MenuItem>
+          <MenuItem disabled={!focusedFile || selectedFiles.size > 1} onClick={() => {
+            if (!focusedFile) return;
+            setRenameTarget(focusedFile);
+            setRenameValue(focusedFile.name);
+            closeContextMenu();
+          }}>Rename</MenuItem>
+          <MenuItem disabled={!focusedFile} onClick={() => void handleDeleteFocused()}>Delete</MenuItem>
+          <MenuItem disabled={!focusedFile} onClick={() => void handleShareFocused()}>Share</MenuItem>
         </Menu>
+
+        <MoveFileModal
+          open={isMoveModalOpen}
+          onClose={() => setIsMoveModalOpen(false)}
+          selectedFiles={selectedFiles.size > 0 ? selectedFiles : new Set(focusedFile ? [focusedFile.name] : [])}
+          sourceDirectory={currentPath}
+          onSuccess={() => {
+            clearSelection();
+            setIsMoveModalOpen(false);
+          }}
+        />
+
+        <Dialog open={Boolean(renameTarget)} onClose={() => setRenameTarget(null)} fullWidth maxWidth="xs">
+          <DialogTitle>Rename</DialogTitle>
+          <DialogContent>
+            <TextField autoFocus margin="dense" fullWidth label="New name" value={renameValue} onChange={(e) => setRenameValue(e.target.value)} />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setRenameTarget(null)}>Cancel</Button>
+            <Button variant="contained" onClick={() => void handleRename()} disabled={!renameValue.trim()}>Save</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
   );
 };
