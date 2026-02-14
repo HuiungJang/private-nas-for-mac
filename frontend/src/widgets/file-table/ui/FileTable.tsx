@@ -1,4 +1,5 @@
 import React from 'react';
+import {useVirtualizer} from '@tanstack/react-virtual';
 import {
   Box,
   Checkbox,
@@ -114,6 +115,15 @@ export const FileTable: React.FC<FileTableProps> = ({
   }, [files.length, viewMode, isMobile]);
 
   const renderedFiles = files.slice(0, renderCount);
+  const tableContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const tableVirtualizer = useVirtualizer({
+    count: files.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 64,
+    overscan: 8,
+    enabled: !isMobile && viewMode === 'list',
+  });
 
   const handleListScrollLoadMore = (event: React.UIEvent<HTMLElement>) => {
     const el = event.currentTarget;
@@ -335,7 +345,7 @@ export const FileTable: React.FC<FileTableProps> = ({
 
   // Desktop View: Table (List)
   return (
-      <TableContainer component={AppCard} sx={{overflow: 'auto', maxHeight: '70vh'}} onScroll={handleListScrollLoadMore}>
+      <TableContainer ref={tableContainerRef} component={AppCard} sx={{overflow: 'auto', maxHeight: '70vh'}}>
         <Table sx={{minWidth: 650}} aria-label="file table">
           <TableHead>
             <TableRow>
@@ -354,7 +364,14 @@ export const FileTable: React.FC<FileTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {renderedFiles.map((file) => {
+            {tableVirtualizer.getVirtualItems().length > 0 && (
+              <TableRow>
+                <TableCell colSpan={6} sx={{height: tableVirtualizer.getVirtualItems()[0].start, p: 0, border: 0}}/>
+              </TableRow>
+            )}
+
+            {tableVirtualizer.getVirtualItems().map((virtualRow) => {
+              const file = files[virtualRow.index];
               const isSelected = selectedFiles.has(file.name);
               return (
                   <StyledTableRow
@@ -406,6 +423,19 @@ export const FileTable: React.FC<FileTableProps> = ({
                   </StyledTableRow>
               );
             })}
+
+            {tableVirtualizer.getVirtualItems().length > 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  sx={{
+                    height: tableVirtualizer.getTotalSize() - tableVirtualizer.getVirtualItems()[tableVirtualizer.getVirtualItems().length - 1].end,
+                    p: 0,
+                    border: 0,
+                  }}
+                />
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
