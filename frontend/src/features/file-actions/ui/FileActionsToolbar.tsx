@@ -44,16 +44,22 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
   const [isCreateDirModalOpen, setIsCreateDirModalOpen] = useState(false);
   const [newDirectoryName, setNewDirectoryName] = useState('');
 
-  const handleDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${selectedFiles.size} items?`)) {
-      const paths = Array.from(selectedFiles).map(name => {
-        const cleanPath = currentPath.endsWith('/') ? currentPath : `${currentPath}/`;
-        return `${cleanPath}${name}`;
-      });
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-      await deleteFiles(paths);
-      onClearSelection();
-    }
+  const buildSelectedPaths = () => {
+    return Array.from(selectedFiles).map((name) => {
+      const cleanPath = currentPath.endsWith('/') ? currentPath : `${currentPath}/`;
+      return `${cleanPath}${name}`;
+    });
+  };
+
+  const handleDelete = async () => {
+    const paths = buildSelectedPaths();
+    if (paths.length === 0) return;
+
+    await deleteFiles(paths);
+    onClearSelection();
+    setIsDeleteConfirmOpen(false);
   };
 
   const handleUploadClick = () => {
@@ -224,7 +230,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
 
               {isMobile ? (
                   <Tooltip title={`Delete selected (${selectedFiles.size})`}>
-                    <IconButton onClick={handleDelete} disabled={isDeleting} color="error">
+                    <IconButton onClick={() => setIsDeleteConfirmOpen(true)} disabled={isDeleting} color="error">
                       <DeleteIcon/>
                     </IconButton>
                   </Tooltip>
@@ -233,7 +239,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                       variant="outlined"
                       color="error"
                       startIcon={<DeleteIcon/>}
-                      onClick={handleDelete}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
                       disabled={isDeleting}
                       sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
                   >
@@ -248,6 +254,19 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                   sourceDirectory={currentPath}
                   onSuccess={onClearSelection}
               />
+
+              <Dialog open={isDeleteConfirmOpen} onClose={() => setIsDeleteConfirmOpen(false)} fullWidth maxWidth="xs">
+                <DialogTitle>Delete items</DialogTitle>
+                <DialogContent>
+                  Delete {selectedFiles.size} item(s)?
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setIsDeleteConfirmOpen(false)} disabled={isDeleting}>Cancel</Button>
+                  <Button onClick={() => void handleDelete()} variant="contained" color="error" disabled={isDeleting}>
+                    Delete
+                  </Button>
+                </DialogActions>
+              </Dialog>
             </>
         )}
       </Stack>
