@@ -106,6 +106,9 @@ export const FileBrowser: React.FC = () => {
       return saved;
     return 'all';
   });
+  const [showPresetHint, setShowPresetHint] = React.useState(() => {
+    return localStorage.getItem('fileBrowser.presetHintDismissed') !== 'true';
+  });
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
@@ -276,6 +279,12 @@ export const FileBrowser: React.FC = () => {
   React.useEffect(() => {
     localStorage.setItem('fileBrowser.showHiddenFiles', String(showHiddenFiles));
   }, [showHiddenFiles]);
+
+  React.useEffect(() => {
+    if (!showPresetHint) {
+      localStorage.setItem('fileBrowser.presetHintDismissed', 'true');
+    }
+  }, [showPresetHint]);
 
   React.useEffect(() => {
     setRecentPaths((prev) => {
@@ -741,6 +750,21 @@ export const FileBrowser: React.FC = () => {
           {showHiddenFiles ? 'Hide hidden files' : 'Show hidden files'}
         </Button>
       </Stack>
+
+      {showPresetHint && (
+        <Alert
+          severity="info"
+          sx={{ mb: 2 }}
+          action={
+            <Button size="small" color="inherit" onClick={() => setShowPresetHint(false)}>
+              Got it
+            </Button>
+          }
+        >
+          Presets help you quickly narrow files: Recent (last 7 days), Large (≥100MB), Media
+          (images/videos/audio), and Documents (docs/spreadsheets/pdfs).
+        </Alert>
+      )}
 
       <Stack direction="row" spacing={1} sx={{ mb: 2, overflowX: 'auto' }}>
         {(
