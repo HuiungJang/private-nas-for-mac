@@ -55,16 +55,16 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   cursor: 'pointer',
   transition: 'background-color 0.15s',
   '&:hover': {
-    backgroundColor: `${theme.palette.primary.main}08 !important`,
+    backgroundColor: `${theme.palette.primary.main}10 !important`,
   },
   '&.Mui-selected': {
-    backgroundColor: `${theme.palette.primary.main}14 !important`,
+    backgroundColor: `${theme.palette.primary.main}18 !important`,
   },
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
-  padding: '12px 14px',
+  padding: '12px 16px',
   fontSize: '14px',
 }));
 
@@ -86,14 +86,15 @@ const GridItemCard = styled(Box, {
   flexDirection: 'column',
   alignItems: 'center',
   padding: '14px',
-  borderRadius: '10px',
+  borderRadius: '12px',
   cursor: 'pointer',
   position: 'relative',
   border: selected ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
   backgroundColor: selected ? theme.palette.action.selected : 'transparent',
-  transition: 'background-color 0.2s, border-color 0.2s',
+  transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
   '&:hover': {
-    backgroundColor: theme.palette.action.hover,
+    backgroundColor: `${theme.palette.primary.main}10`,
+    boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset`,
   },
 }));
 
