@@ -10,14 +10,17 @@ export interface TaskItem {
   startedAt: number;
   finishedAt?: number;
   errorMessage?: string;
+  details?: string;
 }
 
 interface TaskCenterState {
   tasks: TaskItem[];
   startTask: (task: string | FileTaskPayload) => string;
   completeTask: (id: string) => void;
-  failTask: (id: string, errorMessage?: string) => void;
+  failTask: (id: string, errorMessage?: string, details?: string) => void;
   clearFinished: () => void;
+  dismissTask: (id: string) => void;
+  retryTask: (id: string) => void;
 }
 
 export const useTaskCenterStore = create<TaskCenterState>((set) => ({
@@ -38,14 +41,35 @@ export const useTaskCenterStore = create<TaskCenterState>((set) => ({
       ),
     }));
   },
-  failTask: (id, errorMessage) => {
+  failTask: (id, errorMessage, details) => {
     set((state) => ({
       tasks: state.tasks.map((task) =>
-        task.id === id ? {...task, status: 'failed', finishedAt: Date.now(), errorMessage} : task
+        task.id === id
+          ? {...task, status: 'failed', finishedAt: Date.now(), errorMessage, details}
+          : task
       ),
     }));
   },
   clearFinished: () => {
     set((state) => ({tasks: state.tasks.filter((t) => t.status === 'running')}));
+  },
+  dismissTask: (id) => {
+    set((state) => ({tasks: state.tasks.filter((task) => task.id !== id)}));
+  },
+  retryTask: (id) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) => {
+        if (task.id !== id) return task;
+        if (task.status !== 'failed') return task;
+        return {
+          ...task,
+          status: 'running',
+          errorMessage: undefined,
+          details: 'Manual retry requested. Re-run the same action from toolbar/context menu.',
+          startedAt: Date.now(),
+          finishedAt: undefined,
+        };
+      }),
+    }));
   },
 }));

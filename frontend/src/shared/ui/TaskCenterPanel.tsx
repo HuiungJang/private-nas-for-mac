@@ -3,10 +3,12 @@ import {
   Box,
   Button,
   Chip,
+  Collapse,
   Divider,
   List,
   ListItem,
   ListItemText,
+  Stack,
   Typography,
 } from '@mui/material';
 import {useTaskCenterStore} from '@/shared/model/useTaskCenterStore';
@@ -20,6 +22,9 @@ const statusColorMap = {
 export const TaskCenterPanel: React.FC = () => {
   const tasks = useTaskCenterStore((s) => s.tasks);
   const clearFinished = useTaskCenterStore((s) => s.clearFinished);
+  const dismissTask = useTaskCenterStore((s) => s.dismissTask);
+  const retryTask = useTaskCenterStore((s) => s.retryTask);
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
 
   return (
     <Box sx={{width: 360, maxWidth: '100vw', p: 2}}>
@@ -42,6 +47,22 @@ export const TaskCenterPanel: React.FC = () => {
                 />
                 <Chip size="small" label={task.status} color={statusColorMap[task.status]}/>
               </Box>
+              <Stack direction="row" spacing={1} sx={{mt: 0.5}}>
+                {task.status === 'failed' && (
+                  <Button size="small" onClick={() => retryTask(task.id)}>Retry</Button>
+                )}
+                <Button size="small" onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}>
+                  {expandedId === task.id ? 'Hide details' : 'Details'}
+                </Button>
+                <Button size="small" color="inherit" onClick={() => dismissTask(task.id)}>
+                  Dismiss
+                </Button>
+              </Stack>
+              <Collapse in={expandedId === task.id}>
+                <Typography variant="caption" color="text.secondary" sx={{display: 'block', mt: 0.75}}>
+                  {task.details || task.errorMessage || `Started at ${new Date(task.startedAt).toLocaleString()}`}
+                </Typography>
+              </Collapse>
             </ListItem>
           ))}
         </List>
