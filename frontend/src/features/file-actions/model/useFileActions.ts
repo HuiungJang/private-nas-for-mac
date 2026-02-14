@@ -69,6 +69,24 @@ export const useFileActions = () => {
     },
   });
 
+  const createDirectoryMutation = useMutation({
+    mutationFn: async ({parentPath, name}: { parentPath: string; name: string }) => {
+      const taskId = startTask({type: 'file.mkdir', fileName: name});
+      try {
+        const result = await fileApi.createDirectory(parentPath, name);
+        completeTask(taskId);
+        return result;
+      } catch (e: any) {
+        failTask(taskId, e?.message || 'Create folder failed');
+        throw e;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+      showNotification('Folder created successfully', 'success');
+    },
+  });
+
   const moveFileMutation = useMutation({
     mutationFn: async ({sourcePath, destinationPath}: { sourcePath: string; destinationPath: string }) => {
       const taskId = startTask({type: 'file.move', sourcePath, destinationPath});
@@ -111,6 +129,8 @@ export const useFileActions = () => {
     isDeleting: deleteFilesMutation.isPending,
     uploadFile: uploadFileMutation.mutateAsync,
     isUploading: uploadFileMutation.isPending,
+    createDirectory: createDirectoryMutation.mutateAsync,
+    isCreatingDirectory: createDirectoryMutation.isPending,
     moveFile: moveFileMutation.mutateAsync,
     isMoving: moveFileMutation.isPending,
   };

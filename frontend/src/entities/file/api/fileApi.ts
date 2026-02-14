@@ -27,4 +27,8 @@ export const fileApi = {
       },
     });
   },
+
+  createDirectory: async (parentPath: string, name: string): Promise<void> => {
+    await apiClient.post('/admin/files/create-directory', {parentPath, name});
+  },
 };

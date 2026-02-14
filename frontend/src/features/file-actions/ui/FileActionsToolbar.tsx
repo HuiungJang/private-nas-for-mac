@@ -1,9 +1,22 @@
 import React, {useRef, useState} from 'react';
-import {Button, IconButton, Stack, Tooltip, useMediaQuery, useTheme} from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Stack,
+  TextField,
+  Tooltip,
+  useMediaQuery,
+  useTheme
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import {useFileActions} from '../model/useFileActions';
 import {AppButton} from '@/shared/ui';
 import {MoveFileModal} from './MoveFileModal';
@@ -23,9 +36,11 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                                                                       }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const {deleteFiles, isDeleting, uploadFile, isUploading} = useFileActions();
+  const {deleteFiles, isDeleting, uploadFile, isUploading, createDirectory, isCreatingDirectory} = useFileActions();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [isCreateDirModalOpen, setIsCreateDirModalOpen] = useState(false);
+  const [newDirectoryName, setNewDirectoryName] = useState('');
 
   const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete ${selectedFiles.size} items?`)) {
@@ -56,6 +71,35 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
       fileInputRef.current.value = '';
     }
   };
+
+  const validateDirectoryName = (name: string): string | null => {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Folder name is required.';
+    if (trimmed === '.' || trimmed === '..') return 'Folder name cannot be . or ..';
+    if (trimmed.includes('/') || trimmed.includes('\\')) return 'Folder name cannot include / or \\';
+    return null;
+  };
+
+  const handleCreateDirectory = async () => {
+    const error = validateDirectoryName(newDirectoryName);
+    if (error) return;
+
+    await createDirectory({parentPath: currentPath, name: newDirectoryName.trim()});
+    setIsCreateDirModalOpen(false);
+    setNewDirectoryName('');
+  };
+
+  const handleOpenCreateDirectoryModal = () => {
+    setIsCreateDirModalOpen(true);
+  };
+
+  const handleCloseCreateDirectoryModal = () => {
+    if (isCreatingDirectory) return;
+    setIsCreateDirModalOpen(false);
+    setNewDirectoryName('');
+  };
+
+  const directoryNameError = validateDirectoryName(newDirectoryName);
 
   return (
       <Stack direction="row" spacing={1}>
@@ -102,6 +146,52 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
           Upload
         </AppButton>
         )}
+
+        {isMobile ? (
+          <Tooltip title="New Folder">
+            <IconButton onClick={handleOpenCreateDirectoryModal} disabled={isCreatingDirectory} color="primary">
+              <CreateNewFolderIcon/>
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="outlined"
+            startIcon={<CreateNewFolderIcon/>}
+            onClick={handleOpenCreateDirectoryModal}
+            disabled={isCreatingDirectory}
+            sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
+          >
+            New Folder
+          </Button>
+        )}
+
+        <Dialog open={isCreateDirModalOpen} onClose={handleCloseCreateDirectoryModal} fullWidth maxWidth="xs">
+          <DialogTitle>Create New Folder</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Folder name"
+              fullWidth
+              value={newDirectoryName}
+              onChange={(e) => setNewDirectoryName(e.target.value)}
+              error={Boolean(directoryNameError)}
+              helperText={directoryNameError ?? 'Use a simple name like photos-2026'}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !directoryNameError && !isCreatingDirectory) {
+                  e.preventDefault();
+                  void handleCreateDirectory();
+                }
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseCreateDirectoryModal} disabled={isCreatingDirectory}>Cancel</Button>
+            <Button onClick={handleCreateDirectory} variant="contained" disabled={Boolean(directoryNameError) || isCreatingDirectory}>
+              Create
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {selectedFiles.size > 0 && (
             <>

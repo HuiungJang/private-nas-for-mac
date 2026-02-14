@@ -2,6 +2,7 @@ package com.manas.backend.context.file.infrastructure.web;
 
 import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserAccessor;
 import com.manas.backend.context.auth.infrastructure.security.AuthenticatedUserPrincipal;
+import com.manas.backend.context.file.application.port.in.CreateDirectoryUseCase;
 import com.manas.backend.context.file.application.port.in.DeleteFilesResult;
 import com.manas.backend.context.file.application.port.in.DeleteFilesUseCase;
 import com.manas.backend.context.file.application.port.in.FileListSort;
@@ -9,6 +10,7 @@ import com.manas.backend.context.file.application.port.in.ListDirectoryQuery;
 import com.manas.backend.context.file.application.port.in.ListDirectoryUseCase;
 import com.manas.backend.context.file.application.port.in.MoveFileUseCase;
 import com.manas.backend.context.file.domain.DirectoryListing;
+import com.manas.backend.context.file.infrastructure.web.dto.CreateDirectoryRequest;
 import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesRequest;
 import com.manas.backend.context.file.infrastructure.web.dto.DeleteFilesResponse;
 import com.manas.backend.context.file.infrastructure.web.dto.DirectoryListingDTO;
@@ -33,6 +35,7 @@ public class AdminFileController {
     private final ListDirectoryUseCase listDirectoryUseCase;
     private final DeleteFilesUseCase deleteFilesUseCase;
     private final MoveFileUseCase moveFileUseCase;
+    private final CreateDirectoryUseCase createDirectoryUseCase;
     private final FileMapper fileMapper;
     private final AuthenticatedUserAccessor authenticatedUserAccessor;
 
@@ -80,6 +83,17 @@ public class AdminFileController {
     ) {
         var userId = authenticatedUserAccessor.requiredUserId(user);
         moveFileUseCase.moveFile(request.sourcePath(), request.destinationPath(), userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/create-directory")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> createDirectory(
+            @RequestBody CreateDirectoryRequest request,
+            @AuthenticationPrincipal AuthenticatedUserPrincipal user
+    ) {
+        var userId = authenticatedUserAccessor.requiredUserId(user);
+        createDirectoryUseCase.createDirectory(request.parentPath(), request.name(), userId);
         return ResponseEntity.noContent().build();
     }
 }
