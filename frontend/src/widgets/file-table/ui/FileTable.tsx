@@ -21,6 +21,8 @@ import {
 import type {FileNode} from '@/entities/file/model/types';
 import {AppCard} from '@/shared/ui';
 import {FileIcon} from '@/entities/file/ui/FileIcon';
+import {FileThumbnail} from '@/entities/file/ui/FileThumbnail';
+import {isPreviewableMedia} from '@/entities/file/ui/mediaPreview';
 
 export type ViewMode = 'list' | 'grid';
 
@@ -209,7 +211,11 @@ export const FileTable: React.FC<FileTableProps> = ({
                       }}
                   >
                     <ListItemAvatar sx={{minWidth: 40, mr: 1}}>
-                      <FileIcon name={file.name} type={file.type}/>
+                      {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
+                        <FileThumbnail name={file.name} path={file.path} size={28}/>
+                      ) : (
+                        <FileIcon name={file.name} type={file.type}/>
+                      )}
                     </ListItemAvatar>
                     <ListItemText
                         primary={file.name}
@@ -273,7 +279,11 @@ export const FileTable: React.FC<FileTableProps> = ({
                             size="small"
                         />
                       </Box>
-                      <FileIcon name={file.name} type={file.type} sx={{fontSize: 64, mb: 1}}/>
+                      {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
+                        <FileThumbnail name={file.name} path={file.path} size={64} sx={{mb: 1}}/>
+                      ) : (
+                        <FileIcon name={file.name} type={file.type} sx={{fontSize: 64, mb: 1}}/>
+                      )}
                       <Typography
                           variant="body2"
                           align="center"
@@ -351,7 +361,11 @@ export const FileTable: React.FC<FileTableProps> = ({
                       />
                     </StyledTableCell>
                     <StyledTableCell>
-                      <FileIcon name={file.name} type={file.type}/>
+                      {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
+                        <FileThumbnail name={file.name} path={file.path} size={28}/>
+                      ) : (
+                        <FileIcon name={file.name} type={file.type}/>
+                      )}
                     </StyledTableCell>
                     <StyledTableCell component="th" scope="row" sx={{fontWeight: 500}}>
                       {file.name}
