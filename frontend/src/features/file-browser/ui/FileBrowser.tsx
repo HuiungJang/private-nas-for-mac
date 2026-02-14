@@ -38,6 +38,7 @@ import {FileThumbnail} from '@/entities/file/ui/FileThumbnail';
 import {isPreviewableMedia} from '@/entities/file/ui/mediaPreview';
 
 type SortMode = 'name-asc' | 'name-desc' | 'date-desc' | 'date-asc';
+type FilterPreset = 'all' | 'recent' | 'large' | 'media' | 'documents';
 
 const sortFiles = (items: FileNode[], mode: SortMode) => {
   const sorted = [...items];
@@ -76,6 +77,7 @@ export const FileBrowser: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [pathInput, setPathInput] = React.useState(currentPath);
   const [sortMode, setSortMode] = React.useState<SortMode>('name-asc');
+  const [filterPreset, setFilterPreset] = React.useState<FilterPreset>('all');
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
@@ -97,12 +99,28 @@ export const FileBrowser: React.FC = () => {
   const visibleFiles = React.useMemo(() => {
     if (!data?.items) return [];
 
-    const filtered = data.items.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
-    );
+    const now = Date.now();
+    const filtered = data.items.filter((item) => {
+      const q = searchQuery.trim().toLowerCase();
+      if (q && !item.name.toLowerCase().includes(q)) return false;
+
+      if (filterPreset === 'recent') {
+        return now - new Date(item.lastModified).getTime() <= 1000 * 60 * 60 * 24 * 7;
+      }
+      if (filterPreset === 'large') {
+        return item.type === 'FILE' && item.size >= 100 * 1024 * 1024;
+      }
+      if (filterPreset === 'media') {
+        return /\.(jpg|jpeg|png|gif|webp|mp4|mov|mkv|mp3|wav)$/i.test(item.name);
+      }
+      if (filterPreset === 'documents') {
+        return /\.(pdf|doc|docx|txt|md|xls|xlsx|ppt|pptx)$/i.test(item.name);
+      }
+      return true;
+    });
 
     return sortFiles(filtered, sortMode);
-  }, [data?.items, searchQuery, sortMode]);
+  }, [data?.items, searchQuery, sortMode, filterPreset]);
 
   const handleSelectionIntent = (name: string, index: number, options: {shiftKey: boolean; toggleKey: boolean}) => {
     setFocusedFile(visibleFiles[index] ?? null);
@@ -402,6 +420,17 @@ export const FileBrowser: React.FC = () => {
               <MenuItem value="name-desc">Name (Z-A)</MenuItem>
               <MenuItem value="date-desc">Date (Newest)</MenuItem>
               <MenuItem value="date-asc">Date (Oldest)</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{minWidth: {xs: '100%', md: 190}}}>
+            <InputLabel id="file-preset-label">Preset</InputLabel>
+            <Select labelId="file-preset-label" value={filterPreset} label="Preset" onChange={(e) => setFilterPreset(e.target.value as FilterPreset)}>
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="recent">Recent changes (7d)</MenuItem>
+              <MenuItem value="large">Large files (&ge;100MB)</MenuItem>
+              <MenuItem value="media">Media</MenuItem>
+              <MenuItem value="documents">Documents</MenuItem>
             </Select>
           </FormControl>
 
