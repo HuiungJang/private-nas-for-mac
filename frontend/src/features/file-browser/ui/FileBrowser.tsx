@@ -618,7 +618,7 @@ export const FileBrowser: React.FC = () => {
         </Stack>
       </Stack>
 
-      <Paper variant="outlined" sx={{ mb: 2, p: 1 }}>
+      <Paper variant="outlined" sx={{ mb: 2, p: 1.5, borderRadius: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ overflowX: 'auto' }}>
           {tabs.map((tab, i) => {
             const isActive = tab.id === activeTabId;
@@ -698,7 +698,7 @@ export const FileBrowser: React.FC = () => {
       )}
 
       {data && (
-        <Paper variant="outlined" sx={{ mb: 2, p: 1.5 }}>
+        <Paper variant="outlined" sx={{ mb: 2, p: 1.5, borderRadius: 2 }}>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
             <Box sx={{ minWidth: { md: 240 } }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -903,7 +903,10 @@ export const FileBrowser: React.FC = () => {
       </Stack>
 
       {selectedFiles.size > 0 && (
-        <Paper variant="outlined" sx={{ mb: 2, p: 1.5, backgroundColor: 'primary.50' }}>
+        <Paper
+          variant="outlined"
+          sx={{ mb: 2, p: 1.5, backgroundColor: 'primary.50', borderRadius: 2 }}
+        >
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
@@ -1036,7 +1039,7 @@ export const FileBrowser: React.FC = () => {
 
           <Paper
             variant="outlined"
-            sx={{ width: { xs: '100%', lg: 300 }, p: 2, alignSelf: 'flex-start' }}
+            sx={{ width: { xs: '100%', lg: 300 }, p: 2, borderRadius: 2, alignSelf: 'flex-start' }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
               Details
