@@ -54,6 +54,32 @@ const StatCard = ({title, value, icon, subValue}: {
 );
 
 export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isLoading}) => {
+  const [previewTrend, setPreviewTrend] = React.useState<number[]>([]);
+  const [auditTrend, setAuditTrend] = React.useState<number[]>([]);
+
+  React.useEffect(() => {
+    if (!data) return;
+
+    setPreviewTrend((prev) => [...prev, data.previewCacheHitRatio * 100].slice(-24));
+    if (data.auditLogsQueryP95Ms >= 0) {
+      setAuditTrend((prev) => [...prev, data.auditLogsQueryP95Ms].slice(-24));
+    }
+  }, [data]);
+
+  const toSparkline = (values: number[]) => {
+    if (values.length === 0) return '-';
+    const bars = '▁▂▃▄▅▆▇█';
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = Math.max(1e-9, max - min);
+    return values
+      .map((v) => {
+        const idx = Math.min(bars.length - 1, Math.floor(((v - min) / range) * (bars.length - 1)));
+        return bars[idx];
+      })
+      .join('');
+  };
+
   if (isLoading || !data) {
     return (
         <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
@@ -65,6 +91,9 @@ export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isL
   const memoryPercent = ((data.memoryUsed / data.memoryTotal) * 100).toFixed(1);
   const storagePercent = ((data.storageUsed / data.storageTotal) * 100).toFixed(1);
   const previewHitRatioPercent = (data.previewCacheHitRatio * 100).toFixed(1);
+
+  const previewTrendText = toSparkline(previewTrend);
+  const auditTrendText = toSparkline(auditTrend);
 
   return (
       <Stack direction={{xs: 'column', md: 'row'}} spacing={3} flexWrap="wrap" useFlexGap>
@@ -96,7 +125,7 @@ export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isL
           <StatCard
               title="Preview Cache"
               value={`${previewHitRatioPercent}% hit`}
-              subValue={`hit ${data.previewCacheHit.toFixed(0)} / miss ${data.previewCacheMiss.toFixed(0)}`}
+              subValue={`hit ${data.previewCacheHit.toFixed(0)} / miss ${data.previewCacheMiss.toFixed(0)} • ${previewTrendText}`}
               icon={<InsightsIcon color="info"/>}
           />
         </Box>
@@ -105,7 +134,7 @@ export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isL
           <StatCard
               title="Audit Query P95"
               value={data.auditLogsQueryP95Ms >= 0 ? `${data.auditLogsQueryP95Ms.toFixed(1)} ms` : 'N/A'}
-              subValue="/api/admin/system/audit-logs latency"
+              subValue={`/api/admin/system/audit-logs latency • ${auditTrendText}`}
               icon={<QueryStatsIcon color="warning"/>}
           />
         </Box>
