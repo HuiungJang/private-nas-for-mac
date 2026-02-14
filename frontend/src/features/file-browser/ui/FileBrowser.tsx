@@ -287,9 +287,21 @@ export const FileBrowser: React.FC = () => {
 
   const navigateToPath = (path: string) => navigateTo(path);
 
+  const formatTabPath = (path: string) => {
+    if (path.length <= 26) return path;
+    return `…${path.slice(-25)}`;
+  };
+
   const openNewTab = () => {
-    const nextId = `tab-${Date.now()}`;
     const nextPath = currentPath;
+    const existing = tabs.find((tab) => tab.path === nextPath);
+    if (existing) {
+      setActiveTabId(existing.id);
+      navigateToPath(existing.path);
+      return;
+    }
+
+    const nextId = `tab-${Date.now()}`;
     setTabs((prev) => [...prev, { id: nextId, path: nextPath }]);
     setActiveTabId(nextId);
   };
@@ -520,16 +532,30 @@ export const FileBrowser: React.FC = () => {
 
       <Paper variant="outlined" sx={{ mb: 2, p: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ overflowX: 'auto' }}>
-          {tabs.map((tab, i) => (
-            <Chip
-              key={tab.id}
-              label={`Tab ${i + 1}: ${tab.path}`}
-              color={tab.id === activeTabId ? 'primary' : 'default'}
-              onClick={() => switchTab(tab.id)}
-              onDelete={tabs.length > 1 ? () => closeTab(tab.id) : undefined}
-              variant={tab.id === activeTabId ? 'filled' : 'outlined'}
-            />
-          ))}
+          {tabs.map((tab, i) => {
+            const isActive = tab.id === activeTabId;
+            return (
+              <Tooltip key={tab.id} title={tab.path} arrow>
+                <Chip
+                  label={`Tab ${i + 1}: ${formatTabPath(tab.path)}`}
+                  color={isActive ? 'primary' : 'default'}
+                  onClick={() => switchTab(tab.id)}
+                  onDelete={tabs.length > 1 ? () => closeTab(tab.id) : undefined}
+                  variant={isActive ? 'filled' : 'outlined'}
+                  sx={{
+                    fontWeight: isActive ? 700 : 500,
+                    borderWidth: isActive ? 2 : 1,
+                    maxWidth: 280,
+                    '& .MuiChip-label': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
+                  }}
+                />
+              </Tooltip>
+            );
+          })}
           <Button size="small" onClick={openNewTab}>
             + New Tab
           </Button>
