@@ -564,6 +564,13 @@ export const FileBrowser: React.FC = () => {
     }
   };
 
+  const handleQuickCreateFolder = async () => {
+    const name = window.prompt('New folder name');
+    if (!name?.trim()) return;
+    await createDirectory({ parentPath: currentPath, name: name.trim() });
+    await refetch();
+  };
+
   return (
     <Box
       onDragOver={handleDragOverBrowser}
@@ -981,13 +988,27 @@ export const FileBrowser: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {isTrashView
               ? 'Deleted items will appear here. Restore them anytime.'
-              : 'Upload files or create a new folder to get started.'}
+              : currentPath === '/'
+                ? 'Start by uploading files or creating your first folder.'
+                : 'This folder is empty. Upload files here or create a sub-folder.'}
           </Typography>
-          <Stack direction="row" spacing={1} justifyContent="center">
-            <Button variant="outlined" onClick={() => navigateTo('/')}>
-              Go to root
-            </Button>
-            <Button variant="contained" onClick={() => void refetch()}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            justifyContent="center"
+            alignItems="center"
+          >
+            {!isTrashView && (
+              <>
+                <Button variant="contained" onClick={() => void handleQuickCreateFolder()}>
+                  New Folder
+                </Button>
+                <Button variant="outlined" onClick={() => setIsDropzoneActive(true)}>
+                  Upload files (drag & drop)
+                </Button>
+              </>
+            )}
+            <Button variant="text" onClick={() => void refetch()}>
               Refresh
             </Button>
           </Stack>
