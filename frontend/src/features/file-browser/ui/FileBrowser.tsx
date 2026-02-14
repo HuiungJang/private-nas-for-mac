@@ -893,9 +893,15 @@ export const FileBrowser: React.FC = () => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             {!focusedFile ? (
-              <Typography variant="body2" color="text.secondary">
-                Select or right-click a file to inspect details.
-              </Typography>
+              <Stack spacing={1.2}>
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  Nothing selected yet
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Select a file/folder to inspect metadata and run quick actions like rename, move,
+                  or trash.
+                </Typography>
+              </Stack>
             ) : (
               <Stack spacing={1.2}>
                 {focusedFile.type === 'FILE' && isPreviewableMedia(focusedFile.name) && (
@@ -906,8 +912,14 @@ export const FileBrowser: React.FC = () => {
                 <Typography variant="body2">
                   <strong>Name:</strong> {focusedFile.name}
                 </Typography>
-                <Typography variant="body2">
-                  <strong>Type:</strong> {focusedFile.type}
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <strong>Type:</strong>
+                  <Chip
+                    size="small"
+                    label={focusedFile.type === 'DIRECTORY' ? 'Folder' : 'File'}
+                    color={focusedFile.type === 'DIRECTORY' ? 'info' : 'default'}
+                    variant={focusedFile.type === 'DIRECTORY' ? 'filled' : 'outlined'}
+                  />
                 </Typography>
                 <Typography variant="body2">
                   <strong>Size:</strong>{' '}
@@ -928,7 +940,7 @@ export const FileBrowser: React.FC = () => {
                     ? `${currentPath}${focusedFile.name}`
                     : `${currentPath}/${focusedFile.name}`}
                 </Typography>
-                <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ pt: 1 }}>
                   <Button size="small" onClick={() => void handleShareFocused()}>
                     Copy path
                   </Button>
@@ -937,6 +949,31 @@ export const FileBrowser: React.FC = () => {
                       Open
                     </Button>
                   )}
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setRenameTarget(focusedFile);
+                      setRenameValue(focusedFile.name);
+                    }}
+                  >
+                    Rename
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      handleSelectionChange(new Set([focusedFile.name]));
+                      setIsMoveModalOpen(true);
+                    }}
+                  >
+                    Move
+                  </Button>
+                  <Button
+                    size="small"
+                    color={isTrashView ? 'error' : 'warning'}
+                    onClick={() => void handleDeleteFocused()}
+                  >
+                    {isTrashView ? 'Delete permanently' : 'Move to trash'}
+                  </Button>
                 </Stack>
               </Stack>
             )}
