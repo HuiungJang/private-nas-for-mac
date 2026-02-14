@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, CircularProgress, Stack, Typography} from '@mui/material';
+import {Box, CircularProgress, Stack, ToggleButton, ToggleButtonGroup, Typography} from '@mui/material';
 import MemoryIcon from '@mui/icons-material/Memory';
 import StorageIcon from '@mui/icons-material/Storage';
 import SpeedIcon from '@mui/icons-material/Speed';
@@ -56,13 +56,14 @@ const StatCard = ({title, value, icon, subValue}: {
 export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isLoading}) => {
   const [previewTrend, setPreviewTrend] = React.useState<number[]>([]);
   const [auditTrend, setAuditTrend] = React.useState<number[]>([]);
+  const [trendRange, setTrendRange] = React.useState<'2m' | '10m'>('2m');
 
   React.useEffect(() => {
     if (!data) return;
 
-    setPreviewTrend((prev) => [...prev, data.previewCacheHitRatio * 100].slice(-24));
+    setPreviewTrend((prev) => [...prev, data.previewCacheHitRatio * 100].slice(-120));
     if (data.auditLogsQueryP95Ms >= 0) {
-      setAuditTrend((prev) => [...prev, data.auditLogsQueryP95Ms].slice(-24));
+      setAuditTrend((prev) => [...prev, data.auditLogsQueryP95Ms].slice(-120));
     }
   }, [data]);
 
@@ -92,10 +93,26 @@ export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isL
   const storagePercent = ((data.storageUsed / data.storageTotal) * 100).toFixed(1);
   const previewHitRatioPercent = (data.previewCacheHitRatio * 100).toFixed(1);
 
-  const previewTrendText = toSparkline(previewTrend);
-  const auditTrendText = toSparkline(auditTrend);
+  const sampleWindow = trendRange === '2m' ? 24 : 120;
+  const previewTrendText = toSparkline(previewTrend.slice(-sampleWindow));
+  const auditTrendText = toSparkline(auditTrend.slice(-sampleWindow));
 
   return (
+      <Box>
+        <Box sx={{display: 'flex', justifyContent: 'flex-end', mb: 2}}>
+          <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={trendRange}
+              onChange={(_e, next) => {
+                if (next) setTrendRange(next);
+              }}
+          >
+            <ToggleButton value="2m">2m</ToggleButton>
+            <ToggleButton value="10m">10m</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
       <Stack direction={{xs: 'column', md: 'row'}} spacing={3} flexWrap="wrap" useFlexGap>
         <Box flex={1}>
           <StatCard
@@ -139,5 +156,6 @@ export const SystemHealthWidget: React.FC<SystemHealthWidgetProps> = ({data, isL
           />
         </Box>
       </Stack>
+      </Box>
   );
 };
