@@ -78,6 +78,12 @@ export const FileBrowser: React.FC = () => {
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
   const [draggingCount, setDraggingCount] = React.useState(0);
   const [pendingMove, setPendingMove] = React.useState<{ sourceNames: string[]; targetDirectoryName: string } | null>(null);
+  const [favorites, setFavorites] = React.useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('fileBrowser.favorites') ?? '[]'); } catch { return []; }
+  });
+  const [recentPaths, setRecentPaths] = React.useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('fileBrowser.recentPaths') ?? '[]'); } catch { return []; }
+  });
   const [selectionAnchorIndex, setSelectionAnchorIndex] = React.useState<number | null>(null);
   const [isMoveModalOpen, setIsMoveModalOpen] = React.useState(false);
   const [renameTarget, setRenameTarget] = React.useState<FileNode | null>(null);
@@ -136,6 +142,24 @@ export const FileBrowser: React.FC = () => {
       setSelectionAnchorIndex(null);
     }
   }, [selectedFiles]);
+
+  React.useEffect(() => {
+    localStorage.setItem('fileBrowser.favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  React.useEffect(() => {
+    setRecentPaths((prev) => {
+      const next = [currentPath, ...prev.filter((p) => p !== currentPath)].slice(0, 8);
+      localStorage.setItem('fileBrowser.recentPaths', JSON.stringify(next));
+      return next;
+    });
+  }, [currentPath]);
+
+  const navigateToPath = (path: string) => navigateTo(path);
+
+  const toggleFavoritePath = () => {
+    setFavorites((prev) => prev.includes(currentPath) ? prev.filter((p) => p !== currentPath) : [currentPath, ...prev]);
+  };
 
   const closeContextMenu = () => setContextAnchor(null);
 
@@ -287,6 +311,34 @@ export const FileBrowser: React.FC = () => {
           <Alert severity="info" sx={{mb: 2}}>
             Dragging {draggingCount} item(s). Drop on a folder to move.
           </Alert>
+        )}
+
+        {data && (
+          <Paper variant="outlined" sx={{mb: 2, p: 1.5}}>
+            <Stack direction={{xs: 'column', md: 'row'}} spacing={3}>
+              <Box sx={{minWidth: {md: 240}}}>
+                <Typography variant="subtitle2" sx={{mb: 1}}>Favorites</Typography>
+                <Stack spacing={0.5}>
+                  {favorites.length === 0 ? <Typography variant="caption" color="text.secondary">No favorites yet</Typography> : favorites.map((p) => (
+                    <Button key={p} size="small" variant="text" sx={{justifyContent: 'flex-start'}} onClick={() => navigateToPath(p)}>{p}</Button>
+                  ))}
+                </Stack>
+              </Box>
+              <Box sx={{minWidth: {md: 280}}}>
+                <Typography variant="subtitle2" sx={{mb: 1}}>Recent paths</Typography>
+                <Stack spacing={0.5}>
+                  {recentPaths.map((p) => (
+                    <Button key={p} size="small" variant="text" sx={{justifyContent: 'flex-start'}} onClick={() => navigateToPath(p)}>{p}</Button>
+                  ))}
+                </Stack>
+              </Box>
+              <Box sx={{display: 'flex', alignItems: 'flex-start'}}>
+                <Button size="small" variant={favorites.includes(currentPath) ? 'contained' : 'outlined'} onClick={toggleFavoritePath}>
+                  {favorites.includes(currentPath) ? 'Unfavorite current path' : 'Favorite current path'}
+                </Button>
+              </Box>
+            </Stack>
+          </Paper>
         )}
 
         {isDropzoneActive && (
