@@ -350,12 +350,29 @@ export const FileBrowser: React.FC = () => {
         )}
 
         {error && (
-            <Alert severity="error" sx={{mb: 2}}>
-              Failed to load files
+            <Alert
+              severity="error"
+              sx={{mb: 2}}
+              action={<Button color="inherit" size="small" onClick={() => void refetch()}>Retry</Button>}
+            >
+              Failed to load files. Please check network/session and try again.
             </Alert>
         )}
 
-        {data && (
+        {data && visibleFiles.length === 0 && (
+          <Paper variant="outlined" sx={{p: 4, mb: 2, textAlign: 'center'}}>
+            <Typography variant="h6" sx={{mb: 1}}>This folder is empty</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
+              Upload files or create a new folder to get started.
+            </Typography>
+            <Stack direction="row" spacing={1} justifyContent="center">
+              <Button variant="outlined" onClick={() => navigateTo('/')}>Go to root</Button>
+              <Button variant="contained" onClick={() => void refetch()}>Refresh</Button>
+            </Stack>
+          </Paper>
+        )}
+
+        {data && visibleFiles.length > 0 && (
           <Stack direction={{xs: 'column', lg: 'row'}} spacing={2}>
             <Box sx={{flex: 1}}>
               <FileTable
