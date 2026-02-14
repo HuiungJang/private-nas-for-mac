@@ -136,6 +136,18 @@ export const FileBrowser: React.FC = () => {
   const [showHiddenFiles, setShowHiddenFiles] = React.useState(() => {
     return localStorage.getItem('fileBrowser.showHiddenFiles') === 'true';
   });
+  const [visibleColumns, setVisibleColumns] = React.useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fileBrowser.visibleColumns') ?? '{}');
+      return {
+        size: saved.size ?? true,
+        date: saved.date ?? true,
+        owner: saved.owner ?? window.innerWidth >= 900,
+      };
+    } catch {
+      return { size: true, date: true, owner: window.innerWidth >= 900 };
+    }
+  });
   const [isMoveModalOpen, setIsMoveModalOpen] = React.useState(false);
   const [renameTarget, setRenameTarget] = React.useState<FileNode | null>(null);
   const [renameValue, setRenameValue] = React.useState('');
@@ -286,6 +298,10 @@ export const FileBrowser: React.FC = () => {
       localStorage.setItem('fileBrowser.presetHintDismissed', 'true');
     }
   }, [showPresetHint]);
+
+  React.useEffect(() => {
+    localStorage.setItem('fileBrowser.visibleColumns', JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   React.useEffect(() => {
     setRecentPaths((prev) => {
@@ -780,6 +796,30 @@ export const FileBrowser: React.FC = () => {
         >
           {showHiddenFiles ? 'Hide hidden files' : 'Show hidden files'}
         </Button>
+
+        <Stack direction="row" spacing={0.5}>
+          <Button
+            size="small"
+            variant={visibleColumns.size ? 'contained' : 'outlined'}
+            onClick={() => setVisibleColumns((prev) => ({ ...prev, size: !prev.size }))}
+          >
+            Size
+          </Button>
+          <Button
+            size="small"
+            variant={visibleColumns.date ? 'contained' : 'outlined'}
+            onClick={() => setVisibleColumns((prev) => ({ ...prev, date: !prev.date }))}
+          >
+            Date
+          </Button>
+          <Button
+            size="small"
+            variant={visibleColumns.owner ? 'contained' : 'outlined'}
+            onClick={() => setVisibleColumns((prev) => ({ ...prev, owner: !prev.owner }))}
+          >
+            Owner
+          </Button>
+        </Stack>
       </Stack>
 
       {showPresetHint && (
@@ -928,6 +968,7 @@ export const FileBrowser: React.FC = () => {
               files={visibleFiles}
               onNavigate={navigateTo}
               viewMode={viewMode}
+              visibleColumns={visibleColumns}
               selectedFiles={selectedFiles}
               onSelectionChange={handleSelectionChange}
               onSelectionIntent={handleSelectionIntent}
