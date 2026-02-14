@@ -76,6 +76,8 @@ export const FileBrowser: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [pathInput, setPathInput] = React.useState(currentPath);
+  const [tabs, setTabs] = React.useState<Array<{id: string; path: string}>>([{id: 'tab-1', path: currentPath}]);
+  const [activeTabId, setActiveTabId] = React.useState('tab-1');
   const [sortMode, setSortMode] = React.useState<SortMode>('name-asc');
   const [filterPreset, setFilterPreset] = React.useState<FilterPreset>('all');
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
@@ -170,6 +172,10 @@ export const FileBrowser: React.FC = () => {
   }, [currentPath]);
 
   React.useEffect(() => {
+    setTabs((prev) => prev.map((t) => t.id === activeTabId ? {...t, path: currentPath} : t));
+  }, [activeTabId, currentPath]);
+
+  React.useEffect(() => {
     localStorage.setItem('fileBrowser.favorites', JSON.stringify(favorites));
   }, [favorites]);
 
@@ -182,6 +188,30 @@ export const FileBrowser: React.FC = () => {
   }, [currentPath]);
 
   const navigateToPath = (path: string) => navigateTo(path);
+
+  const openNewTab = () => {
+    const nextId = `tab-${Date.now()}`;
+    const nextPath = currentPath;
+    setTabs((prev) => [...prev, {id: nextId, path: nextPath}]);
+    setActiveTabId(nextId);
+  };
+
+  const switchTab = (id: string) => {
+    const tab = tabs.find((t) => t.id === id);
+    if (!tab) return;
+    setActiveTabId(id);
+    navigateToPath(tab.path);
+  };
+
+  const closeTab = (id: string) => {
+    if (tabs.length === 1) return;
+    const next = tabs.filter((t) => t.id !== id);
+    setTabs(next);
+    if (activeTabId === id) {
+      setActiveTabId(next[0].id);
+      navigateToPath(next[0].path);
+    }
+  };
 
   const toggleFavoritePath = () => {
     setFavorites((prev) => prev.includes(currentPath) ? prev.filter((p) => p !== currentPath) : [currentPath, ...prev]);
@@ -326,6 +356,22 @@ export const FileBrowser: React.FC = () => {
           </ToggleButtonGroup>
         </Stack>
         </Stack>
+
+        <Paper variant="outlined" sx={{mb: 2, p: 1}}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{overflowX: 'auto'}}>
+            {tabs.map((tab, i) => (
+              <Chip
+                key={tab.id}
+                label={`Tab ${i + 1}: ${tab.path}`}
+                color={tab.id === activeTabId ? 'primary' : 'default'}
+                onClick={() => switchTab(tab.id)}
+                onDelete={tabs.length > 1 ? () => closeTab(tab.id) : undefined}
+                variant={tab.id === activeTabId ? 'filled' : 'outlined'}
+              />
+            ))}
+            <Button size="small" onClick={openNewTab}>+ New Tab</Button>
+          </Stack>
+        </Paper>
 
         {data && (
             <Box mb={2}>
