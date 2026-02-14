@@ -78,8 +78,16 @@ export const FileBrowser: React.FC = () => {
   const [pathInput, setPathInput] = React.useState(currentPath);
   const [tabs, setTabs] = React.useState<Array<{id: string; path: string}>>([{id: 'tab-1', path: currentPath}]);
   const [activeTabId, setActiveTabId] = React.useState('tab-1');
-  const [sortMode, setSortMode] = React.useState<SortMode>('name-asc');
-  const [filterPreset, setFilterPreset] = React.useState<FilterPreset>('all');
+  const [sortMode, setSortMode] = React.useState<SortMode>(() => {
+    const saved = localStorage.getItem('fileBrowser.sortMode');
+    if (saved === 'name-asc' || saved === 'name-desc' || saved === 'date-desc' || saved === 'date-asc') return saved;
+    return 'name-asc';
+  });
+  const [filterPreset, setFilterPreset] = React.useState<FilterPreset>(() => {
+    const saved = localStorage.getItem('fileBrowser.filterPreset');
+    if (saved === 'all' || saved === 'recent' || saved === 'large' || saved === 'media' || saved === 'documents') return saved;
+    return 'all';
+  });
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
@@ -176,8 +184,49 @@ export const FileBrowser: React.FC = () => {
   }, [activeTabId, currentPath]);
 
   React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+      if (isTyping) return;
+
+      if (event.key === 'Delete' && selectedFiles.size > 0) {
+        event.preventDefault();
+        void handleDeleteSelection();
+      }
+
+      if (event.key === 'F2' && focusedFile && selectedFiles.size <= 1) {
+        event.preventDefault();
+        setRenameTarget(focusedFile);
+        setRenameValue(focusedFile.name);
+      }
+
+      if (event.key === 'Enter' && focusedFile?.type === 'DIRECTORY') {
+        event.preventDefault();
+        navigateTo(focusedFile.name);
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c' && focusedFile) {
+        event.preventDefault();
+        void navigator.clipboard.writeText(focusedFile.name);
+        showNotification('Copied selected name', 'success');
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [focusedFile, selectedFiles, currentPath]);
+
+  React.useEffect(() => {
     localStorage.setItem('fileBrowser.favorites', JSON.stringify(favorites));
   }, [favorites]);
+
+  React.useEffect(() => {
+    localStorage.setItem('fileBrowser.sortMode', sortMode);
+  }, [sortMode]);
+
+  React.useEffect(() => {
+    localStorage.setItem('fileBrowser.filterPreset', filterPreset);
+  }, [filterPreset]);
 
   React.useEffect(() => {
     setRecentPaths((prev) => {
@@ -231,6 +280,13 @@ export const FileBrowser: React.FC = () => {
     if (!targetPath || !focusedFile) return;
     await deleteFiles([targetPath]);
     setContextAnchor(null);
+  };
+
+  const handleDeleteSelection = async () => {
+    const targets = Array.from(selectedFiles).map((name) => joinPath(currentPath, name));
+    if (targets.length === 0) return;
+    await deleteFiles(targets);
+    clearSelection();
   };
 
   const handleShareFocused = async () => {
@@ -487,11 +543,32 @@ export const FileBrowser: React.FC = () => {
           />
         </Stack>
 
+        <Stack direction="row" spacing={1} sx={{mb: 2, overflowX: 'auto'}}>
+          {([
+            {key: 'recent', label: 'Recent (7d)'},
+            {key: 'large', label: 'Large (≥100MB)'},
+            {key: 'media', label: 'Media'},
+            {key: 'documents', label: 'Documents'},
+          ] as const).map((preset) => (
+            <Chip
+              key={preset.key}
+              label={preset.label}
+              clickable
+              color={filterPreset === preset.key ? 'primary' : 'default'}
+              variant={filterPreset === preset.key ? 'filled' : 'outlined'}
+              onClick={() => setFilterPreset((prev) => (prev === preset.key ? 'all' : preset.key))}
+            />
+          ))}
+          {filterPreset !== 'all' && (
+            <Button size="small" onClick={() => setFilterPreset('all')}>Clear preset</Button>
+          )}
+        </Stack>
+
         {selectedFiles.size > 0 && (
           <Paper variant="outlined" sx={{mb: 2, p: 1.5, backgroundColor: 'primary.50'}}>
             <Stack direction={{xs: 'column', sm: 'row'}} spacing={1} alignItems={{xs: 'stretch', sm: 'center'}} justifyContent="space-between">
               <Typography variant="body2" sx={{fontWeight: 600}}>
-                {selectedFiles.size} item(s) selected · Shift for range, Cmd/Ctrl for toggle
+                {selectedFiles.size} item(s) selected · Shift for range, Cmd/Ctrl for toggle · Delete/F2/Enter shortcuts enabled
               </Typography>
               <Stack direction="row" spacing={1}>
                 <Button size="small" onClick={() => handleSelectionChange(new Set(visibleFiles.map((f) => f.name)))}>Select All Visible</Button>
