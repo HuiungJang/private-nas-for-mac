@@ -8,6 +8,8 @@ app:
   storage:
     root: /mnt/host_volumes
     cache-dir: ${APP_STORAGE_CACHE_DIR:/tmp/nas-cache}
+  monitoring:
+    health-cache-ttl-ms: ${APP_MONITORING_HEALTH_CACHE_TTL_MS:2000}
   security:
     bootstrap-admin-password: ${APP_SECURITY_BOOTSTRAP_ADMIN_PASSWORD:}
 
@@ -28,6 +30,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
+    open-in-view: false
     properties:
       hibernate:
         format_sql: false
