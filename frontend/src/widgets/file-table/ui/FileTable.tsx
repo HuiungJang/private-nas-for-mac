@@ -105,6 +105,22 @@ export const FileTable: React.FC<FileTableProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [dragOverDir, setDragOverDir] = React.useState<string | null>(null);
+  const INITIAL_RENDER_COUNT = 300;
+  const RENDER_BATCH = 200;
+  const [renderCount, setRenderCount] = React.useState(INITIAL_RENDER_COUNT);
+
+  React.useEffect(() => {
+    setRenderCount(INITIAL_RENDER_COUNT);
+  }, [files.length, viewMode, isMobile]);
+
+  const renderedFiles = files.slice(0, renderCount);
+
+  const handleListScrollLoadMore = (event: React.UIEvent<HTMLElement>) => {
+    const el = event.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 80) {
+      setRenderCount((prev) => Math.min(files.length, prev + RENDER_BATCH));
+    }
+  };
 
   const handleRowClick = (file: FileNode) => {
     if (file.type === 'DIRECTORY') {
@@ -178,8 +194,8 @@ export const FileTable: React.FC<FileTableProps> = ({
   if (isMobile) {
     return (
         <AppCard sx={{p: 0, overflow: 'hidden'}}>
-          <List disablePadding>
-            {files.map((file, index) => (
+          <List disablePadding sx={{maxHeight: '70vh', overflowY: 'auto'}} onScroll={handleListScrollLoadMore}>
+            {renderedFiles.map((file, index) => (
                 <ListItem
                     key={file.name}
                     disablePadding
@@ -205,7 +221,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                       }}
                       sx={{
                         borderBottom:
-                            index !== files.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
+                            index !== renderedFiles.length - 1 ? `1px solid ${theme.palette.divider}` : 'none',
                         py: 1.5,
                         backgroundColor: dragOverDir === file.name ? `${theme.palette.primary.main}22` : undefined,
                         outline: dragOverDir === file.name ? `2px dashed ${theme.palette.primary.main}` : undefined,
@@ -248,9 +264,11 @@ export const FileTable: React.FC<FileTableProps> = ({
               md: 'repeat(4, 1fr)',
               lg: 'repeat(6, 1fr)'
             },
-            gap: 2
-          }}>
-            {files.map((file) => {
+            gap: 2,
+            maxHeight: '70vh',
+            overflowY: 'auto'
+          }} onScroll={handleListScrollLoadMore}>
+            {renderedFiles.map((file) => {
               const isSelected = selectedFiles.has(file.name);
               return (
                   <Box key={file.name}>
@@ -317,7 +335,7 @@ export const FileTable: React.FC<FileTableProps> = ({
 
   // Desktop View: Table (List)
   return (
-      <TableContainer component={AppCard} sx={{overflow: 'hidden'}}>
+      <TableContainer component={AppCard} sx={{overflow: 'auto', maxHeight: '70vh'}} onScroll={handleListScrollLoadMore}>
         <Table sx={{minWidth: 650}} aria-label="file table">
           <TableHead>
             <TableRow>
@@ -336,7 +354,7 @@ export const FileTable: React.FC<FileTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {files.map((file) => {
+            {renderedFiles.map((file) => {
               const isSelected = selectedFiles.has(file.name);
               return (
                   <StyledTableRow

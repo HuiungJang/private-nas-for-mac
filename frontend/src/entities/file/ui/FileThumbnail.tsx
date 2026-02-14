@@ -5,6 +5,7 @@ import {API_URL} from '@/shared/api/axios';
 import {useAuthStore} from '@/entities/user/model/store';
 import {FileIcon} from './FileIcon';
 import {isImageFile, isVideoFile} from './mediaPreview';
+import {getCachedBlob} from './thumbnailCache';
 
 interface FileThumbnailProps {
   name: string;
@@ -20,6 +21,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
   const [inView, setInView] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const hoverTimerRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     if (!isImageFile(name) && !isVideoFile(name)) {
@@ -45,6 +47,14 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
   }, [name]);
 
   React.useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current !== null) {
+        window.clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
+
+  React.useEffect(() => {
     if (!inView) return;
     if (!isImageFile(name) && !isVideoFile(name)) return;
 
@@ -63,15 +73,15 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
     const controller = new AbortController();
     setLoading(true);
 
-    fetch(endpoint, {
-      method: 'GET',
-      headers: {Authorization: `Bearer ${token}`},
-      signal: controller.signal,
+    getCachedBlob(endpoint, async () => {
+      const res = await fetch(endpoint, {
+        method: 'GET',
+        headers: {Authorization: `Bearer ${token}`},
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`preview fetch failed: ${res.status}`);
+      return res.blob();
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`preview fetch failed: ${res.status}`);
-        return res.blob();
-      })
       .then((blob) => {
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
@@ -125,9 +135,18 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
           playsInline
           preload="metadata"
           onMouseEnter={() => {
-            void videoRef.current?.play().catch(() => undefined);
+            if (hoverTimerRef.current !== null) {
+              window.clearTimeout(hoverTimerRef.current);
+            }
+            hoverTimerRef.current = window.setTimeout(() => {
+              void videoRef.current?.play().catch(() => undefined);
+            }, 150);
           }}
           onMouseLeave={() => {
+            if (hoverTimerRef.current !== null) {
+              window.clearTimeout(hoverTimerRef.current);
+              hoverTimerRef.current = null;
+            }
             if (videoRef.current) {
               videoRef.current.pause();
               videoRef.current.currentTime = 0;
