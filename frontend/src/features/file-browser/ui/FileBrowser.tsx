@@ -79,6 +79,7 @@ export const FileBrowser: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [pathInput, setPathInput] = React.useState(currentPath);
+  const [pathInputError, setPathInputError] = React.useState<string | null>(null);
   const [tabs, setTabs] = React.useState<Array<{ id: string; path: string }>>([
     { id: 'tab-1', path: currentPath },
   ]);
@@ -294,7 +295,29 @@ export const FileBrowser: React.FC = () => {
     });
   }, [currentPath]);
 
-  const navigateToPath = (path: string) => navigateTo(path);
+  const validateAndNormalizePath = (rawPath: string) => {
+    const value = rawPath.trim();
+    if (!value) return { ok: false as const, error: 'Path is required.' };
+    if (!value.startsWith('/')) {
+      return { ok: false as const, error: 'Path should start with /', suggestion: `/${value}` };
+    }
+    if (/\s{2,}/.test(value)) {
+      return { ok: false as const, error: 'Path contains repeated spaces.' };
+    }
+    return { ok: true as const, value: value.replace(/\/+$/, '') || '/' };
+  };
+
+  const navigateToPath = (rawPath: string) => {
+    const result = validateAndNormalizePath(rawPath);
+    if (!result.ok) {
+      setPathInputError(result.error);
+      if ('suggestion' in result && result.suggestion) setPathInput(result.suggestion);
+      return;
+    }
+
+    setPathInputError(null);
+    navigateTo(result.value);
+  };
 
   const formatTabPath = (path: string) => {
     if (path.length <= 26) return path;
@@ -578,7 +601,15 @@ export const FileBrowser: React.FC = () => {
               size="small"
               label="Path"
               value={pathInput}
-              onChange={(e) => setPathInput(e.target.value)}
+              error={Boolean(pathInputError)}
+              helperText={pathInputError ?? 'Press Enter to navigate'}
+              onChange={(e) => {
+                setPathInput(e.target.value);
+                if (pathInputError) setPathInputError(null);
+              }}
+              onBlur={() => {
+                if (pathInput.trim()) navigateToPath(pathInput.trim());
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && pathInput.trim()) navigateToPath(pathInput.trim());
               }}
