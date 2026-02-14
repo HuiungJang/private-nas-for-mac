@@ -250,6 +250,39 @@ export const FileBrowser: React.FC = () => {
         target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
       if (isTyping) return;
 
+      const focusedIndex = focusedFile
+        ? visibleFiles.findIndex((file) => file.name === focusedFile.name)
+        : -1;
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        handleSelectionChange(new Set(visibleFiles.map((file) => file.name)));
+        return;
+      }
+
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (visibleFiles.length === 0) return;
+
+        const delta = event.key === 'ArrowDown' ? 1 : -1;
+        const nextIndex =
+          focusedIndex < 0 ? 0 : Math.min(visibleFiles.length - 1, Math.max(0, focusedIndex + delta));
+        const nextFile = visibleFiles[nextIndex];
+        if (!nextFile) return;
+        setFocusedFile(nextFile);
+        handleSelectionChange(new Set([nextFile.name]));
+        return;
+      }
+
+      if (event.key === ' ' && focusedFile) {
+        event.preventDefault();
+        const next = new Set(selectedFiles);
+        if (next.has(focusedFile.name)) next.delete(focusedFile.name);
+        else next.add(focusedFile.name);
+        handleSelectionChange(next);
+        return;
+      }
+
       if (event.key === 'Delete' && selectedFiles.size > 0) {
         event.preventDefault();
         void handleDeleteSelection();
@@ -275,7 +308,7 @@ export const FileBrowser: React.FC = () => {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [focusedFile, selectedFiles, currentPath, isTrashView]);
+  }, [focusedFile, selectedFiles, currentPath, isTrashView, visibleFiles, handleSelectionChange]);
 
   React.useEffect(() => {
     localStorage.setItem('fileBrowser.favorites', JSON.stringify(favorites));
