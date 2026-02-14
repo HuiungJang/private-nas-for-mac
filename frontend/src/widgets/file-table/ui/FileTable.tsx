@@ -33,6 +33,11 @@ interface FileTableProps {
   files: FileNode[];
   onNavigate: (name: string) => void;
   viewMode?: ViewMode;
+  visibleColumns?: {
+    size: boolean;
+    date: boolean;
+    owner: boolean;
+  };
   selectedFiles: Set<string>;
   onSelectionChange: (selected: Set<string>) => void;
   onSelectionIntent?: (
@@ -104,6 +109,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   files,
   onNavigate,
   viewMode = 'list',
+  visibleColumns = { size: true, date: true, owner: true },
   selectedFiles,
   onSelectionChange,
   onSelectionIntent,
@@ -419,16 +425,16 @@ export const FileTable: React.FC<FileTableProps> = ({
             </StyledHeaderCell>
             <StyledHeaderCell width="50px"></StyledHeaderCell>
             <StyledHeaderCell>Name</StyledHeaderCell>
-            <StyledHeaderCell align="right">Size</StyledHeaderCell>
-            <StyledHeaderCell align="right">Date</StyledHeaderCell>
-            <StyledHeaderCell align="right">Owner</StyledHeaderCell>
+            {visibleColumns.size && <StyledHeaderCell align="right">Size</StyledHeaderCell>}
+            {visibleColumns.date && <StyledHeaderCell align="right">Date</StyledHeaderCell>}
+            {visibleColumns.owner && <StyledHeaderCell align="right">Owner</StyledHeaderCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {tableVirtualizer.getVirtualItems().length > 0 && (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={3 + Number(visibleColumns.size) + Number(visibleColumns.date) + Number(visibleColumns.owner)}
                 sx={{ height: tableVirtualizer.getVirtualItems()[0].start, p: 0, border: 0 }}
               />
             </TableRow>
@@ -492,17 +498,23 @@ export const FileTable: React.FC<FileTableProps> = ({
                 <StyledTableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
                   {file.name}
                 </StyledTableCell>
-                <StyledTableCell align="right">
-                  {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
-                </StyledTableCell>
-                <StyledTableCell align="right">
-                  <Tooltip title={formatExactDateTime(file.lastModified)} arrow>
-                    <span>{formatRelativeDateTime(file.lastModified)}</span>
-                  </Tooltip>
-                </StyledTableCell>
-                <StyledTableCell align="right" sx={{ color: 'text.secondary' }}>
-                  {file.owner}
-                </StyledTableCell>
+                {visibleColumns.size && (
+                  <StyledTableCell align="right">
+                    {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
+                  </StyledTableCell>
+                )}
+                {visibleColumns.date && (
+                  <StyledTableCell align="right">
+                    <Tooltip title={formatExactDateTime(file.lastModified)} arrow>
+                      <span>{formatRelativeDateTime(file.lastModified)}</span>
+                    </Tooltip>
+                  </StyledTableCell>
+                )}
+                {visibleColumns.owner && (
+                  <StyledTableCell align="right" sx={{ color: 'text.secondary' }}>
+                    {file.owner}
+                  </StyledTableCell>
+                )}
               </StyledTableRow>
             );
           })}
@@ -510,7 +522,7 @@ export const FileTable: React.FC<FileTableProps> = ({
           {tableVirtualizer.getVirtualItems().length > 0 && (
             <TableRow>
               <TableCell
-                colSpan={6}
+                colSpan={3 + Number(visibleColumns.size) + Number(visibleColumns.date) + Number(visibleColumns.owner)}
                 sx={{
                   height:
                     tableVirtualizer.getTotalSize() -
