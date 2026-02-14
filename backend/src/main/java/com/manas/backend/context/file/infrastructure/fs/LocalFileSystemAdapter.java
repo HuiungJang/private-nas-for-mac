@@ -148,11 +148,32 @@ public class LocalFileSystemAdapter implements FileStoragePort {
     public DirectoryListing listDirectory(String pathString, UUID userId, int offset, int limit, FileListSort sort) {
         var targetPath = resolveAndValidate(pathString);
 
+        int safeLimit = Math.max(1, limit);
+
+        if (sort == FileListSort.NAME_ASC || sort == FileListSort.NAME_DESC) {
+            var entries = fetchEntriesSortedByName(targetPath, sort);
+            int totalCount = entries.size();
+            int safeOffset = Math.min(Math.max(0, offset), totalCount);
+            int endExclusive = Math.min(safeOffset + safeLimit, totalCount);
+
+            var pagedItems = entries.subList(safeOffset, endExclusive).stream()
+                    .map(entry -> toFileNodeWithAttrs(entry.path()))
+                    .flatMap(Stream::ofNullable)
+                    .toList();
+
+            return new DirectoryListing(
+                    toLogicalPath(targetPath),
+                    generateBreadcrumbs(targetPath),
+                    pagedItems,
+                    totalCount,
+                    safeOffset,
+                    safeLimit
+            );
+        }
+
         var allItems = fetchFileNodes(targetPath, sort);
         int totalCount = allItems.size();
-
         int safeOffset = Math.min(Math.max(0, offset), totalCount);
-        int safeLimit = Math.max(1, limit);
         int endExclusive = Math.min(safeOffset + safeLimit, totalCount);
 
         var pagedItems = allItems.subList(safeOffset, endExclusive);
@@ -204,7 +225,7 @@ public class LocalFileSystemAdapter implements FileStoragePort {
     private List<FileNode> fetchFileNodes(Path directory, FileListSort sort) {
         try (Stream<Path> stream = Files.list(directory)) {
             return stream
-                    .map(this::toFileNode)
+                    .map(this::toFileNodeWithAttrs)
                     .flatMap(Stream::ofNullable)
                     .sorted(comparatorBySort(sort))
                     .toList();
@@ -214,7 +235,36 @@ public class LocalFileSystemAdapter implements FileStoragePort {
         }
     }
 
-    private FileNode toFileNode(Path path) {
+    private List<PathEntry> fetchEntriesSortedByName(Path directory, FileListSort sort) {
+        try (Stream<Path> stream = Files.list(directory)) {
+            Comparator<String> nameComparator = sort == FileListSort.NAME_DESC
+                    ? Comparator.reverseOrder()
+                    : Comparator.naturalOrder();
+
+            Comparator<PathEntry> comparator = Comparator.comparing(PathEntry::isDirectory).reversed()
+                    .thenComparing(entry -> entry.path().getFileName().toString(), nameComparator);
+
+            return stream
+                    .map(this::toPathEntry)
+                    .flatMap(Stream::ofNullable)
+                    .sorted(comparator)
+                    .toList();
+        } catch (IOException e) {
+            log.error("Failed to list directory: {}", directory, e);
+            throw new FileOperationException("Failed to list directory content", e);
+        }
+    }
+
+    private PathEntry toPathEntry(Path path) {
+        try {
+            return new PathEntry(path, Files.isDirectory(path));
+        } catch (Exception e) {
+            log.warn("Skipping path '{}' due to metadata read error: {}", path, e.getMessage());
+            return null;
+        }
+    }
+
+    private FileNode toFileNodeWithAttrs(Path path) {
         try {
             var attrs = Files.readAttributes(path, BasicFileAttributes.class);
             return new FileNode(
@@ -291,6 +341,9 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             log.error("Failed to get file size: {}", targetPath, e);
             throw new FileOperationException("Failed to get file size", e);
         }
+    }
+
+    private record PathEntry(Path path, boolean isDirectory) {
     }
 
     @Override

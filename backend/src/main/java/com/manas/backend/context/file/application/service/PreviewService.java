@@ -15,6 +15,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,15 +27,20 @@ public class PreviewService implements GetFilePreviewUseCase {
     private final FileStoragePort fileStoragePort;
     private final PreviewGeneratorPort previewGeneratorPort;
     private final Path cacheDir;
+    private final Counter cacheHitCounter;
+    private final Counter cacheMissCounter;
 
     public PreviewService(
             FileStoragePort fileStoragePort,
             PreviewGeneratorPort previewGeneratorPort,
+            MeterRegistry meterRegistry,
             @Value("${app.storage.cache-dir}") String cacheDirString
     ) {
         this.fileStoragePort = fileStoragePort;
         this.previewGeneratorPort = previewGeneratorPort;
         this.cacheDir = Paths.get(cacheDirString).toAbsolutePath().normalize();
+        this.cacheHitCounter = meterRegistry.counter("app.preview.cache.hit");
+        this.cacheMissCounter = meterRegistry.counter("app.preview.cache.miss");
         initializeCacheDir();
     }
 
@@ -56,6 +63,7 @@ public class PreviewService implements GetFilePreviewUseCase {
         if (Files.exists(cachedFile)) {
             try {
                 log.debug("Cache hit for preview: {}", path);
+                cacheHitCounter.increment();
                 return new FileContent(
                         "thumbnail.jpg",
                         "image/jpeg",
@@ -69,6 +77,7 @@ public class PreviewService implements GetFilePreviewUseCase {
         }
 
         // 2. Retrieve Original
+        cacheMissCounter.increment();
         log.info("Generating preview for: {}", path);
         FileContent source = fileStoragePort.retrieve(path, userId);
 
