@@ -1,10 +1,12 @@
 import React, {useRef, useState} from 'react';
 import {
+  Badge,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   IconButton,
   Stack,
   TextField,
@@ -102,7 +104,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
   const directoryNameError = validateDirectoryName(newDirectoryName);
 
   return (
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap" justifyContent="flex-end">
         <input
             type="file"
             multiple
@@ -111,30 +113,13 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
             onChange={handleFileChange}
         />
 
-        {onRefresh && (
-          isMobile ? (
-            <Tooltip title="Refresh">
-              <IconButton onClick={onRefresh} color="inherit">
-                <RefreshIcon/>
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="outlined"
-              startIcon={<RefreshIcon/>}
-              onClick={onRefresh}
-              sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
-            >
-              Refresh
-            </Button>
-          )
-        )}
-
         {isMobile ? (
-            <Tooltip title="Upload">
-              <IconButton onClick={handleUploadClick} disabled={isUploading} color="primary">
-                <UploadFileIcon/>
-              </IconButton>
+            <Tooltip title="Upload files">
+              <Badge color="primary" variant="dot" invisible={isUploading}>
+                <IconButton onClick={handleUploadClick} disabled={isUploading} color="primary">
+                  <UploadFileIcon/>
+                </IconButton>
+              </Badge>
             </Tooltip>
         ) : (
         <AppButton
@@ -143,13 +128,13 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
             onClick={handleUploadClick}
             disabled={isUploading}
         >
-          Upload
+          Upload Files
         </AppButton>
         )}
 
         {isMobile ? (
-          <Tooltip title="New Folder">
-            <IconButton onClick={handleOpenCreateDirectoryModal} disabled={isCreatingDirectory} color="primary">
+          <Tooltip title="Create folder">
+            <IconButton onClick={handleOpenCreateDirectoryModal} disabled={isCreatingDirectory} color="inherit">
               <CreateNewFolderIcon/>
             </IconButton>
           </Tooltip>
@@ -163,6 +148,25 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
           >
             New Folder
           </Button>
+        )}
+
+        {onRefresh && (
+          isMobile ? (
+            <Tooltip title="Refresh list">
+              <IconButton onClick={onRefresh} color="inherit">
+                <RefreshIcon/>
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="text"
+              startIcon={<RefreshIcon/>}
+              onClick={onRefresh}
+              sx={{borderRadius: '12px', textTransform: 'none', fontWeight: 600}}
+            >
+              Refresh
+            </Button>
+          )
         )}
 
         <Dialog open={isCreateDirModalOpen} onClose={handleCloseCreateDirectoryModal} fullWidth maxWidth="xs">
@@ -195,8 +199,14 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
 
         {selectedFiles.size > 0 && (
             <>
+              <Divider orientation="vertical" flexItem sx={{mx: 0.5}}/>
+              {!isMobile && (
+                <Button size="small" variant="text" color="inherit" disableRipple>
+                  {selectedFiles.size} selected
+                </Button>
+              )}
               {isMobile ? (
-                  <Tooltip title="Move">
+                  <Tooltip title="Move selected">
                     <IconButton onClick={() => setIsMoveModalOpen(true)} color="primary">
                       <DriveFileMoveIcon/>
                     </IconButton>
@@ -213,7 +223,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
               )}
 
               {isMobile ? (
-                  <Tooltip title={`Delete (${selectedFiles.size})`}>
+                  <Tooltip title={`Delete selected (${selectedFiles.size})`}>
                     <IconButton onClick={handleDelete} disabled={isDeleting} color="error">
                       <DeleteIcon/>
                     </IconButton>
