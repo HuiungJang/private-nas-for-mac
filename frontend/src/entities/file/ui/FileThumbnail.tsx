@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box} from '@mui/material';
+import {Box, Skeleton} from '@mui/material';
 import type {SxProps, Theme} from '@mui/material';
 import {API_URL} from '@/shared/api/axios';
 import {useAuthStore} from '@/entities/user/model/store';
@@ -16,17 +16,42 @@ interface FileThumbnailProps {
 export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 28, sx}) => {
   const [url, setUrl] = React.useState<string | null>(null);
   const [failed, setFailed] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [inView, setInView] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
 
   React.useEffect(() => {
     if (!isImageFile(name) && !isVideoFile(name)) {
-      setUrl(null);
       setFailed(true);
+      setLoading(false);
       return;
     }
+
+    if (!rootRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      {rootMargin: '200px'}
+    );
+
+    observer.observe(rootRef.current);
+    return () => observer.disconnect();
+  }, [name]);
+
+  React.useEffect(() => {
+    if (!inView) return;
+    if (!isImageFile(name) && !isVideoFile(name)) return;
 
     const token = useAuthStore.getState().token;
     if (!token) {
       setFailed(true);
+      setLoading(false);
       return;
     }
 
@@ -36,6 +61,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
 
     let objectUrl: string | null = null;
     const controller = new AbortController();
+    setLoading(true);
 
     fetch(endpoint, {
       method: 'GET',
@@ -53,50 +79,69 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
       })
       .catch(() => {
         setFailed(true);
+      })
+      .finally(() => {
+        setLoading(false);
       });
 
     return () => {
       controller.abort();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [name, path]);
+  }, [inView, name, path]);
 
-  if (failed || !url) {
-    return <FileIcon name={name} type="FILE" sx={{fontSize: size, ...sx}}/>;
+  const baseStyle: React.CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: '6px',
+    objectFit: 'cover',
+  };
+
+  if (failed) {
+    return (
+      <Box ref={rootRef} sx={{display: 'inline-flex'}}>
+        <FileIcon name={name} type="FILE" sx={{fontSize: size, ...sx}}/>
+      </Box>
+    );
+  }
+
+  if (loading || !url) {
+    return (
+      <Box ref={rootRef} sx={{display: 'inline-flex'}}>
+        <Skeleton variant="rounded" width={size} height={size} sx={sx}/>
+      </Box>
+    );
   }
 
   if (isVideoFile(name)) {
     return (
-      <Box
-        component="video"
-        src={url}
-        muted
-        playsInline
-        preload="metadata"
-        sx={{
-          width: size,
-          height: size,
-          borderRadius: '6px',
-          objectFit: 'cover',
-          backgroundColor: '#111',
-          ...sx,
-        }}
-      />
+      <Box ref={rootRef} sx={{display: 'inline-flex', ...sx}}>
+        <Box
+          component="video"
+          ref={videoRef}
+          src={url}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          onMouseEnter={() => {
+            void videoRef.current?.play().catch(() => undefined);
+          }}
+          onMouseLeave={() => {
+            if (videoRef.current) {
+              videoRef.current.pause();
+              videoRef.current.currentTime = 0;
+            }
+          }}
+          style={{...baseStyle, backgroundColor: '#111'}}
+        />
+      </Box>
     );
   }
 
   return (
-    <Box
-      component="img"
-      src={url}
-      alt={name}
-      sx={{
-        width: size,
-        height: size,
-        borderRadius: '6px',
-        objectFit: 'cover',
-        ...sx,
-      }}
-    />
+    <Box ref={rootRef} sx={{display: 'inline-flex', ...sx}}>
+      <Box component="img" src={url} alt={name} style={baseStyle}/>
+    </Box>
   );
 };
