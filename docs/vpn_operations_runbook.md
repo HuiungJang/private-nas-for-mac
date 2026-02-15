@@ -27,12 +27,24 @@
   4. Validate peer connectivity and admin UI.
   5. Rollback by restoring previous version value if needed.
 
-## 4) Post-Change Validation Checklist
+## 4) VPN Proxy Validation (VPN-only entrypoint)
+
+If you use the VPN-only proxy entrypoint (`nas-vpn-proxy`), validate reachability from inside the VPN namespace:
+
+```bash
+bash scripts/check_vpn_proxy.sh
+```
+
+Expected:
+- `/` -> 200
+- `/api/admin/system/health` -> 401/403 (unauth) or 200 (auth)
+
+## 5) Post-Change Validation Checklist
 - [ ] UDP 51820 reachable only as intended.
 - [ ] 51821 admin UI not publicly exposed.
 - [ ] VPN client can access NAS services.
 - [ ] Unauthorized client cannot connect.
 - [ ] Change record updated.
 
-## 5) Emergency Contacts / Notes
+## 6) Emergency Contacts / Notes
 - Keep this section updated with operator-specific procedures.
