@@ -2,6 +2,7 @@ import axios from 'axios';
 import {v4 as uuidv4} from 'uuid';
 import {useAuthStore} from '@/entities/user/model/store';
 import {useNotificationStore} from '@/shared/model/useNotificationStore';
+import {uploadDebugLog} from '@/shared/debug/uploadDebug';
 
 export const API_URL = '/api';
 
@@ -32,18 +33,46 @@ apiClient.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const url = config.url ?? '';
+    if (url.includes('/files/upload')) {
+      uploadDebugLog('C) upload request started', {
+        method: config.method,
+        traceId,
+        hasFormData: typeof FormData !== 'undefined' && config.data instanceof FormData,
+      });
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const url = response.config?.url ?? '';
+    if (url.includes('/files/upload')) {
+      uploadDebugLog('C) upload request succeeded', {
+        status: response.status,
+        traceId: response.config?.headers?.['X-Trace-ID'],
+      });
+    }
+    return response;
+  },
   (error) => {
     const responseTraceId = error.response?.headers?.['x-trace-id'];
     const requestTraceId = error.config?.headers?.['X-Trace-ID'];
     const traceId = responseTraceId || requestTraceId || 'unknown';
     console.error(`[API Error] TraceID: ${traceId}`, error.response?.data || error.message);
+
+    const url = error.config?.url ?? '';
+    if (url.includes('/files/upload')) {
+      uploadDebugLog('C) upload request failed', {
+        status: error.response?.status,
+        traceId,
+        detail: error.response?.data?.detail,
+        message: error.message,
+      });
+    }
 
     const status: number | undefined = error.response?.status;
 

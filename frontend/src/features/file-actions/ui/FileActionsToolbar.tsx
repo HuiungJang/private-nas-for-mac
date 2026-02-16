@@ -22,6 +22,7 @@ import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import {useFileActions} from '../model/useFileActions';
 import {AppButton} from '@/shared/ui';
 import {MoveFileModal} from './MoveFileModal';
+import {uploadDebugLog} from '@/shared/debug/uploadDebug';
 
 interface FileActionsToolbarProps {
   selectedFiles: Set<string>;
@@ -63,11 +64,21 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
   };
 
   const handleUploadClick = () => {
+    uploadDebugLog('A) Upload button clicked', {
+      selectedCount: selectedFiles.size,
+      isUploading,
+    });
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
+
+    uploadDebugLog('B) file input change received', {
+      fileCount: files?.length ?? 0,
+      files: files ? Array.from(files).map((file) => ({name: file.name, size: file.size})) : [],
+    });
+
     if (files && files.length > 0) {
       // Upload one by one for now
       for (let i = 0; i < files.length; i++) {
