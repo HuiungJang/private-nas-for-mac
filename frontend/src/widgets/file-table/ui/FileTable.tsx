@@ -259,7 +259,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   }, [onDragSelectionCountChange, updateDragOverDir]);
 
   const beginPointerCandidate = (event: React.PointerEvent, file: FileNode) => {
-    if (event.button !== 0 || file.type !== 'FILE') return;
+    if (event.button !== 0) return;
     pointerCandidateRef.current = {x: event.clientX, y: event.clientY, file};
   };
 
@@ -322,11 +322,8 @@ export const FileTable: React.FC<FileTableProps> = ({
   }, []);
 
   const getDragProps = (file: FileNode) => ({
-    draggable: file.type === 'FILE',
-    onDragStart: (e: React.DragEvent) => {
-      if (file.type !== 'FILE') return;
-      handleDragStart(e, file);
-    },
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => handleDragStart(e, file),
     onDragEnd: handleDragEnd,
   });
 
