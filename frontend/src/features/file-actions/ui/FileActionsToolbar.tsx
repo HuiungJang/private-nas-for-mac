@@ -268,7 +268,10 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
                   onClose={() => setIsMoveModalOpen(false)}
                   selectedFiles={selectedFiles}
                   sourceDirectory={currentPath}
-                  onSuccess={onClearSelection}
+                  onSuccess={async () => {
+                    onClearSelection();
+                    await onRefresh?.();
+                  }}
               />
 
               <Dialog open={isDeleteConfirmOpen} onClose={() => setIsDeleteConfirmOpen(false)} fullWidth maxWidth="xs">
