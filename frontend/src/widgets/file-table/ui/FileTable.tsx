@@ -53,6 +53,7 @@ interface FileTableProps {
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:last-child td, &:last-child th': { border: 0 },
   cursor: 'pointer',
+  userSelect: 'none',
   transition: 'background-color 0.15s',
   '&:hover': {
     backgroundColor: `${theme.palette.primary.main}10 !important`,
@@ -121,6 +122,9 @@ export const FileTable: React.FC<FileTableProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [dragOverDir, setDragOverDir] = React.useState<string | null>(null);
+  const [gestureDragActive, setGestureDragActive] = React.useState(false);
+  const [gestureDragSourceNames, setGestureDragSourceNames] = React.useState<string[] | null>(null);
+  const pointerCandidateRef = React.useRef<{x: number; y: number; file: FileNode} | null>(null);
   const INITIAL_RENDER_COUNT = 300;
   const RENDER_BATCH = 200;
   const [renderCount, setRenderCount] = React.useState(INITIAL_RENDER_COUNT);
@@ -202,6 +206,58 @@ export const FileTable: React.FC<FileTableProps> = ({
     onDragSelectionCountChange?.(0);
   };
 
+  const endGestureDrag = React.useCallback(() => {
+    setGestureDragActive(false);
+    setGestureDragSourceNames(null);
+    setDragOverDir(null);
+    onDragSelectionCountChange?.(0);
+  }, [onDragSelectionCountChange]);
+
+  const beginPointerCandidate = (event: React.PointerEvent, file: FileNode) => {
+    if (event.button !== 0 || file.type !== 'FILE') return;
+    pointerCandidateRef.current = {x: event.clientX, y: event.clientY, file};
+  };
+
+  const maybeActivateGestureDrag = (event: React.PointerEvent) => {
+    if (gestureDragActive) return;
+    const c = pointerCandidateRef.current;
+    if (!c) return;
+    const dx = Math.abs(event.clientX - c.x);
+    const dy = Math.abs(event.clientY - c.y);
+    if (dx + dy < 8) return;
+    const names = getDraggedNames(c.file);
+    setGestureDragActive(true);
+    setGestureDragSourceNames(names);
+    onDragSelectionCountChange?.(names.length);
+  };
+
+  React.useEffect(() => {
+    const onPointerUp = () => {
+      pointerCandidateRef.current = null;
+      if (!gestureDragActive) return;
+      if (!dragOverDir || !gestureDragSourceNames || !onDropToDirectory) {
+        endGestureDrag();
+        return;
+      }
+      Promise.resolve(onDropToDirectory(gestureDragSourceNames, dragOverDir)).finally(() => {
+        endGestureDrag();
+      });
+    };
+    window.addEventListener('pointerup', onPointerUp);
+    return () => window.removeEventListener('pointerup', onPointerUp);
+  }, [gestureDragActive, dragOverDir, gestureDragSourceNames, onDropToDirectory, endGestureDrag]);
+
+  const maybeSetGestureTarget = (file: FileNode) => {
+    if (!gestureDragActive || file.type !== 'DIRECTORY') return;
+    setDragOverDir(file.name);
+  };
+
+  const getDragProps = (file: FileNode) => ({
+    draggable: true,
+    onDragStart: (e: React.DragEvent) => handleDragStart(e, file),
+    onDragEnd: handleDragEnd,
+  });
+
   const handleDragOverDirectory = (event: React.DragEvent, directoryName: string) => {
     if (!onDropToDirectory) return;
     event.preventDefault();
@@ -268,9 +324,7 @@ export const FileTable: React.FC<FileTableProps> = ({
               }
             >
               <ListItemButton
-                draggable
-                onDragStart={(e) => handleDragStart(e, file)}
-                onDragEnd={handleDragEnd}
+                {...getDragProps(file)}
                 onDragEnter={(e) =>
                   file.type === 'DIRECTORY' && handleDragEnterDirectory(e, file.name)
                 }
@@ -278,7 +332,13 @@ export const FileTable: React.FC<FileTableProps> = ({
                   file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                 }
                 onDragLeave={() => setDragOverDir(null)}
+                onDropCapture={(e) =>
+                  file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)
+                }
                 onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
+                onPointerDown={(e) => beginPointerCandidate(e, file)}
+                onPointerMove={maybeActivateGestureDrag}
+                onPointerEnter={() => maybeSetGestureTarget(file)}
                 onClick={() => handleRowClick(file)}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -358,7 +418,13 @@ export const FileTable: React.FC<FileTableProps> = ({
                     file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                   }
                   onDragLeave={() => setDragOverDir(null)}
+                  onDropCapture={(e) =>
+                    file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)
+                  }
                   onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
+                  onPointerDown={(e) => beginPointerCandidate(e, file)}
+                  onPointerMove={maybeActivateGestureDrag}
+                  onPointerEnter={() => maybeSetGestureTarget(file)}
                   onDoubleClick={() => handleRowClick(file)}
                   onClick={(e) =>
                     handleSelect(file.name, index, {
@@ -471,9 +537,7 @@ export const FileTable: React.FC<FileTableProps> = ({
               <StyledTableRow
                 key={file.name}
                 selected={isSelected}
-                draggable
-                onDragStart={(e) => handleDragStart(e, file)}
-                onDragEnd={handleDragEnd}
+                {...getDragProps(file)}
                 onDragEnter={(e) =>
                   file.type === 'DIRECTORY' && handleDragEnterDirectory(e, file.name)
                 }
@@ -481,7 +545,13 @@ export const FileTable: React.FC<FileTableProps> = ({
                   file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                 }
                 onDragLeave={() => setDragOverDir(null)}
+                onDropCapture={(e) =>
+                  file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)
+                }
                 onDrop={(e) => file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)}
+                onPointerDown={(e) => beginPointerCandidate(e, file)}
+                onPointerMove={maybeActivateGestureDrag}
+                onPointerEnter={() => maybeSetGestureTarget(file)}
                 onDoubleClick={() => handleRowClick(file)}
                 onClick={(e) =>
                   handleSelect(file.name, virtualRow.index, {
@@ -502,7 +572,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                     : undefined
                 }
               >
-                <StyledTableCell padding="checkbox">
+                <StyledTableCell padding="checkbox" {...getDragProps(file)}>
                   <Checkbox
                     checked={isSelected}
                     onChange={(e) => {
@@ -516,30 +586,30 @@ export const FileTable: React.FC<FileTableProps> = ({
                     }}
                   />
                 </StyledTableCell>
-                <StyledTableCell>
+                <StyledTableCell {...getDragProps(file)}>
                   {file.type === 'FILE' && isPreviewableMedia(file.name) ? (
                     <FileThumbnail name={file.name} path={file.path} size={28} />
                   ) : (
                     <FileIcon name={file.name} type={file.type} />
                   )}
                 </StyledTableCell>
-                <StyledTableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
+                <StyledTableCell component="th" scope="row" sx={{ fontWeight: 500 }} {...getDragProps(file)}>
                   {file.name}
                 </StyledTableCell>
                 {visibleColumns.size && (
-                  <StyledTableCell align="right">
+                  <StyledTableCell align="right" {...getDragProps(file)}>
                     {file.type === 'DIRECTORY' ? '--' : formatSize(file.size)}
                   </StyledTableCell>
                 )}
                 {visibleColumns.date && (
-                  <StyledTableCell align="right">
+                  <StyledTableCell align="right" {...getDragProps(file)}>
                     <Tooltip title={formatExactDateTime(file.lastModified)} arrow>
                       <span>{formatRelativeDateTime(file.lastModified)}</span>
                     </Tooltip>
                   </StyledTableCell>
                 )}
                 {visibleColumns.owner && (
-                  <StyledTableCell align="right" sx={{ color: 'text.secondary' }}>
+                  <StyledTableCell align="right" sx={{ color: 'text.secondary' }} {...getDragProps(file)}>
                     {file.owner}
                   </StyledTableCell>
                 )}
