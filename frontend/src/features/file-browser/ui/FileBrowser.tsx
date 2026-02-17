@@ -959,66 +959,75 @@ export const FileBrowser: React.FC = () => {
         )}
       </Stack>
 
-      {selectedFiles.size > 0 && (
-        <Paper
-          variant="outlined"
-          sx={{ mb: 2, p: 1.5, backgroundColor: 'primary.50', borderRadius: 2 }}
+      <Paper
+        variant="outlined"
+        sx={{
+          mb: 2,
+          p: 1.5,
+          borderRadius: 2,
+          minHeight: 66,
+          backgroundColor: selectedFiles.size > 0 ? 'primary.50' : 'background.paper',
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
         >
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            justifyContent="space-between"
-          >
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {selectedFiles.size} item(s) selected · Shift for range, Cmd/Ctrl for toggle ·
-              Delete/F2/Enter shortcuts enabled
-            </Typography>
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+          <Typography variant="body2" sx={{ fontWeight: 600, color: selectedFiles.size > 0 ? 'text.primary' : 'text.secondary' }}>
+            {selectedFiles.size > 0
+              ? `${selectedFiles.size} item(s) selected · Shift for range, Cmd/Ctrl for toggle · Delete/F2/Enter shortcuts enabled`
+              : 'No item selected · Select files/folders to use quick actions'}
+          </Typography>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <Button
+              size="small"
+              onClick={() => handleSelectionChange(new Set(visibleFiles.map((f) => f.name)))}
+              disabled={visibleFiles.length === 0}
+            >
+              Select All Visible
+            </Button>
+            {!isTrashView && (
               <Button
                 size="small"
-                onClick={() => handleSelectionChange(new Set(visibleFiles.map((f) => f.name)))}
+                color="warning"
+                onClick={() => void moveNamesToTrash(Array.from(selectedFiles))}
+                disabled={selectedFiles.size === 0}
               >
-                Select All Visible
+                Move to Trash
               </Button>
-              {!isTrashView && (
-                <Button
-                  size="small"
-                  color="warning"
-                  onClick={() => void moveNamesToTrash(Array.from(selectedFiles))}
-                >
-                  Move to Trash
-                </Button>
-              )}
-              {isTrashView && (
-                <Button
-                  size="small"
-                  color="success"
-                  onClick={() => void restoreNamesFromTrash(Array.from(selectedFiles))}
-                >
-                  Restore
-                </Button>
-              )}
-              {isTrashView && (
-                <Button
-                  size="small"
-                  color="error"
-                  onClick={() =>
-                    void deleteFiles(
-                      Array.from(selectedFiles).map((name) => `${TRASH_PATH}/${name}`)
-                    )
-                  }
-                >
-                  Delete Permanently
-                </Button>
-              )}
-              <Button size="small" onClick={clearSelection}>
-                Clear
+            )}
+            {isTrashView && (
+              <Button
+                size="small"
+                color="success"
+                onClick={() => void restoreNamesFromTrash(Array.from(selectedFiles))}
+                disabled={selectedFiles.size === 0}
+              >
+                Restore
               </Button>
-            </Stack>
+            )}
+            {isTrashView && (
+              <Button
+                size="small"
+                color="error"
+                onClick={() =>
+                  void deleteFiles(
+                    Array.from(selectedFiles).map((name) => `${TRASH_PATH}/${name}`)
+                  )
+                }
+                disabled={selectedFiles.size === 0}
+              >
+                Delete Permanently
+              </Button>
+            )}
+            <Button size="small" onClick={clearSelection} disabled={selectedFiles.size === 0}>
+              Clear
+            </Button>
           </Stack>
-        </Paper>
-      )}
+        </Stack>
+      </Paper>
 
       {isLoading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
