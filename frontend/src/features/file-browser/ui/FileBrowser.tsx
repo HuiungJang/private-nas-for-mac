@@ -115,6 +115,7 @@ export const FileBrowser: React.FC = () => {
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
   const [draggingCount, setDraggingCount] = React.useState(0);
+  const [dragHoverTarget, setDragHoverTarget] = React.useState<string | null>(null);
   const [dropMoveState, setDropMoveState] = React.useState<{count: number; target: string} | null>(null);
   const [favorites, setFavorites] = React.useState<string[]>(() => {
     try {
@@ -531,9 +532,11 @@ export const FileBrowser: React.FC = () => {
 
       await moveFilesBatch(moves);
       setDraggingCount(0);
+      setDragHoverTarget(null);
       clearSelection();
     } finally {
       setDropMoveState(null);
+      setDragHoverTarget(null);
     }
   };
 
@@ -552,6 +555,7 @@ export const FileBrowser: React.FC = () => {
     event.preventDefault();
     setIsDropzoneActive(false);
     setDraggingCount(0);
+    setDragHoverTarget(null);
 
     const droppedFiles = Array.from(event.dataTransfer.files);
     for (const file of droppedFiles) {
@@ -689,9 +693,34 @@ export const FileBrowser: React.FC = () => {
       )}
 
       {draggingCount > 0 && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Dragging {draggingCount} item(s). Drop on a folder to move.
-        </Alert>
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 8,
+            zIndex: 20,
+            mb: 2,
+            pointerEvents: 'none',
+          }}
+        >
+          <Paper
+            elevation={4}
+            sx={{
+              px: 1.5,
+              py: 1,
+              borderRadius: 2,
+              border: `1px solid ${dragHoverTarget ? '#2e7d32' : '#90caf9'}`,
+              backgroundColor: dragHoverTarget ? 'rgba(46,125,50,0.08)' : 'rgba(33,150,243,0.08)',
+              transition: 'all 180ms ease',
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+              Moving {draggingCount} item(s)
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {dragHoverTarget ? `Drop to: ${dragHoverTarget}` : 'Drag over a folder to choose destination'}
+            </Typography>
+          </Paper>
+        </Box>
       )}
 
       {data && (
@@ -1032,6 +1061,7 @@ export const FileBrowser: React.FC = () => {
                 void handleDropToDirectory(sourceNames, targetDirectoryName);
               }}
               onDragSelectionCountChange={setDraggingCount}
+              onDragHoverDirectoryChange={setDragHoverTarget}
             />
           </Box>
 

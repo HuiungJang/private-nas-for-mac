@@ -48,6 +48,7 @@ interface FileTableProps {
   onContextMenu?: (event: React.MouseEvent, file: FileNode) => void;
   onDropToDirectory?: (sourceNames: string[], targetDirectoryName: string) => void;
   onDragSelectionCountChange?: (count: number) => void;
+  onDragHoverDirectoryChange?: (directoryName: string | null) => void;
 }
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
@@ -118,10 +119,15 @@ export const FileTable: React.FC<FileTableProps> = ({
   onContextMenu,
   onDropToDirectory,
   onDragSelectionCountChange,
+  onDragHoverDirectoryChange,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [dragOverDir, setDragOverDir] = React.useState<string | null>(null);
+  const updateDragOverDir = React.useCallback((name: string | null) => {
+    setDragOverDir(name);
+    onDragHoverDirectoryChange?.(name);
+  }, [onDragHoverDirectoryChange]);
   const [gestureDragActive, setGestureDragActive] = React.useState(false);
   const [gestureDragSourceNames, setGestureDragSourceNames] = React.useState<string[] | null>(null);
   const pointerCandidateRef = React.useRef<{x: number; y: number; file: FileNode} | null>(null);
@@ -202,14 +208,14 @@ export const FileTable: React.FC<FileTableProps> = ({
   };
 
   const handleDragEnd = () => {
-    setDragOverDir(null);
+    updateDragOverDir(null);
     onDragSelectionCountChange?.(0);
   };
 
   const endGestureDrag = React.useCallback(() => {
     setGestureDragActive(false);
     setGestureDragSourceNames(null);
-    setDragOverDir(null);
+    updateDragOverDir(null);
     onDragSelectionCountChange?.(0);
   }, [onDragSelectionCountChange]);
 
@@ -249,7 +255,7 @@ export const FileTable: React.FC<FileTableProps> = ({
 
   const maybeSetGestureTarget = (file: FileNode) => {
     if (!gestureDragActive || file.type !== 'DIRECTORY') return;
-    setDragOverDir(file.name);
+    updateDragOverDir(file.name);
   };
 
   const getDragProps = (file: FileNode) => ({
@@ -262,7 +268,7 @@ export const FileTable: React.FC<FileTableProps> = ({
     if (!onDropToDirectory) return;
     event.preventDefault();
     event.stopPropagation();
-    setDragOverDir(directoryName);
+    updateDragOverDir(directoryName);
     event.dataTransfer.dropEffect = 'move';
   };
 
@@ -270,14 +276,14 @@ export const FileTable: React.FC<FileTableProps> = ({
     if (!onDropToDirectory) return;
     event.preventDefault();
     event.stopPropagation();
-    setDragOverDir(directoryName);
+    updateDragOverDir(directoryName);
   };
 
   const handleDropDirectory = (event: React.DragEvent, directoryName: string) => {
     if (!onDropToDirectory) return;
     event.preventDefault();
     event.stopPropagation();
-    setDragOverDir(null);
+    updateDragOverDir(null);
 
     const raw =
       event.dataTransfer.getData('application/x-nas-file-names') ||
@@ -331,7 +337,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                 onDragOver={(e) =>
                   file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                 }
-                onDragLeave={() => setDragOverDir(null)}
+                onDragLeave={() => updateDragOverDir(null)}
                 onDropCapture={(e) =>
                   file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)
                 }
@@ -417,7 +423,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                   onDragOver={(e) =>
                     file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                   }
-                  onDragLeave={() => setDragOverDir(null)}
+                  onDragLeave={() => updateDragOverDir(null)}
                   onDropCapture={(e) =>
                     file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)
                   }
@@ -544,7 +550,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                 onDragOver={(e) =>
                   file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                 }
-                onDragLeave={() => setDragOverDir(null)}
+                onDragLeave={() => updateDragOverDir(null)}
                 onDropCapture={(e) =>
                   file.type === 'DIRECTORY' && handleDropDirectory(e, file.name)
                 }
