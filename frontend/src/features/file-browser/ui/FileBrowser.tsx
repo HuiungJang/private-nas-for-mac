@@ -1190,9 +1190,9 @@ export const FileBrowser: React.FC = () => {
           selectedFiles.size > 0 ? selectedFiles : new Set(focusedFile ? [focusedFile.name] : [])
         }
         sourceDirectory={currentPath}
-        onSuccess={() => {
+        onSuccess={async () => {
           clearSelection();
-          setIsMoveModalOpen(false);
+          await refetch();
         }}
       />
 

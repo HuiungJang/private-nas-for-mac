@@ -8,7 +8,7 @@ interface MoveFileModalProps {
   onClose: () => void;
   selectedFiles: Set<string>;
   sourceDirectory: string;
-  onSuccess: () => void;
+  onSuccess: () => void | Promise<void>;
 }
 
 export const MoveFileModal: React.FC<MoveFileModalProps> = ({
@@ -39,7 +39,7 @@ export const MoveFileModal: React.FC<MoveFileModalProps> = ({
 
         await moveFile({sourcePath: source, destinationPath: destination});
       }
-      onSuccess();
+      await onSuccess();
       onClose();
     } catch (error) {
       console.error("Failed to move files", error);
