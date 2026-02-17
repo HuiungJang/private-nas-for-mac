@@ -130,6 +130,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   }, [onDragHoverDirectoryChange]);
   const [gestureDragActive, setGestureDragActive] = React.useState(false);
   const [gestureDragSourceNames, setGestureDragSourceNames] = React.useState<string[] | null>(null);
+  const [activeDragNames, setActiveDragNames] = React.useState<Set<string>>(new Set());
   const pointerCandidateRef = React.useRef<{x: number; y: number; file: FileNode} | null>(null);
   const INITIAL_RENDER_COUNT = 300;
   const RENDER_BATCH = 200;
@@ -204,20 +205,23 @@ export const FileTable: React.FC<FileTableProps> = ({
     // Fallback for browsers that do not preserve custom MIME types reliably.
     event.dataTransfer.setData('text/plain', payload);
     event.dataTransfer.effectAllowed = 'move';
+    setActiveDragNames(new Set(names));
     onDragSelectionCountChange?.(names.length);
   };
 
   const handleDragEnd = () => {
     updateDragOverDir(null);
+    setActiveDragNames(new Set());
     onDragSelectionCountChange?.(0);
   };
 
   const endGestureDrag = React.useCallback(() => {
     setGestureDragActive(false);
     setGestureDragSourceNames(null);
+    setActiveDragNames(new Set());
     updateDragOverDir(null);
     onDragSelectionCountChange?.(0);
-  }, [onDragSelectionCountChange]);
+  }, [onDragSelectionCountChange, updateDragOverDir]);
 
   const beginPointerCandidate = (event: React.PointerEvent, file: FileNode) => {
     if (event.button !== 0 || file.type !== 'FILE') return;
@@ -234,6 +238,7 @@ export const FileTable: React.FC<FileTableProps> = ({
     const names = getDraggedNames(c.file);
     setGestureDragActive(true);
     setGestureDragSourceNames(names);
+    setActiveDragNames(new Set(names));
     onDragSelectionCountChange?.(names.length);
   };
 
@@ -329,6 +334,18 @@ export const FileTable: React.FC<FileTableProps> = ({
     },
   };
 
+  const getDraggingSourceSx = (name: string) =>
+    activeDragNames.has(name)
+      ? {
+          opacity: 0.62,
+          transform: 'scale(0.985)',
+          boxShadow: `0 8px 20px ${theme.palette.common.black}22`,
+          cursor: 'grabbing',
+          transition: 'transform 100ms ease, opacity 100ms ease, box-shadow 100ms ease',
+          filter: 'saturate(0.92)',
+        }
+      : undefined;
+
 
   // Mobile View: Always List (Simplified, selection via long press? Or just checkbox)
   if (isMobile) {
@@ -385,6 +402,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                       ? `1px solid ${theme.palette.divider}`
                       : 'none',
                   py: 1.5,
+                  ...getDraggingSourceSx(file.name),
                   ...(dragOverDir === file.name ? dragTargetHighlightSx : {}),
                 }}
               >
@@ -466,7 +484,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                     e.preventDefault();
                     onContextMenu?.(e, file);
                   }}
-                  sx={dragOverDir === file.name ? dragTargetHighlightSx : undefined}
+                  sx={{
+                    ...getDraggingSourceSx(file.name),
+                    ...(dragOverDir === file.name ? dragTargetHighlightSx : {}),
+                  }}
                 >
                   <Box sx={{ position: 'absolute', top: 8, left: 8 }}>
                     <Checkbox
@@ -585,7 +606,10 @@ export const FileTable: React.FC<FileTableProps> = ({
                   e.preventDefault();
                   onContextMenu?.(e, file);
                 }}
-                sx={dragOverDir === file.name ? dragTargetHighlightSx : undefined}
+                sx={{
+                  ...getDraggingSourceSx(file.name),
+                  ...(dragOverDir === file.name ? dragTargetHighlightSx : {}),
+                }}
               >
                 <StyledTableCell padding="checkbox" {...getDragProps(file)}>
                   <Checkbox
