@@ -305,11 +305,27 @@ export const FileTable: React.FC<FileTableProps> = ({
     outline: `2px dashed ${theme.palette.primary.main}`,
     backgroundColor: `${theme.palette.primary.main}14`,
     boxShadow: `0 0 0 2px ${theme.palette.primary.main}22 inset`,
-    animation: 'dndPulse 900ms ease-in-out infinite',
-    '@keyframes dndPulse': {
-      '0%': { boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset` },
-      '50%': { boxShadow: `0 0 0 4px ${theme.palette.primary.main}3d inset` },
-      '100%': { boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset` },
+    transform: 'scale(1.01)',
+    transformOrigin: 'center',
+    transition: 'transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease',
+    animation: 'dndPulseScale 900ms ease-in-out infinite',
+    '@keyframes dndPulseScale': {
+      '0%': {
+        boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset`,
+        transform: 'scale(1.005)',
+      },
+      '50%': {
+        boxShadow: `0 0 0 5px ${theme.palette.primary.main}3d inset`,
+        transform: 'scale(1.016)',
+      },
+      '100%': {
+        boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset`,
+        transform: 'scale(1.005)',
+      },
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      animation: 'none',
+      transform: 'none',
     },
   };
 
