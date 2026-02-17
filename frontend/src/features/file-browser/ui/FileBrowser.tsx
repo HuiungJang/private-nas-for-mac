@@ -114,6 +114,7 @@ export const FileBrowser: React.FC = () => {
   const [focusedFile, setFocusedFile] = React.useState<FileNode | null>(null);
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
+  const [isOpeningTrash, setIsOpeningTrash] = React.useState(false);
   const [draggingCount, setDraggingCount] = React.useState(0);
   const [dragHoverTarget, setDragHoverTarget] = React.useState<string | null>(null);
   const [dropMoveState, setDropMoveState] = React.useState<{count: number; target: string} | null>(null);
@@ -420,9 +421,24 @@ export const FileBrowser: React.FC = () => {
 
   const ensureTrashDirectory = async () => {
     try {
-      await createDirectory({ parentPath: '/', name: '.trash' });
+      await fileApi.listFiles(TRASH_PATH);
+      return;
     } catch {
-      // noop
+      // missing trash directory: create below
+    }
+
+    try {
+      await fileApi.createDirectory('/', '.trash');
+    } catch (error: any) {
+      const message = String(error?.message ?? '').toLowerCase();
+      const alreadyExists =
+        message.includes('already exists') ||
+        message.includes('exist') ||
+        message.includes('409') ||
+        message.includes('conflict');
+      if (!alreadyExists) {
+        throw error;
+      }
     }
   };
 
@@ -573,8 +589,16 @@ export const FileBrowser: React.FC = () => {
   };
 
   const handleOpenTrash = async () => {
-    await ensureTrashDirectory();
-    navigateToPath(TRASH_PATH);
+    if (isOpeningTrash) return;
+    setIsOpeningTrash(true);
+    try {
+      await ensureTrashDirectory();
+      navigateToPath(TRASH_PATH);
+    } catch {
+      showNotification('Failed to open Trash. Please try again.', 'error');
+    } finally {
+      setIsOpeningTrash(false);
+    }
   };
 
   return (
@@ -789,8 +813,9 @@ export const FileBrowser: React.FC = () => {
                 variant={isTrashView ? 'contained' : 'outlined'}
                 color={isTrashView ? 'warning' : 'inherit'}
                 onClick={() => void handleOpenTrash()}
+                disabled={isOpeningTrash}
               >
-                Open Trash
+                {isOpeningTrash ? 'Opening Trash…' : 'Open Trash'}
               </Button>
             </Stack>
           </Stack>
