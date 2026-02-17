@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle,} from '@mui/material';
 import {FolderPicker} from './folder-picker/FolderPicker';
 import {useFileActions} from '../model/useFileActions';
@@ -20,6 +20,12 @@ export const MoveFileModal: React.FC<MoveFileModalProps> = ({
                                                             }) => {
   const [destinationPath, setDestinationPath] = useState('/');
   const {moveFile, isMoving} = useFileActions();
+
+  useEffect(() => {
+    if (open) {
+      setDestinationPath('/');
+    }
+  }, [open]);
 
   const handleMove = async () => {
     // Iterate and move each file
