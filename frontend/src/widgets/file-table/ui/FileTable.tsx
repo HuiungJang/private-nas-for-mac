@@ -133,6 +133,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   const [activeDragNames, setActiveDragNames] = React.useState<Set<string>>(new Set());
   const [dragCanceled, setDragCanceled] = React.useState(false);
   const pointerCandidateRef = React.useRef<{x: number; y: number; file: FileNode} | null>(null);
+  const dragPreviewRef = React.useRef<HTMLElement | null>(null);
   const INITIAL_RENDER_COUNT = 300;
   const RENDER_BATCH = 200;
   const [renderCount, setRenderCount] = React.useState(INITIAL_RENDER_COUNT);
@@ -206,6 +207,32 @@ export const FileTable: React.FC<FileTableProps> = ({
     // Fallback for browsers that do not preserve custom MIME types reliably.
     event.dataTransfer.setData('text/plain', payload);
     event.dataTransfer.effectAllowed = 'move';
+
+    const preview = document.createElement('div');
+    preview.style.position = 'fixed';
+    preview.style.top = '-9999px';
+    preview.style.left = '-9999px';
+    preview.style.padding = '6px 10px';
+    preview.style.borderRadius = '10px';
+    preview.style.background = 'rgba(32, 34, 37, 0.72)';
+    preview.style.color = '#fff';
+    preview.style.fontSize = '12px';
+    preview.style.fontWeight = '600';
+    preview.style.backdropFilter = 'blur(3px)';
+    preview.style.boxShadow = '0 10px 24px rgba(0,0,0,0.28)';
+    preview.style.transform = 'scale(0.9)';
+    preview.style.opacity = '0.9';
+    preview.style.pointerEvents = 'none';
+    preview.textContent = names.length > 1 ? `${names[0]} 외 ${names.length - 1}개` : names[0];
+    document.body.appendChild(preview);
+    dragPreviewRef.current = preview;
+
+    try {
+      event.dataTransfer.setDragImage(preview, 14, 14);
+    } catch {
+      // ignore if drag image is unsupported
+    }
+
     setDragCanceled(false);
     setActiveDragNames(new Set(names));
     onDragSelectionCountChange?.(names.length);
@@ -216,6 +243,11 @@ export const FileTable: React.FC<FileTableProps> = ({
     setActiveDragNames(new Set());
     setDragCanceled(false);
     onDragSelectionCountChange?.(0);
+
+    if (dragPreviewRef.current) {
+      dragPreviewRef.current.remove();
+      dragPreviewRef.current = null;
+    }
   };
 
   const endGestureDrag = React.useCallback(() => {
@@ -279,6 +311,15 @@ export const FileTable: React.FC<FileTableProps> = ({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [gestureDragActive, activeDragNames.size, endGestureDrag]);
+
+  React.useEffect(() => {
+    return () => {
+      if (dragPreviewRef.current) {
+        dragPreviewRef.current.remove();
+        dragPreviewRef.current = null;
+      }
+    };
+  }, []);
 
   const getDragProps = (file: FileNode) => ({
     draggable: file.type === 'FILE',
