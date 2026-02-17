@@ -191,6 +191,8 @@ export const FileTable: React.FC<FileTableProps> = ({
     const names = getDraggedNames(file);
     const payload = JSON.stringify(names);
     event.dataTransfer.setData('application/x-nas-file-names', payload);
+    // Fallback for browsers that do not preserve custom MIME types reliably.
+    event.dataTransfer.setData('text/plain', payload);
     event.dataTransfer.effectAllowed = 'move';
     onDragSelectionCountChange?.(names.length);
   };
@@ -203,22 +205,35 @@ export const FileTable: React.FC<FileTableProps> = ({
   const handleDragOverDirectory = (event: React.DragEvent, directoryName: string) => {
     if (!onDropToDirectory) return;
     event.preventDefault();
+    event.stopPropagation();
     setDragOverDir(directoryName);
     event.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnterDirectory = (event: React.DragEvent, directoryName: string) => {
+    if (!onDropToDirectory) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragOverDir(directoryName);
   };
 
   const handleDropDirectory = (event: React.DragEvent, directoryName: string) => {
     if (!onDropToDirectory) return;
     event.preventDefault();
+    event.stopPropagation();
     setDragOverDir(null);
 
-    const raw = event.dataTransfer.getData('application/x-nas-file-names');
+    const raw =
+      event.dataTransfer.getData('application/x-nas-file-names') ||
+      event.dataTransfer.getData('text/plain');
     if (!raw) return;
 
     try {
       const names = JSON.parse(raw) as string[];
       if (!Array.isArray(names) || names.length === 0) return;
-      onDropToDirectory(names, directoryName);
+      Promise.resolve(onDropToDirectory(names, directoryName)).catch(() => {
+        // handled by caller notifications
+      });
     } catch {
       // ignore invalid payload
     }
@@ -245,7 +260,8 @@ export const FileTable: React.FC<FileTableProps> = ({
                     const native = e.nativeEvent as MouseEvent;
                     handleSelect(file.name, index, {
                       shiftKey: native.shiftKey,
-                      toggleKey: native.metaKey || native.ctrlKey,
+                      // Checkbox click should always toggle multi-select without Cmd/Ctrl.
+                      toggleKey: true,
                     });
                   }}
                 />
@@ -255,6 +271,9 @@ export const FileTable: React.FC<FileTableProps> = ({
                 draggable
                 onDragStart={(e) => handleDragStart(e, file)}
                 onDragEnd={handleDragEnd}
+                onDragEnter={(e) =>
+                  file.type === 'DIRECTORY' && handleDragEnterDirectory(e, file.name)
+                }
                 onDragOver={(e) =>
                   file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                 }
@@ -332,6 +351,9 @@ export const FileTable: React.FC<FileTableProps> = ({
                   draggable
                   onDragStart={(e) => handleDragStart(e, file)}
                   onDragEnd={handleDragEnd}
+                  onDragEnter={(e) =>
+                    file.type === 'DIRECTORY' && handleDragEnterDirectory(e, file.name)
+                  }
                   onDragOver={(e) =>
                     file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                   }
@@ -366,7 +388,8 @@ export const FileTable: React.FC<FileTableProps> = ({
                         const native = e.nativeEvent as MouseEvent;
                         handleSelect(file.name, index, {
                           shiftKey: native.shiftKey,
-                          toggleKey: native.metaKey || native.ctrlKey,
+                          // Checkbox click should always toggle multi-select without Cmd/Ctrl.
+                          toggleKey: true,
                         });
                       }}
                       size="small"
@@ -451,6 +474,9 @@ export const FileTable: React.FC<FileTableProps> = ({
                 draggable
                 onDragStart={(e) => handleDragStart(e, file)}
                 onDragEnd={handleDragEnd}
+                onDragEnter={(e) =>
+                  file.type === 'DIRECTORY' && handleDragEnterDirectory(e, file.name)
+                }
                 onDragOver={(e) =>
                   file.type === 'DIRECTORY' && handleDragOverDirectory(e, file.name)
                 }
@@ -484,7 +510,8 @@ export const FileTable: React.FC<FileTableProps> = ({
                       const native = e.nativeEvent as MouseEvent;
                       handleSelect(file.name, virtualRow.index, {
                         shiftKey: native.shiftKey,
-                        toggleKey: native.metaKey || native.ctrlKey,
+                        // Checkbox click should always toggle multi-select without Cmd/Ctrl.
+                        toggleKey: true,
                       });
                     }}
                   />
