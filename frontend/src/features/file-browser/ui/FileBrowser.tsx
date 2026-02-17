@@ -723,28 +723,40 @@ export const FileBrowser: React.FC = () => {
 
       {draggingCount > 0 && (
         <Paper
-          elevation={8}
+          elevation={10}
           sx={{
             position: 'fixed',
-            right: 24,
-            bottom: 64,
+            left: '50%',
+            top: 84,
+            transform: 'translateX(-50%)',
             zIndex: (theme) => theme.zIndex.modal - 1,
-            px: 1.5,
-            py: 1,
-            borderRadius: 2,
-            border: `1px solid ${dragHoverTarget ? '#2e7d32' : '#90caf9'}`,
-            backgroundColor: dragHoverTarget ? 'rgba(46,125,50,0.14)' : 'rgba(33,150,243,0.12)',
-            backdropFilter: 'blur(4px)',
+            px: 2,
+            py: 1.25,
+            borderRadius: 2.5,
+            border: `1px solid ${dragHoverTarget ? '#66bb6a' : '#64b5f6'}`,
+            backgroundColor: dragHoverTarget ? 'rgba(27, 94, 32, 0.86)' : 'rgba(13, 71, 161, 0.84)',
+            backdropFilter: 'blur(6px)',
             transition: 'all 180ms ease',
             pointerEvents: 'none',
-            minWidth: 240,
-            maxWidth: 340,
+            minWidth: 300,
+            maxWidth: 520,
+            color: '#fff',
           }}
         >
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
             Moving {draggingCount} item(s)
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'rgba(255,255,255,0.92)',
+              display: 'block',
+              mt: 0.25,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {dragHoverTarget ? `Drop to: ${dragHoverTarget}` : 'Drag over a folder to choose destination'}
           </Typography>
         </Paper>
