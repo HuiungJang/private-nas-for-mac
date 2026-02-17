@@ -134,6 +134,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
           loop
           playsInline
           preload="metadata"
+          draggable={false}
           onMouseEnter={() => {
             if (hoverTimerRef.current !== null) {
               window.clearTimeout(hoverTimerRef.current);
@@ -160,7 +161,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
 
   return (
     <Box ref={rootRef} sx={{display: 'inline-flex', ...sx}}>
-      <Box component="img" src={url} alt={name} style={baseStyle}/>
+      <Box component="img" src={url} alt={name} draggable={false} style={baseStyle}/>
     </Box>
   );
 };
