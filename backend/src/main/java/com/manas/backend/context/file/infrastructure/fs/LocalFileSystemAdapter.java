@@ -275,9 +275,24 @@ public class LocalFileSystemAdapter implements FileStoragePort {
             ".VolumeIcon.icns"
     );
 
+    private static final Set<String> ROOT_VOLUME_EXCLUDES = Set.of(
+            "Macintosh HD",
+            "Macintosh HD - Data"
+    );
+
     private boolean shouldExcludeByDefault(Path path) {
         String name = path.getFileName() == null ? "" : path.getFileName().toString();
-        return DEFAULT_SYSTEM_EXCLUDES.contains(name);
+
+        if (DEFAULT_SYSTEM_EXCLUDES.contains(name)) {
+            return true;
+        }
+
+        Path parent = path.getParent();
+        if (parent != null && parent.equals(rootPath) && ROOT_VOLUME_EXCLUDES.contains(name)) {
+            return true;
+        }
+
+        return false;
     }
 
     private List<PathEntry> fetchEntriesSortedByName(Path directory, FileListSort sort) {

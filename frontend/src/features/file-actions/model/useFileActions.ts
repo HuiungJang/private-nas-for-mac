@@ -13,7 +13,13 @@ export const useFileActions = () => {
 
   const deleteFilesMutation = useMutation({
     mutationFn: async (paths: string[]) => {
-      const taskId = startTask({type: 'file.delete', count: paths.length});
+      const taskId = startTask({
+        task: {type: 'file.delete', count: paths.length},
+        onRetry: async () => {
+          await fileApi.deleteFiles(paths);
+          queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+        },
+      });
       try {
         const result = await fileApi.deleteFiles(paths);
         completeTask(taskId);
@@ -53,7 +59,13 @@ export const useFileActions = () => {
 
   const uploadFileMutation = useMutation({
     mutationFn: async ({file, directory}: { file: File; directory: string }) => {
-      const taskId = startTask({type: 'file.upload', fileName: file.name});
+      const taskId = startTask({
+        task: {type: 'file.upload', fileName: file.name},
+        onRetry: async () => {
+          await fileApi.uploadFile(file, directory);
+          queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+        },
+      });
       try {
         const result = await fileApi.uploadFile(file, directory);
         completeTask(taskId);
@@ -71,7 +83,13 @@ export const useFileActions = () => {
 
   const createDirectoryMutation = useMutation({
     mutationFn: async ({parentPath, name}: { parentPath: string; name: string }) => {
-      const taskId = startTask({type: 'file.mkdir', fileName: name});
+      const taskId = startTask({
+        task: {type: 'file.mkdir', fileName: name},
+        onRetry: async () => {
+          await fileApi.createDirectory(parentPath, name);
+          queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+        },
+      });
       try {
         const result = await fileApi.createDirectory(parentPath, name);
         completeTask(taskId);
@@ -89,7 +107,15 @@ export const useFileActions = () => {
 
   const moveFilesBatchMutation = useMutation({
     mutationFn: async (moves: Array<{ sourcePath: string; destinationPath: string }>) => {
-      const taskId = startTask(`Move ${moves.length} item(s)`);
+      const taskId = startTask({
+        task: `Move ${moves.length} item(s)`,
+        onRetry: async () => {
+          for (const move of moves) {
+            await fileApi.moveFile(move.sourcePath, move.destinationPath);
+          }
+          queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+        },
+      });
       let successCount = 0;
       const failures: Array<{ sourcePath: string; reason: string }> = [];
 
@@ -122,7 +148,13 @@ export const useFileActions = () => {
 
   const moveFileMutation = useMutation({
     mutationFn: async ({sourcePath, destinationPath}: { sourcePath: string; destinationPath: string }) => {
-      const taskId = startTask({type: 'file.move', sourcePath, destinationPath});
+      const taskId = startTask({
+        task: {type: 'file.move', sourcePath, destinationPath},
+        onRetry: async () => {
+          await fileApi.moveFile(sourcePath, destinationPath);
+          queryClient.invalidateQueries({queryKey: queryKeys.files(), exact: false});
+        },
+      });
       try {
         const result = await fileApi.moveFile(sourcePath, destinationPath);
         completeTask(taskId);

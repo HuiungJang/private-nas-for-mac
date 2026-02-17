@@ -28,7 +28,7 @@ interface FileActionsToolbarProps {
   selectedFiles: Set<string>;
   currentPath: string;
   onClearSelection: () => void;
-  onRefresh?: () => void;
+  onRefresh?: () => void | Promise<unknown>;
 }
 
 export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
@@ -59,6 +59,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
     if (paths.length === 0) return;
 
     await deleteFiles(paths);
+    await onRefresh?.();
     onClearSelection();
     setIsDeleteConfirmOpen(false);
   };
@@ -84,6 +85,9 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
       for (let i = 0; i < files.length; i++) {
         await uploadFile({file: files[i], directory: currentPath});
       }
+
+      // Ensure visible list refreshes immediately after upload completes.
+      await onRefresh?.();
     }
     // Reset input
     if (fileInputRef.current) {
@@ -104,6 +108,7 @@ export const FileActionsToolbar: React.FC<FileActionsToolbarProps> = ({
     if (error) return;
 
     await createDirectory({parentPath: currentPath, name: newDirectoryName.trim()});
+    await onRefresh?.();
     setIsCreateDirModalOpen(false);
     setNewDirectoryName('');
   };

@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Alert,
+  Backdrop,
   Box,
   Button,
   Chip,
@@ -114,10 +115,7 @@ export const FileBrowser: React.FC = () => {
   const [contextAnchor, setContextAnchor] = React.useState<null | HTMLElement>(null);
   const [isDropzoneActive, setIsDropzoneActive] = React.useState(false);
   const [draggingCount, setDraggingCount] = React.useState(0);
-  const [pendingMove, setPendingMove] = React.useState<{
-    sourceNames: string[];
-    targetDirectoryName: string;
-  } | null>(null);
+  const [dropMoveState, setDropMoveState] = React.useState<{count: number; target: string} | null>(null);
   const [favorites, setFavorites] = React.useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('fileBrowser.favorites') ?? '[]');
@@ -504,42 +502,39 @@ export const FileBrowser: React.FC = () => {
   const handleDropToDirectory = async (sourceNames: string[], targetDirectoryName: string) => {
     const uniqueNames = Array.from(new Set(sourceNames));
     if (uniqueNames.length === 0) return;
-    setPendingMove({ sourceNames: uniqueNames, targetDirectoryName });
-  };
 
-  const handleConfirmMove = async () => {
-    if (!pendingMove) return;
+    setDropMoveState({count: uniqueNames.length, target: targetDirectoryName});
+    try {
+      const targetPath = joinPath(currentPath, targetDirectoryName);
+      const targetListing = await fileApi.listFiles(targetPath);
+      const existingNames = new Set(targetListing.items.map((item) => item.name));
 
-    const targetPath = joinPath(currentPath, pendingMove.targetDirectoryName);
-    const targetListing = await fileApi.listFiles(targetPath);
-    const existingNames = new Set(targetListing.items.map((item) => item.name));
+      const conflicts = uniqueNames.filter((name) => existingNames.has(name));
+      const movable = uniqueNames.filter(
+        (name) => !existingNames.has(name) && name !== targetDirectoryName
+      );
 
-    const conflicts = pendingMove.sourceNames.filter((name) => existingNames.has(name));
-    const movable = pendingMove.sourceNames.filter(
-      (name) => !existingNames.has(name) && name !== pendingMove.targetDirectoryName
-    );
+      if (conflicts.length > 0) {
+        showNotification(`Skipped ${conflicts.length} conflicting item(s)`, 'error');
+      }
 
-    if (conflicts.length > 0) {
-      showNotification(`Skipped ${conflicts.length} conflicting item(s)`, 'error');
-    }
+      if (movable.length === 0) {
+        setDraggingCount(0);
+        clearSelection();
+        return;
+      }
 
-    if (movable.length === 0) {
-      setPendingMove(null);
+      const moves = movable.map((name) => ({
+        sourcePath: joinPath(currentPath, name),
+        destinationPath: `${targetPath}/${name}`,
+      }));
+
+      await moveFilesBatch(moves);
       setDraggingCount(0);
       clearSelection();
-      return;
+    } finally {
+      setDropMoveState(null);
     }
-
-    const moves = movable.map((name) => ({
-      sourcePath: joinPath(currentPath, name),
-      destinationPath: `${targetPath}/${name}`,
-    }));
-
-    await moveFilesBatch(moves);
-
-    setPendingMove(null);
-    setDraggingCount(0);
-    clearSelection();
   };
 
   const handleDragOverBrowser = (event: React.DragEvent) => {
@@ -562,6 +557,8 @@ export const FileBrowser: React.FC = () => {
     for (const file of droppedFiles) {
       await uploadFile({ file, directory: currentPath });
     }
+
+    await refetch();
   };
 
   const handleQuickCreateFolder = async () => {
@@ -1134,32 +1131,6 @@ export const FileBrowser: React.FC = () => {
         </Stack>
       )}
 
-      <Dialog
-        open={Boolean(pendingMove)}
-        onClose={() => {
-          setPendingMove(null);
-          setDraggingCount(0);
-        }}
-      >
-        <DialogTitle>Confirm Move</DialogTitle>
-        <DialogContent>
-          Move {pendingMove?.sourceNames.length ?? 0} item(s) into folder{' '}
-          <strong>{pendingMove?.targetDirectoryName}</strong>?
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setPendingMove(null);
-              setDraggingCount(0);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={() => void handleConfirmMove()}>
-            Move
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Menu open={Boolean(contextAnchor)} anchorEl={contextAnchor} onClose={closeContextMenu}>
         <MenuItem
@@ -1224,6 +1195,23 @@ export const FileBrowser: React.FC = () => {
           setIsMoveModalOpen(false);
         }}
       />
+
+      <Backdrop
+        open={Boolean(dropMoveState)}
+        sx={{
+          color: '#fff',
+          zIndex: (theme) => theme.zIndex.drawer + 10,
+          flexDirection: 'column',
+          gap: 1,
+        }}
+      >
+        <Typography variant="h6" sx={{fontWeight: 700}}>
+          Moving {dropMoveState?.count ?? 0} item(s)
+        </Typography>
+        <Typography variant="body2">
+          Target folder: {dropMoveState?.target ?? '-'}
+        </Typography>
+      </Backdrop>
 
       <Dialog
         open={Boolean(renameTarget)}

@@ -11,24 +11,47 @@ export interface TaskItem {
   finishedAt?: number;
   errorMessage?: string;
   details?: string;
+  onRetry?: () => Promise<void> | void;
 }
+
+type TaskStartInput = string | FileTaskPayload | {
+  task: string | FileTaskPayload;
+  onRetry?: () => Promise<void> | void;
+};
 
 interface TaskCenterState {
   tasks: TaskItem[];
-  startTask: (task: string | FileTaskPayload) => string;
+  startTask: (task: TaskStartInput) => string;
   completeTask: (id: string) => void;
   failTask: (id: string, errorMessage?: string, details?: string) => void;
   clearFinished: () => void;
   dismissTask: (id: string) => void;
-  retryTask: (id: string) => void;
+  retryTask: (id: string) => Promise<void>;
 }
 
-export const useTaskCenterStore = create<TaskCenterState>((set) => ({
+export const useTaskCenterStore = create<TaskCenterState>((set, get) => ({
   tasks: [],
   startTask: (taskInput) => {
     const id = crypto.randomUUID();
-    const label = typeof taskInput === 'string' ? taskInput : buildTaskLabel(taskInput);
-    const task: TaskItem = {id, label, status: 'running', startedAt: Date.now()};
+
+    const normalized =
+      typeof taskInput === 'object' && taskInput !== null && 'task' in taskInput
+        ? taskInput
+        : {task: taskInput};
+
+    const label =
+      typeof normalized.task === 'string'
+        ? normalized.task
+        : buildTaskLabel(normalized.task);
+
+    const task: TaskItem = {
+      id,
+      label,
+      status: 'running',
+      startedAt: Date.now(),
+      onRetry: normalized.onRetry,
+    };
+
     set((state) => ({
       tasks: [task, ...state.tasks].slice(0, 30),
     }));
@@ -56,20 +79,32 @@ export const useTaskCenterStore = create<TaskCenterState>((set) => ({
   dismissTask: (id) => {
     set((state) => ({tasks: state.tasks.filter((task) => task.id !== id)}));
   },
-  retryTask: (id) => {
+  retryTask: async (id) => {
+    const current = get().tasks.find((task) => task.id === id);
+    if (!current || current.status !== 'failed' || !current.onRetry) {
+      return;
+    }
+
     set((state) => ({
-      tasks: state.tasks.map((task) => {
-        if (task.id !== id) return task;
-        if (task.status !== 'failed') return task;
-        return {
-          ...task,
-          status: 'running',
-          errorMessage: undefined,
-          details: 'Manual retry requested. Re-run the same action from toolbar/context menu.',
-          startedAt: Date.now(),
-          finishedAt: undefined,
-        };
-      }),
+      tasks: state.tasks.map((task) =>
+        task.id === id
+          ? {
+              ...task,
+              status: 'running',
+              errorMessage: undefined,
+              details: undefined,
+              startedAt: Date.now(),
+              finishedAt: undefined,
+            }
+          : task
+      ),
     }));
+
+    try {
+      await current.onRetry();
+      get().completeTask(id);
+    } catch (error: any) {
+      get().failTask(id, error?.message || 'Retry failed');
+    }
   },
 }));
