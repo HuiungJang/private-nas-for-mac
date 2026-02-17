@@ -721,16 +721,16 @@ export const FileBrowser: React.FC = () => {
         </Box>
       )}
 
-      {draggingCount > 0 && (
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 8,
-            zIndex: 20,
-            mb: 2,
-            pointerEvents: 'none',
-          }}
-        >
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 8,
+          zIndex: 20,
+          pointerEvents: 'none',
+          height: 0,
+        }}
+      >
+        {draggingCount > 0 && (
           <Paper
             elevation={4}
             sx={{
@@ -740,6 +740,7 @@ export const FileBrowser: React.FC = () => {
               border: `1px solid ${dragHoverTarget ? '#2e7d32' : '#90caf9'}`,
               backgroundColor: dragHoverTarget ? 'rgba(46,125,50,0.08)' : 'rgba(33,150,243,0.08)',
               transition: 'all 180ms ease',
+              transform: 'translateY(-6px)',
             }}
           >
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
@@ -749,8 +750,8 @@ export const FileBrowser: React.FC = () => {
               {dragHoverTarget ? `Drop to: ${dragHoverTarget}` : 'Drag over a folder to choose destination'}
             </Typography>
           </Paper>
-        </Box>
-      )}
+        )}
+      </Box>
 
       {data && (
         <Paper variant="outlined" sx={{ mb: 2, p: 1.5, borderRadius: 2 }}>
