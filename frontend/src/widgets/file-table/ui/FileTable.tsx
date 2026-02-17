@@ -301,6 +301,19 @@ export const FileTable: React.FC<FileTableProps> = ({
     }
   };
 
+  const dragTargetHighlightSx = {
+    outline: `2px dashed ${theme.palette.primary.main}`,
+    backgroundColor: `${theme.palette.primary.main}14`,
+    boxShadow: `0 0 0 2px ${theme.palette.primary.main}22 inset`,
+    animation: 'dndPulse 900ms ease-in-out infinite',
+    '@keyframes dndPulse': {
+      '0%': { boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset` },
+      '50%': { boxShadow: `0 0 0 4px ${theme.palette.primary.main}3d inset` },
+      '100%': { boxShadow: `0 0 0 1px ${theme.palette.primary.main}22 inset` },
+    },
+  };
+
+
   // Mobile View: Always List (Simplified, selection via long press? Or just checkbox)
   if (isMobile) {
     return (
@@ -356,12 +369,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                       ? `1px solid ${theme.palette.divider}`
                       : 'none',
                   py: 1.5,
-                  backgroundColor:
-                    dragOverDir === file.name ? `${theme.palette.primary.main}22` : undefined,
-                  outline:
-                    dragOverDir === file.name
-                      ? `2px dashed ${theme.palette.primary.main}`
-                      : undefined,
+                  ...(dragOverDir === file.name ? dragTargetHighlightSx : {}),
                 }}
               >
                 <ListItemAvatar sx={{ minWidth: 40, mr: 1 }}>
@@ -442,15 +450,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                     e.preventDefault();
                     onContextMenu?.(e, file);
                   }}
-                  sx={
-                    dragOverDir === file.name
-                      ? {
-                          outline: `2px dashed ${theme.palette.primary.main}`,
-                          backgroundColor: `${theme.palette.primary.main}14`,
-                          boxShadow: `0 0 0 2px ${theme.palette.primary.main}22 inset`,
-                        }
-                      : undefined
-                  }
+                  sx={dragOverDir === file.name ? dragTargetHighlightSx : undefined}
                 >
                   <Box sx={{ position: 'absolute', top: 8, left: 8 }}>
                     <Checkbox
@@ -569,14 +569,7 @@ export const FileTable: React.FC<FileTableProps> = ({
                   e.preventDefault();
                   onContextMenu?.(e, file);
                 }}
-                sx={
-                  dragOverDir === file.name
-                    ? {
-                        outline: `2px dashed ${theme.palette.primary.main}`,
-                        backgroundColor: `${theme.palette.primary.main}14`,
-                      }
-                    : undefined
-                }
+                sx={dragOverDir === file.name ? dragTargetHighlightSx : undefined}
               >
                 <StyledTableCell padding="checkbox" {...getDragProps(file)}>
                   <Checkbox
