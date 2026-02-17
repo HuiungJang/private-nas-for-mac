@@ -281,8 +281,11 @@ export const FileTable: React.FC<FileTableProps> = ({
   }, [gestureDragActive, activeDragNames.size, endGestureDrag]);
 
   const getDragProps = (file: FileNode) => ({
-    draggable: true,
-    onDragStart: (e: React.DragEvent) => handleDragStart(e, file),
+    draggable: file.type === 'FILE',
+    onDragStart: (e: React.DragEvent) => {
+      if (file.type !== 'FILE') return;
+      handleDragStart(e, file);
+    },
     onDragEnd: handleDragEnd,
   });
 
@@ -473,9 +476,7 @@ export const FileTable: React.FC<FileTableProps> = ({
               <Box key={file.name}>
                 <GridItemCard
                   selected={isSelected}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, file)}
-                  onDragEnd={handleDragEnd}
+                  {...getDragProps(file)}
                   onDragEnter={(e) =>
                     file.type === 'DIRECTORY' && handleDragEnterDirectory(e, file.name)
                   }
