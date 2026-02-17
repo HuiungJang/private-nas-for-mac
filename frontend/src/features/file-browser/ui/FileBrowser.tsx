@@ -572,6 +572,11 @@ export const FileBrowser: React.FC = () => {
     await refetch();
   };
 
+  const handleOpenTrash = async () => {
+    await ensureTrashDirectory();
+    navigateToPath(TRASH_PATH);
+  };
+
   return (
     <Box
       onDragOver={handleDragOverBrowser}
@@ -783,7 +788,7 @@ export const FileBrowser: React.FC = () => {
                 size="small"
                 variant={isTrashView ? 'contained' : 'outlined'}
                 color={isTrashView ? 'warning' : 'inherit'}
-                onClick={() => navigateToPath(TRASH_PATH)}
+                onClick={() => void handleOpenTrash()}
               >
                 Open Trash
               </Button>
