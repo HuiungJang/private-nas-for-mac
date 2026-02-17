@@ -696,50 +696,51 @@ export const FileBrowser: React.FC = () => {
 
       {data && (
         <Paper variant="outlined" sx={{ mb: 2, p: 1.5, borderRadius: 2 }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-            <Box sx={{ minWidth: { md: 240 } }}>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'flex-start' }}>
+            <Box sx={{ minWidth: { md: 220 }, flex: 1 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Favorites
               </Typography>
-              <Stack spacing={0.5}>
-                {favorites.length === 0 ? (
-                  <Typography variant="caption" color="text.secondary">
-                    No favorites yet
-                  </Typography>
-                ) : (
-                  favorites.map((p) => (
-                    <Button
+              {favorites.length === 0 ? (
+                <Typography variant="caption" color="text.secondary">
+                  No favorites yet
+                </Typography>
+              ) : (
+                <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ maxHeight: 72, overflowY: 'auto' }}>
+                  {favorites.map((p) => (
+                    <Chip
                       key={p}
                       size="small"
-                      variant="text"
-                      sx={{ justifyContent: 'flex-start' }}
+                      label={p}
+                      clickable
                       onClick={() => navigateToPath(p)}
-                    >
-                      {p}
-                    </Button>
-                  ))
-                )}
-              </Stack>
+                      sx={{ maxWidth: 220 }}
+                    />
+                  ))}
+                </Stack>
+              )}
             </Box>
-            <Box sx={{ minWidth: { md: 280 } }}>
+
+            <Box sx={{ minWidth: { md: 280 }, flex: 1.4 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Recent paths
               </Typography>
-              <Stack spacing={0.5}>
+              <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" sx={{ maxHeight: 72, overflowY: 'auto' }}>
                 {recentPaths.map((p) => (
-                  <Button
+                  <Chip
                     key={p}
                     size="small"
-                    variant="text"
-                    sx={{ justifyContent: 'flex-start' }}
+                    variant="outlined"
+                    label={p}
+                    clickable
                     onClick={() => navigateToPath(p)}
-                  >
-                    {p}
-                  </Button>
+                    sx={{ maxWidth: 240 }}
+                  />
                 ))}
               </Stack>
             </Box>
-            <Stack spacing={1} sx={{ display: 'flex', alignItems: 'flex-start' }}>
+
+            <Stack direction={{ xs: 'row', md: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={{ minWidth: { md: 320 }, justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
               <Button
                 size="small"
                 variant={favorites.includes(currentPath) ? 'contained' : 'outlined'}
