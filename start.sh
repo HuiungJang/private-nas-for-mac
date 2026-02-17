@@ -183,7 +183,21 @@ main() {
   preflight_security_checks
 
   print_info "Starting services..."
-  docker-compose up -d --build
+
+  if [[ "${REBUILD_VPN:-0}" == "1" ]]; then
+    print_info "REBUILD_VPN=1 detected: rebuilding full stack (including VPN)"
+    docker-compose up -d --build
+  else
+    if docker ps -a --format '{{.Names}}' | grep -qx "nas-vpn"; then
+      print_info "Existing install detected: rebuilding app services only (VPN preserved)"
+      docker-compose up -d nas-db wg-easy
+      docker-compose up -d --build --no-deps nas-backend nas-frontend
+      docker-compose up -d nas-vpn-proxy
+    else
+      print_info "First run detected: bringing up full stack"
+      docker-compose up -d --build
+    fi
+  fi
 
   print_ok "=== Setup Complete ==="
   echo "Frontend: http://localhost"
