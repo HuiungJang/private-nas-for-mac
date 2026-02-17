@@ -131,6 +131,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   const [gestureDragActive, setGestureDragActive] = React.useState(false);
   const [gestureDragSourceNames, setGestureDragSourceNames] = React.useState<string[] | null>(null);
   const [activeDragNames, setActiveDragNames] = React.useState<Set<string>>(new Set());
+  const [dragCanceled, setDragCanceled] = React.useState(false);
   const pointerCandidateRef = React.useRef<{x: number; y: number; file: FileNode} | null>(null);
   const INITIAL_RENDER_COUNT = 300;
   const RENDER_BATCH = 200;
@@ -205,6 +206,7 @@ export const FileTable: React.FC<FileTableProps> = ({
     // Fallback for browsers that do not preserve custom MIME types reliably.
     event.dataTransfer.setData('text/plain', payload);
     event.dataTransfer.effectAllowed = 'move';
+    setDragCanceled(false);
     setActiveDragNames(new Set(names));
     onDragSelectionCountChange?.(names.length);
   };
@@ -212,6 +214,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   const handleDragEnd = () => {
     updateDragOverDir(null);
     setActiveDragNames(new Set());
+    setDragCanceled(false);
     onDragSelectionCountChange?.(0);
   };
 
@@ -236,6 +239,7 @@ export const FileTable: React.FC<FileTableProps> = ({
     const dy = Math.abs(event.clientY - c.y);
     if (dx + dy < 8) return;
     const names = getDraggedNames(c.file);
+    setDragCanceled(false);
     setGestureDragActive(true);
     setGestureDragSourceNames(names);
     setActiveDragNames(new Set(names));
@@ -263,6 +267,19 @@ export const FileTable: React.FC<FileTableProps> = ({
     updateDragOverDir(file.name);
   };
 
+  React.useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (!gestureDragActive && activeDragNames.size === 0) return;
+      setDragCanceled(true);
+      pointerCandidateRef.current = null;
+      endGestureDrag();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [gestureDragActive, activeDragNames.size, endGestureDrag]);
+
   const getDragProps = (file: FileNode) => ({
     draggable: true,
     onDragStart: (e: React.DragEvent) => handleDragStart(e, file),
@@ -270,7 +287,7 @@ export const FileTable: React.FC<FileTableProps> = ({
   });
 
   const handleDragOverDirectory = (event: React.DragEvent, directoryName: string) => {
-    if (!onDropToDirectory) return;
+    if (!onDropToDirectory || dragCanceled) return;
     event.preventDefault();
     event.stopPropagation();
     updateDragOverDir(directoryName);
@@ -278,14 +295,14 @@ export const FileTable: React.FC<FileTableProps> = ({
   };
 
   const handleDragEnterDirectory = (event: React.DragEvent, directoryName: string) => {
-    if (!onDropToDirectory) return;
+    if (!onDropToDirectory || dragCanceled) return;
     event.preventDefault();
     event.stopPropagation();
     updateDragOverDir(directoryName);
   };
 
   const handleDropDirectory = (event: React.DragEvent, directoryName: string) => {
-    if (!onDropToDirectory) return;
+    if (!onDropToDirectory || dragCanceled) return;
     event.preventDefault();
     event.stopPropagation();
     updateDragOverDir(null);
