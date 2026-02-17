@@ -4,7 +4,7 @@ import type {SxProps, Theme} from '@mui/material';
 import {API_URL} from '@/shared/api/axios';
 import {useAuthStore} from '@/entities/user/model/store';
 import {FileIcon} from './FileIcon';
-import {isImageFile, isVideoFile} from './mediaPreview';
+import {isImageFile, isTextPreviewFile, isVideoFile} from './mediaPreview';
 import {getCachedBlob} from './thumbnailCache';
 
 interface FileThumbnailProps {
@@ -19,12 +19,13 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
   const [failed, setFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [inView, setInView] = React.useState(false);
+  const [textPreview, setTextPreview] = React.useState<string | null>(null);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const hoverTimerRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
-    if (!isImageFile(name) && !isVideoFile(name)) {
+    if (!isImageFile(name) && !isVideoFile(name) && !isTextPreviewFile(name)) {
       setFailed(true);
       setLoading(false);
       return;
@@ -56,7 +57,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
 
   React.useEffect(() => {
     if (!inView) return;
-    if (!isImageFile(name) && !isVideoFile(name)) return;
+    if (!isImageFile(name) && !isVideoFile(name) && !isTextPreviewFile(name)) return;
 
     const token = useAuthStore.getState().token;
     if (!token) {
@@ -82,9 +83,18 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
       if (!res.ok) throw new Error(`preview fetch failed: ${res.status}`);
       return res.blob();
     })
-      .then((blob) => {
+      .then(async (blob) => {
+        if (isTextPreviewFile(name)) {
+          const text = (await blob.text()).replace(/\s+/g, ' ').trim();
+          setTextPreview(text.slice(0, 80) || '(empty)');
+          setUrl(null);
+          setFailed(false);
+          return;
+        }
+
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
+        setTextPreview(null);
         setFailed(false);
       })
       .catch(() => {
@@ -115,7 +125,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
     );
   }
 
-  if (loading || !url) {
+  if (loading || (!url && !textPreview)) {
     return (
       <Box ref={rootRef} sx={{display: 'inline-flex'}}>
         <Skeleton variant="rounded" width={size} height={size} sx={sx}/>
@@ -123,13 +133,43 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
     );
   }
 
+  if (isTextPreviewFile(name) && textPreview) {
+    return (
+      <Box
+        ref={rootRef}
+        sx={{
+          width: size,
+          height: size,
+          borderRadius: '6px',
+          border: '1px solid rgba(0,0,0,0.14)',
+          backgroundColor: '#fafafa',
+          color: '#555',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: 0.5,
+          fontSize: Math.max(8, Math.min(11, size / 4)),
+          lineHeight: 1.2,
+          textAlign: 'left',
+          overflow: 'hidden',
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          ...sx,
+        }}
+      >
+        {textPreview}
+      </Box>
+    );
+  }
+
+  const mediaUrl = url ?? '';
+
   if (isVideoFile(name)) {
     return (
       <Box ref={rootRef} sx={{display: 'inline-flex', ...sx}}>
         <Box
           component="video"
           ref={videoRef}
-          src={url}
+          src={mediaUrl}
           muted
           loop
           playsInline
@@ -161,7 +201,7 @@ export const FileThumbnail: React.FC<FileThumbnailProps> = ({name, path, size = 
 
   return (
     <Box ref={rootRef} sx={{display: 'inline-flex', ...sx}}>
-      <Box component="img" src={url} alt={name} draggable={false} style={baseStyle}/>
+      <Box component="img" src={mediaUrl} alt={name} draggable={false} style={baseStyle}/>
     </Box>
   );
 };
